@@ -95,7 +95,7 @@ const EXERCISES = {
     {
       name: 'Deficit Push-Up',
       sets: 4, repsRange: '8–15', restSeconds: 90,
-      tip: 'Hands on books or plates for extra depth. Let chest sink below hand level. Full range is what makes this better.',
+      tip: 'Hands on books or dumbbell plates for extra depth. Let chest sink below hand level. Full range is what makes this better.',
     },
     {
       name: 'Dumbbell Floor Press',
@@ -156,7 +156,7 @@ const EXERCISES = {
     {
       name: 'Dumbbell Pullover',
       sets: 3, repsRange: '12–15', restSeconds: 90,
-      tip: 'Lie across a bench or sofa edge. Arms straight, arc the DB from over your chest to behind your head. Feel the stretch.',
+      tip: 'Lie across a sofa edge, shoulders supported. Arms straight, arc the DB from over your chest to behind your head. Feel the lat stretch.',
     },
   ],
 
@@ -164,12 +164,12 @@ const EXERCISES = {
     {
       name: 'Chest-Supported Incline Row',
       sets: 3, repsRange: '10–12 each', restSeconds: 90,
-      tip: 'Lie face-down on an incline surface. Pull elbows back and squeeze shoulder blades together. No momentum.',
+      tip: 'Lie face-down over a sofa arm or ottoman, chest hanging off. Pull elbows back and squeeze shoulder blades. No momentum.',
     },
     {
       name: 'Single-Arm Dumbbell Row',
       sets: 3, repsRange: '10–12 each', restSeconds: 90,
-      tip: 'Knee and hand on bench. Drive the elbow back and up, not just up. Full stretch at the bottom.',
+      tip: 'Knee and hand on a sturdy chair or sofa. Drive the elbow back and up, not just up. Full stretch at the bottom.',
     },
     {
       name: 'Dumbbell Rear Delt Fly',
@@ -197,7 +197,7 @@ const EXERCISES = {
     {
       name: 'Incline Dumbbell Curl',
       sets: 3, repsRange: '10–12', restSeconds: 60,
-      tip: 'Lie back on an incline. Arms hang straight — this stretches the long head of the bicep. Don\'t swing.',
+      tip: 'Recline against a sofa arm or pillows stacked against a wall. Arms hang straight — this stretches the long head of the bicep. Don\'t swing.',
     },
     {
       name: 'Zottman Curl',
@@ -340,9 +340,40 @@ function storageDel(key) {
 // ── WEEK STORE ─────────────────────────────────────────────────────────────
 //
 // Week data stored under grind:week-{YYYY-MM-DD} (Monday of current week).
-// Schema: { dayAssignment, completed: string[], usedExercises: { key: string[] } }
+// Schema:
+//   dayAssignment:      { monday: 'C', wednesday: 'A', friday: 'B' }  — set once per week
+//   completed:          string[]   — template IDs completed this week
+//   completedWeekdays:  string[]   — weekday names of completed sessions (for week strip dots)
+//   usedExercises:      { categoryKey: string[] }
 //
 // Week key uses toISOString().slice(0,10) — always YYYY-MM-DD, never 0-indexed month.
+
+const STRENGTH_DAYS  = ['monday', 'wednesday', 'friday'];
+const WEEKDAY_NAMES  = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const WEEKDAY_SHORT  = { monday:'MON', tuesday:'TUE', wednesday:'WED', thursday:'THU', friday:'FRI', saturday:'SAT', sunday:'SUN' };
+
+function getTodayWeekday() {
+  return WEEKDAY_NAMES[new Date().getDay()];
+}
+
+// Shuffle A/B/C once per week and assign to Mon/Wed/Fri.
+// All three templates are always used — only the order rotates.
+// Stored in week.dayAssignment so the same assignment persists all week.
+function getOrCreateDayAssignment(weekKey) {
+  const week = loadWeek(weekKey);
+  if (week.dayAssignment) return week.dayAssignment;
+
+  // Fisher-Yates shuffle
+  const templates = ['A', 'B', 'C'];
+  for (let i = templates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [templates[i], templates[j]] = [templates[j], templates[i]];
+  }
+
+  week.dayAssignment = Object.fromEntries(STRENGTH_DAYS.map((d, i) => [d, templates[i]]));
+  saveWeek(weekKey, week);
+  return week.dayAssignment;
+}
 
 function getWeekKey() {
   const now = new Date();
@@ -387,6 +418,10 @@ function markExerciseUsed(categoryKey, name, weekKey) {
 function markDayComplete(templateId, weekKey) {
   const week = loadWeek(weekKey);
   if (!week.completed.includes(templateId)) week.completed.push(templateId);
+  // Track the actual weekday so the week strip can show a dot on the right day
+  const today = getTodayWeekday();
+  if (!week.completedWeekdays) week.completedWeekdays = [];
+  if (!week.completedWeekdays.includes(today)) week.completedWeekdays.push(today);
   saveWeek(weekKey, week);
 }
 
@@ -986,45 +1021,55 @@ function renderHome() {
 }
 
 function renderWeekStrip() {
-  const weekKey   = getWeekKey();
-  const now       = new Date();
-  const todayIdx  = (now.getDay() + 6) % 7; // Mon=0, Sun=6
-  const labels    = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const strip     = document.getElementById('week-strip');
+  const weekKey           = getWeekKey();
+  const week              = loadWeek(weekKey);
+  const completedWeekdays = week.completedWeekdays || [];
+  const todayWeekday      = getTodayWeekday();
+  // Mon-first labels and weekday name mapping
+  const labels            = ['M','T','W','T','F','S','S'];
+  const weekdays          = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const strip             = document.getElementById('week-strip');
 
-  // Build a date for each day of this week (Mon–Sun)
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + (todayIdx === 0 ? 0 : -todayIdx));
-  monday.setHours(0, 0, 0, 0);
-
-  // We don't have per-day completion dates in Phase 1;
-  // just mark today and leave dots for Phase 2 (weekday assignments).
   strip.innerHTML = labels.map((label, i) => {
-    const isToday = i === todayIdx;
-    return `<div class="week-day ${isToday ? 'today' : ''}">
+    const weekday = weekdays[i];
+    const isToday = weekday === todayWeekday;
+    const isDone  = completedWeekdays.includes(weekday);
+    return `<div class="week-day ${isToday ? 'today' : ''} ${isDone ? 'done' : ''}">
       ${label}<div class="dot"></div>
     </div>`;
   }).join('');
 }
 
 function renderDayCards() {
-  const weekKey  = getWeekKey();
-  const completed = getCompletedDays(weekKey);
-  const container = document.getElementById('day-cards');
+  const weekKey      = getWeekKey();
+  const assignment   = getOrCreateDayAssignment(weekKey);   // { monday:'C', wednesday:'A', friday:'B' }
+  const completed    = getCompletedDays(weekKey);
+  const todayWeekday = getTodayWeekday();
+  const isStrengthDay = STRENGTH_DAYS.includes(todayWeekday);
+  const container    = document.getElementById('day-cards');
 
-  container.innerHTML = Object.entries(DAYS).map(([id, day]) => {
-    const isDone = completed.includes(id);
-    const tags   = day.slots.map(s => `<span class="slot-tag">${s.label}</span>`).join('');
+  // Show one card per strength day in Mon / Wed / Fri order
+  container.innerHTML = STRENGTH_DAYS.map(weekday => {
+    const templateId = assignment[weekday];
+    const day        = DAYS[templateId];
+    const isDone     = completed.includes(templateId);
+    const isToday    = weekday === todayWeekday;
+    const tags       = day.slots.map(s => `<span class="slot-tag">${s.label}</span>`).join('');
+
     return `
-      <div class="day-card fadein ${isDone ? 'completed' : ''}" data-day="${id}">
+      <div class="day-card fadein ${isDone ? 'completed' : ''} ${isToday ? 'today-card' : ''}"
+           data-day="${templateId}">
         <div class="day-card-top">
-          <div class="day-letter">${id}</div>
-          <div class="day-done-badge">DONE ✓</div>
+          <div class="day-letter">${templateId}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="day-weekday-label">${WEEKDAY_SHORT[weekday]}</div>
+            <div class="day-done-badge">DONE ✓</div>
+          </div>
         </div>
         <div class="day-name">${day.name}</div>
         <div class="day-focus">${day.focus}</div>
         <div class="day-slots">${tags}</div>
-        <div class="day-cta">DEAL CARDS →</div>
+        <div class="day-cta">${isToday ? 'DEAL CARDS NOW →' : 'DEAL CARDS →'}</div>
       </div>`;
   }).join('');
 }

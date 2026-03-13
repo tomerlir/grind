@@ -189,6 +189,20 @@
       color: var(--gold);
       text-align: right;
     }
+    /* Today's strength day gets a neon accent border */
+    .day-card.today-card {
+      border-color: var(--neon);
+      box-shadow: 0 0 0 1px var(--neon-dim);
+    }
+    .day-card.today-card .day-cta { color: var(--neon); }
+    .day-weekday-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .day-card.today-card .day-weekday-label { color: var(--neon); }
 
     .home-footer {
       display: flex;
