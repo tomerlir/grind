@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>GRIND — Workout Roulette</title>
+  <!-- Phase 8: replace with self-hosted fonts in /fonts/ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── DESIGN TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --bg:             #080604;
+      --surface:        #100D09;
+      --surface2:       #1A1510;
+      --border:         #2A2218;
+      --border-gold:    #3D3015;
+      --neon:           #c8f135;
+      --neon-dim:       #6B8018;
+      --gold:           #C9A84C;
+      --gold-bright:    #F0C843;
+      --crimson:        #8B1A1A;
+      --crimson-bright: #C0392B;
+      --text:           #F0E6D3;
+      --muted:          #6B5F4E;
+      --muted2:         #3D3328;
+      --font-display:   'Bebas Neue', sans-serif;
+      --font-body:      'DM Sans', sans-serif;
+      --font-mono:      'DM Mono', monospace;
+      --radius:         10px;
+      --radius-card:    16px;
+    }
+
+    /* ── RESET ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100%;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── SCREENS ───────────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 24px 20px 48px;
+      max-width: 480px;
+      margin: 0 auto;
+      flex-direction: column;
+    }
+    .screen.active { display: flex; }
+
+    /* ── HOME ──────────────────────────────────────────────────────── */
+    .home-header { text-align: center; padding: 28px 0 24px; }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 64px;
+      color: var(--neon);
+      letter-spacing: 8px;
+      line-height: 1;
+    }
+    .logo-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .resume-banner {
+      background: var(--surface);
+      border: 1px solid var(--neon);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .resume-text {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--neon);
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .resume-btn {
+      background: var(--neon);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .resume-btn:hover { opacity: 0.85; }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* Week strip */
+    .week-strip { display: flex; gap: 6px; margin-bottom: 28px; }
+    .week-day {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .week-day.today    { border-color: var(--neon); color: var(--neon); }
+    .week-day .dot     { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+    .week-day.done .dot { background: var(--gold); }
+
+    /* Day cards */
+    .day-cards { display: flex; flex-direction: column; gap: 12px; }
+    .day-card {
+      background: var(--surface);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius-card);
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, opacity 0.2s;
+      position: relative;
+      user-select: none;
+    }
+    .day-card:active { border-color: var(--gold); }
+    .day-card.completed { opacity: 0.45; }
+    .day-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .day-letter { font-family: var(--font-display); font-size: 44px; color: var(--gold); line-height: 1; }
+    .day-done-badge {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--gold);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .day-card.completed .day-done-badge { display: block; }
+    .day-name  { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; margin-bottom: 3px; }
+    .day-focus { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .day-slots { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+    .slot-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--muted2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 7px;
+    }
+    .day-cta {
+      font-family: var(--font-display);
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-align: right;
+    }
+
+    .home-footer {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding-top: 24px;
+      margin-top: auto;
+    }
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 9px 18px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── SESSION ───────────────────────────────────────────────────── */
+    .session-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .back-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .session-title { font-family: var(--font-display); font-size: 28px; color: var(--gold); letter-spacing: 3px; }
+    .session-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .progress-bar-wrap {
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin-bottom: 36px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .spin-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .slot-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .slot-machine {
+      width: 100%;
+      background: var(--surface2);
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 36px 24px;
+      text-align: center;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+    }
+    #slot-display {
+      font-family: var(--font-display);
+      font-size: 30px;
+      letter-spacing: 2px;
+      color: var(--muted2);
+      transition: color 0.15s;
+      line-height: 1.2;
+    }
+    #slot-display.landed { color: var(--neon); }
+    @keyframes slotLand {
+      0%   { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    #slot-display.landed { animation: slotLand 0.18s ease-out forwards; }
+    .slot-sets-info {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      min-height: 16px;
+    }
+    .spin-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--surface);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      border-radius: var(--radius);
+      font-family: var(--font-display);
+      font-size: 26px;
+      letter-spacing: 3px;
+      transition: all 0.15s;
+    }
+    .spin-btn:hover:not(:disabled) { background: var(--gold); color: #000; }
+    .spin-btn.spinning { border-color: var(--neon); color: var(--neon); }
+    .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── EXERCISE ──────────────────────────────────────────────────── */
+    .exercise-header { margin-bottom: 20px; }
+    .exercise-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .exercise-name {
+      font-family: var(--font-display);
+      font-size: 40px;
+      letter-spacing: 2px;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .exercise-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .exercise-tip {
+      font-size: 13px;
+      color: var(--muted);
+      border-left: 2px solid var(--neon);
+      padding-left: 10px;
+      line-height: 1.5;
+    }
+
+    /* Rest timer */
+    .rest-timer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .rest-timer.active  { display: block; border-color: var(--neon-dim); }
+    .rest-label         { font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    .rest-countdown     { font-family: var(--font-display); font-size: 52px; color: var(--neon); line-height: 1; }
+    .rest-skip {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border-radius: 5px;
+      margin-top: 8px;
+      transition: all 0.15s;
+    }
+    .rest-skip:hover { border-color: var(--muted); color: var(--text); }
+
+    /* Set rows */
+    .sets-container { display: flex; flex-direction: column; gap: 8px; flex: 1; margin-bottom: 16px; }
+    .set-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.15s, opacity 0.15s;
+    }
+    .set-row.active-set { border-color: var(--gold); }
+    .set-row.done-set   { opacity: 0.45; }
+    .set-num { font-family: var(--font-mono); font-size: 10px; color: var(--muted); width: 18px; text-align: center; flex-shrink: 0; }
+    .input-group { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .input-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .set-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 500;
+      padding: 5px 8px;
+      width: 100%;
+      text-align: center;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .set-input:focus            { outline: none; border-color: var(--gold); }
+    .set-input:disabled         { opacity: 0.4; }
+    .set-input::placeholder     { color: var(--muted2); }
+    /* Hide number spinners */
+    .set-input::-webkit-outer-spin-button,
+    .set-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .set-input[type=number]     { -moz-appearance: textfield; }
+
+    .set-done-btn {
+      width: 36px; height: 36px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .set-done-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    .set-done-btn.confirmed { background: var(--gold); border-color: var(--gold); color: #000; }
+
+    .complete-ex-btn {
+      width: 100%;
+      padding: 16px;
+      background: none;
+      border: 2px solid var(--neon);
+      color: var(--neon);
+      border-radius: var(--radius);
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      transition: all 0.15s;
+      margin-top: auto;
+    }
+    .complete-ex-btn:hover:not(:disabled) { background: rgba(200,241,53,0.08); }
+    .complete-ex-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── DONE ──────────────────────────────────────────────────────── */
+    .done-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 0;
+    }
+    .done-icon    { font-size: 56px; margin-bottom: 16px; }
+    .done-title   { font-family: var(--font-display); font-size: 72px; color: var(--neon); letter-spacing: 4px; line-height: 1; margin-bottom: 8px; }
+    .done-sub     { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 28px; }
+    .done-stats   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px; }
+    .done-stat    { background: var(--surface); border: 1px solid var(--border-gold); border-radius: var(--radius); padding: 14px 8px; }
+    .done-stat-val   { font-family: var(--font-display); font-size: 36px; color: var(--gold); line-height: 1; }
+    .done-stat-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+    .done-section-block {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+    }
+    .done-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+    .done-pr-item  { font-size: 13px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .done-pr-item:last-child { border-bottom: none; }
+    .done-sync { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 24px; transition: color 0.3s; }
+    .done-sync.syncing { color: var(--muted); }
+    .done-sync.success { color: var(--neon); }
+    .done-sync.error   { color: var(--crimson-bright); }
+    .done-back-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      transition: opacity 0.15s;
+    }
+    .done-back-btn:hover { opacity: 0.85; }
+
+    /* ── HISTORY ───────────────────────────────────────────────────── */
+    .history-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .history-title  { font-family: var(--font-display); font-size: 32px; color: var(--gold); letter-spacing: 3px; }
+    .history-list   { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border-gold);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .history-card:hover { border-color: var(--gold); }
+    .history-card-meta  { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; }
+    .history-card-stats { font-size: 13px; color: var(--muted); }
+    .history-card-prs   { font-family: var(--font-mono); font-size: 9px; color: var(--neon); letter-spacing: 1px; margin-top: 4px; }
+    .history-card-detail {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .history-card.expanded .history-card-detail { display: block; }
+    .history-entry        { margin-bottom: 10px; }
+    .history-entry-name   { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text); text-transform: uppercase; }
+    .history-entry-cat    { font-size: 11px; color: var(--gold); display: inline; }
+    .history-entry-sets   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .history-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 48px 0;
+    }
+    .history-empty-icon { font-size: 40px; }
+    .history-more-btn {
+      width: 100%;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 10px;
+      border-radius: var(--radius);
+      margin-top: 8px;
+      transition: all 0.15s;
+    }
+    .history-more-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── SYNC BAR ──────────────────────────────────────────────────── */
+    .sync-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 10px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-align: center;
+      transform: translateY(100%);
+      transition: transform 0.3s;
+      z-index: 100;
+    }
+    .sync-bar.show    { transform: translateY(0); }
+    .sync-bar.success { color: var(--neon); border-color: var(--neon-dim); }
+    .sync-bar.error   { color: var(--crimson-bright); }
+
+    /* ── UTILITIES ─────────────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fadein { animation: fadeIn 0.25s ease forwards; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HOME ═══════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="home-header">
+    <div class="logo">GRIND</div>
+    <div class="logo-sub">✦ Workout Roulette ✦</div>
+  </div>
+
+  <div class="resume-banner" id="resume-banner" style="display:none">
+    <div class="resume-text" id="resume-text"></div>
+    <button class="resume-btn" id="resume-btn">RESUME</button>
+  </div>
+
+  <div class="section-label">This week</div>
+  <div class="week-strip" id="week-strip"></div>
+
+  <div class="section-label">Choose your game</div>
+  <div class="day-cards" id="day-cards"></div>
+
+  <div class="home-footer">
+    <button class="btn-ghost" id="history-btn">HISTORY</button>
+  </div>
+</div>
+
+<!-- ═══ SESSION ════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-session">
+  <div class="session-header">
+    <button class="back-btn" id="session-back">←</button>
+    <div>
+      <div class="session-title" id="sess-title">DAY A</div>
+      <div class="session-sub"  id="sess-sub">7 exercises</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <div class="spin-zone">
+    <div class="slot-label" id="slot-label">READY TO SPIN</div>
+    <div class="slot-machine">
+      <div id="slot-display">?</div>
+      <div class="slot-sets-info" id="slot-sets-info"></div>
+    </div>
+    <button class="spin-btn" id="spin-btn">SPIN</button>
+  </div>
+</div>
+
+<!-- ═══ EXERCISE ═══════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-exercise">
+  <div class="exercise-header">
+    <div class="exercise-tag"  id="ex-tag">LOWER · QUAD</div>
+    <div class="exercise-name" id="ex-name">BULGARIAN SPLIT SQUAT</div>
+    <div class="exercise-meta" id="ex-meta">4 sets · 6–10 · 2 min rest</div>
+    <div class="exercise-tip"  id="ex-tip"></div>
+  </div>
+
+  <div class="rest-timer" id="rest-timer">
+    <div class="rest-label">Rest</div>
+    <div class="rest-countdown" id="rest-countdown">2:00</div>
+    <button class="rest-skip" id="rest-skip-btn">SKIP REST</button>
+  </div>
+
+  <div class="sets-container" id="sets-container"></div>
+
+  <button class="complete-ex-btn" id="complete-ex-btn" disabled>
+    DONE — SPIN NEXT ▸
+  </button>
+</div>
+
+<!-- ═══ DONE ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-done">
+  <div class="done-screen">
+    <div class="done-icon">🎰</div>
+    <div class="done-title">JACKPOT.</div>
+    <div class="done-sub" id="done-sub">Day A complete</div>
+
+    <div class="done-stats" id="done-stats"></div>
+
+    <!-- Phase 4: populated by PR tracking -->
+    <div class="done-section-block" id="done-prs" style="display:none">
+      <div class="done-section-title">✦ New Records</div>
+      <div id="done-prs-list"></div>
+    </div>
+
+    <!-- Phase 4: populated by overload nudges -->
+    <div class="done-section-block" id="done-nudges" style="display:none">
+      <div class="done-section-title">⚡ Overload Nudges</div>
+      <div id="done-nudges-list"></div>
+    </div>
+
+    <div class="done-sync" id="done-sync"></div>
+    <button class="done-back-btn" id="done-back-btn">BACK TO HOME</button>
+  </div>
+</div>
+
+<!-- ═══ HISTORY ════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-history">
+  <div class="history-header">
+    <button class="back-btn" id="history-back">←</button>
+    <div class="history-title">HISTORY</div>
+  </div>
+  <div class="history-list"     id="history-list"></div>
+  <button class="history-more-btn" id="history-more-btn" style="display:none">SHOW MORE</button>
+</div>
+
+<!-- SYNC BAR -->
+<div class="sync-bar" id="sync-bar"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
