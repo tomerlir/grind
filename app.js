@@ -707,7 +707,10 @@ function completeExercise() {
   const ex   = session.currentExercise;
   const slot = session.currentSlot;
 
-  // PR detection (stub in Phase 1 — returns {}; populated in Phase 4)
+  // Save last weight for pre-fill on next session (Phase 3)
+  saveLastWeight(ex.name, session.currentSets);
+
+  // PR detection (stub — returns {}; replaced with full logic in Phase 4)
   const prs = checkAndUpdatePR(ex.name, session.currentSets);
 
   // Mark exercise used in the week store
@@ -858,6 +861,19 @@ function parseWeight(w) {
   if (!w || w === '—' || (typeof w === 'string' && w.toLowerCase() === 'bw')) return null;
   const n = parseFloat(w);
   return isNaN(n) ? null : n;
+}
+
+// Saves the heaviest numeric set weight from a completed exercise.
+// This is the only grind:pr write in Phase 3.
+// Phase 4 (checkAndUpdatePR) extends this same record with full PR data.
+function saveLastWeight(exerciseName, sets) {
+  const numericWeights = sets.map(s => parseWeight(s.weight)).filter(w => w !== null);
+  if (numericWeights.length === 0) return; // BW exercise — nothing to save
+  const max = Math.max(...numericWeights);
+  const pr = storageGet('grind:pr', {});
+  if (!pr[exerciseName]) pr[exerciseName] = {};
+  pr[exerciseName].lastWeight = String(max);
+  storageSet('grind:pr', pr);
 }
 
 // Phase 1 stub — returns {} (no PRs)
@@ -1402,7 +1418,41 @@ function runTests() {
     assert(nudge === null, 'getOverloadNudge (stub) returns null');
   }
 
-  // 8. Data integrity — all day slots reference valid EXERCISES keys
+  // 8. saveLastWeight — stores max weight, skips BW
+  {
+    const testSets = [{ weight: '40', reps: '8' }, { weight: '42.5', reps: '7' }, { weight: '40', reps: '6' }];
+    saveLastWeight('Bulgarian Split Squat', testSets);
+    const saved = getLastWeight('Bulgarian Split Squat');
+    assert(saved === '42.5', `saveLastWeight stores heaviest set (got "${saved}")`);
+
+    // BW exercise — should not overwrite existing or create entry
+    const preBW = getLastWeight('Pull-Up');
+    saveLastWeight('Pull-Up', [{ weight: '—', reps: '8' }, { weight: '—', reps: '7' }]);
+    assert(getLastWeight('Pull-Up') === preBW, 'saveLastWeight skips BW exercise');
+
+    // Cleanup test data
+    const pr = storageGet('grind:pr', {});
+    delete pr['Bulgarian Split Squat'];
+    storageSet('grind:pr', pr);
+  }
+
+  // 9. getOrCreateDayAssignment — all templates used, persists on second call
+  {
+    const testKey = 'test-week-2099-01-01';
+    const assignment1 = getOrCreateDayAssignment(testKey);
+    const values = Object.values(assignment1).sort().join(',');
+    assert(values === 'A,B,C', `Day assignment uses all 3 templates (got "${values}")`);
+    assert(Object.keys(assignment1).length === 3, 'Assignment covers 3 weekdays');
+
+    const assignment2 = getOrCreateDayAssignment(testKey);
+    assert(JSON.stringify(assignment1) === JSON.stringify(assignment2),
+      'Day assignment is stable across calls same week');
+
+    // Cleanup
+    storageDel(`grind:week-${testKey}`);
+  }
+
+  // 10. Data integrity — all day slots reference valid EXERCISES keys
   {
     let allValid = true;
     Object.entries(DAYS).forEach(([dayId, day]) => {
