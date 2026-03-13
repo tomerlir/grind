@@ -618,6 +618,18 @@ function launchExercise(exercise, slot) {
   }));
   saveSession();
 
+  // Overload nudge chip
+  const nudge   = getOverloadNudge(exercise.name);
+  const nudgeEl = document.getElementById('overload-nudge');
+  if (nudgeEl) {
+    if (nudge) {
+      nudgeEl.textContent   = `⚡ Last 3× at ${nudge.currentWeight}kg — try ${nudge.suggestedWeight}kg?`;
+      nudgeEl.style.display = 'inline-flex';
+    } else {
+      nudgeEl.style.display = 'none';
+    }
+  }
+
   // Render exercise screen
   document.getElementById('ex-tag').textContent  = slot.label;
   document.getElementById('ex-name').textContent = exercise.name.toUpperCase();
@@ -707,11 +719,11 @@ function completeExercise() {
   const ex   = session.currentExercise;
   const slot = session.currentSlot;
 
-  // Save last weight for pre-fill on next session (Phase 3)
-  saveLastWeight(ex.name, session.currentSets);
-
-  // PR detection (stub — returns {}; replaced with full logic in Phase 4)
+  // PR detection + lastWeight write (checkAndUpdatePR handles both)
   const prs = checkAndUpdatePR(ex.name, session.currentSets);
+
+  // Store for PR flash on Session screen (consumed by renderSessionScreen)
+  lastCompletedPRs = Object.keys(prs).length > 0 ? prs : null;
 
   // Mark exercise used in the week store
   markExerciseUsed(slot.key, ex.name, session.weekKey);
@@ -854,8 +866,15 @@ function resumeRestIfNeeded() {
 }
 
 // ── PR TRACKING ────────────────────────────────────────────────────────────
-// Stub implementations for Phase 1.
-// Phase 4 replaces these with full logic.
+//
+// grind:pr schema (one key per exercise name):
+// {
+//   maxWeight:    number   — heaviest single set across all time
+//   maxVolume:    number   — best session volume (sum weight×reps) across all time
+//   lastWeight:   string   — heaviest set from last session (drives pre-fill)
+//   lastNudgeDate: string  — ISO timestamp of last overload nudge shown
+//   sessions: [{ date, weekKey, maxSetWeight, sessionVolume }]  — last 52 entries
+// }
 
 function parseWeight(w) {
   if (!w || w === '—' || (typeof w === 'string' && w.toLowerCase() === 'bw')) return null;
@@ -863,36 +882,95 @@ function parseWeight(w) {
   return isNaN(n) ? null : n;
 }
 
-// Saves the heaviest numeric set weight from a completed exercise.
-// This is the only grind:pr write in Phase 3.
-// Phase 4 (checkAndUpdatePR) extends this same record with full PR data.
+function todayFormatted() {
+  return new Date().toLocaleDateString('en-GB'); // "dd/MM/yyyy"
+}
+
+function loadPR(exerciseName) {
+  return storageGet('grind:pr', {})[exerciseName] ?? {};
+}
+
+function savePR(exerciseName, data) {
+  const all = storageGet('grind:pr', {});
+  all[exerciseName] = data;
+  storageSet('grind:pr', all);
+}
+
+// saveLastWeight is kept for reference; checkAndUpdatePR supersedes it for
+// non-BW exercises. BW exercises never write lastWeight (no weight to pre-fill).
 function saveLastWeight(exerciseName, sets) {
   const numericWeights = sets.map(s => parseWeight(s.weight)).filter(w => w !== null);
-  if (numericWeights.length === 0) return; // BW exercise — nothing to save
+  if (numericWeights.length === 0) return;
   const max = Math.max(...numericWeights);
-  const pr = storageGet('grind:pr', {});
-  if (!pr[exerciseName]) pr[exerciseName] = {};
-  pr[exerciseName].lastWeight = String(max);
-  storageSet('grind:pr', pr);
+  const all = storageGet('grind:pr', {});
+  if (!all[exerciseName]) all[exerciseName] = {};
+  all[exerciseName].lastWeight = String(max);
+  storageSet('grind:pr', all);
 }
 
-// Phase 1 stub — returns {} (no PRs)
-function checkAndUpdatePR(exerciseName, sets) {   // eslint-disable-line no-unused-vars
-  return {};
+// Checks for new weight/volume PRs and updates grind:pr.
+// Returns { weight?: { prev, new }, volume?: { prev, new } } or {}.
+// BW exercises (all null weights) return {} and are not tracked.
+function checkAndUpdatePR(exerciseName, sets) {
+  const numericWeights = sets.map(s => parseWeight(s.weight)).filter(w => w !== null);
+  if (numericWeights.length === 0) return {}; // BW exercise
+
+  const maxSetWeight  = Math.max(...numericWeights);
+  const sessionVolume = sets.reduce((sum, s) => {
+    return sum + (parseWeight(s.weight) ?? 0) * (parseInt(s.reps) || 0);
+  }, 0);
+
+  const history = loadPR(exerciseName);
+  const prs     = {};
+
+  if (maxSetWeight > (history.maxWeight || 0)) {
+    prs.weight       = { prev: history.maxWeight || 0, new: maxSetWeight };
+    history.maxWeight = maxSetWeight;
+  }
+  if (sessionVolume > (history.maxVolume || 0)) {
+    prs.volume        = { prev: history.maxVolume || 0, new: sessionVolume };
+    history.maxVolume = sessionVolume;
+  }
+
+  // Always update lastWeight and session log
+  history.lastWeight = String(maxSetWeight);
+  history.sessions   = [
+    ...(history.sessions || []),
+    { date: todayFormatted(), weekKey: getWeekKey(), maxSetWeight, sessionVolume },
+  ].slice(-52); // keep ~1 year
+
+  savePR(exerciseName, history);
+  return prs;
 }
 
-// Phase 1 stub — returns null (no nudges)
-function getOverloadNudge(exerciseName) {          // eslint-disable-line no-unused-vars
-  return null;
+// Returns a nudge if the user has done the same weight 3 times in a row
+// and hasn't been nudged for this exercise in the last 21 days.
+function getOverloadNudge(exerciseName) {
+  const h      = loadPR(exerciseName);
+  const recent = (h.sessions || []).slice(-3);
+  if (recent.length < 3) return null;
+
+  if (h.lastNudgeDate) {
+    const daysSince = (Date.now() - new Date(h.lastNudgeDate)) / 86400000;
+    if (daysSince < 21) return null;
+  }
+
+  const weights = recent.map(s => s.maxSetWeight).filter(Boolean);
+  if (weights.length < 3) return null; // recent BW sessions mixed in
+  if (!weights.every(w => w === weights[0])) return null;
+
+  return { currentWeight: weights[0], suggestedWeight: weights[0] + 2.5 };
 }
 
-// Phase 1 stub
-function markNudgeShown(exerciseName) {}           // eslint-disable-line no-unused-vars
+// Called when a nudge is displayed — resets the 21-day gate.
+function markNudgeShown(exerciseName) {
+  const h = loadPR(exerciseName);
+  h.lastNudgeDate = new Date().toISOString();
+  savePR(exerciseName, h);
+}
 
 function getLastWeight(exerciseName) {
-  const pr = storageGet('grind:pr', {});
-  const val = pr[exerciseName]?.lastWeight;
-  return val ?? null;
+  return loadPR(exerciseName).lastWeight ?? null;
 }
 
 // ── HISTORY ────────────────────────────────────────────────────────────────
@@ -1014,6 +1092,31 @@ function showSyncBar(msg, type = '') {
   bar.className    = `sync-bar show ${type}`;
   clearTimeout(showSyncBar._timer);
   showSyncBar._timer = setTimeout(() => bar.classList.remove('show'), 3000);
+}
+
+// ── PR FLASH ───────────────────────────────────────────────────────────────
+// Carries PR data from completeExercise() → renderSessionScreen().
+// Module-level rather than in session to avoid polluting persisted state.
+
+let lastCompletedPRs = null;
+
+function showPRFlash(prs) {
+  const el = document.getElementById('pr-flash');
+  if (!el) return;
+
+  const parts = [];
+  if (prs.weight) parts.push(`+${(prs.weight.new - prs.weight.prev).toFixed(1)}KG MAX`);
+  if (prs.volume) parts.push('VOLUME PR');
+  el.textContent  = `✦ ${parts.join(' · ')} ✦`;
+  el.style.display = 'block';
+
+  // Restart CSS animation by forcing reflow
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+
+  clearTimeout(showPRFlash._timer);
+  showPRFlash._timer = setTimeout(() => { el.style.display = 'none'; }, 2800);
 }
 
 // ── APP / ROUTER ────────────────────────────────────────────────────────────
@@ -1147,6 +1250,9 @@ function renderSessionScreen() {
   document.getElementById('sess-title').textContent = `DAY ${session.templateId}`;
   document.getElementById('sess-sub').textContent   =
     `${day.focus} · ${session.slots.length} exercises`;
+
+  // Show PR flash if the just-completed exercise set a new record
+  if (lastCompletedPRs) { showPRFlash(lastCompletedPRs); lastCompletedPRs = null; }
 
   updateProgress();
 
@@ -1405,17 +1511,54 @@ function runTests() {
     session = orig;
   }
 
-  // 6. checkAndUpdatePR stub — BW exercise
+  // 6. checkAndUpdatePR — BW exercise returns {}
   {
-    const prs = checkAndUpdatePR('Pull-Up', [{ weight: '—', reps: '8' }]);
-    assert(Object.keys(prs).length === 0,
-      'checkAndUpdatePR (stub) returns {} for BW exercise');
+    const prs = checkAndUpdatePR('Pull-Up', [{ weight: '—', reps: '8' }, { weight: '—', reps: '7' }]);
+    assert(Object.keys(prs).length === 0, 'checkAndUpdatePR returns {} for BW exercise');
+    assert(loadPR('Pull-Up').lastWeight === undefined, 'BW exercise does not write lastWeight');
   }
 
-  // 7. getOverloadNudge stub — returns null
+  // 7. checkAndUpdatePR — first session is always a weight PR (prev = 0)
   {
-    const nudge = getOverloadNudge('Bulgarian Split Squat');
-    assert(nudge === null, 'getOverloadNudge (stub) returns null');
+    // Clean slate for this exercise
+    const all = storageGet('grind:pr', {}); delete all['Test Curl']; storageSet('grind:pr', all);
+    const sets = [{ weight: '20', reps: '10' }, { weight: '22.5', reps: '8' }];
+    const prs  = checkAndUpdatePR('Test Curl', sets);
+    assert(prs.weight?.new === 22.5,   'First session sets maxWeight PR to 22.5');
+    assert(prs.volume?.new === 380,    `Volume PR = 20×10 + 22.5×8 = 380 (got ${prs.volume?.new})`);
+    assert(loadPR('Test Curl').lastWeight === '22.5', 'lastWeight written as string');
+    assert(loadPR('Test Curl').sessions?.length === 1, 'Session appended to history');
+
+    // Second session — same weights, no new PR
+    const prs2 = checkAndUpdatePR('Test Curl', sets);
+    assert(Object.keys(prs2).length === 0, 'Same weights second session = no PR');
+
+    // Third session — heavier weight, new PR
+    const prs3 = checkAndUpdatePR('Test Curl', [{ weight: '25', reps: '8' }]);
+    assert(prs3.weight?.new === 25, 'Heavier weight triggers weight PR');
+
+    // Cleanup
+    const pr2 = storageGet('grind:pr', {}); delete pr2['Test Curl']; storageSet('grind:pr', pr2);
+  }
+
+  // 8. getOverloadNudge — fires after 3 same-weight sessions, respects 21-day gate
+  {
+    const all2 = storageGet('grind:pr', {}); delete all2['Test Squat']; storageSet('grind:pr', all2);
+    // 3 sessions at 40kg
+    ['s1','s2','s3'].forEach(() =>
+      checkAndUpdatePR('Test Squat', [{ weight: '40', reps: '8' }, { weight: '40', reps: '8' }])
+    );
+    const nudge = getOverloadNudge('Test Squat');
+    assert(nudge !== null, 'Nudge fires after 3 sessions at same weight');
+    assert(nudge?.currentWeight === 40, `currentWeight is 40 (got ${nudge?.currentWeight})`);
+    assert(nudge?.suggestedWeight === 42.5, `suggestedWeight is 42.5 (got ${nudge?.suggestedWeight})`);
+
+    // After markNudgeShown, 21-day gate blocks it
+    markNudgeShown('Test Squat');
+    assert(getOverloadNudge('Test Squat') === null, '21-day gate blocks nudge after markNudgeShown');
+
+    // Cleanup
+    const pr3 = storageGet('grind:pr', {}); delete pr3['Test Squat']; storageSet('grind:pr', pr3);
   }
 
   // 8. saveLastWeight — stores max weight, skips BW

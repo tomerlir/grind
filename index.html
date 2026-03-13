@@ -355,6 +355,39 @@
       padding-left: 10px;
       line-height: 1.5;
     }
+    .overload-nudge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--border-gold);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--gold);
+      padding: 5px 10px;
+      margin-bottom: 12px;
+    }
+    /* PR flash — appears on Session screen after a PR exercise */
+    .pr-flash {
+      width: 100%;
+      background: var(--gold-bright);
+      color: #000;
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 3px;
+      text-align: center;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+    }
+    @keyframes prFlash {
+      0%   { opacity: 0; transform: scale(0.92); }
+      12%  { opacity: 1; transform: scale(1); }
+      70%  { opacity: 1; }
+      100% { opacity: 0; transform: scale(1); }
+    }
+    .pr-flash { animation: prFlash 2.8s ease forwards; }
 
     /* Rest timer */
     .rest-timer {
@@ -622,6 +655,7 @@
   </div>
 
   <div class="spin-zone">
+    <div id="pr-flash" style="display:none"></div>
     <div class="slot-label" id="slot-label">READY TO SPIN</div>
     <div class="slot-machine">
       <div id="slot-display">?</div>
@@ -637,6 +671,7 @@
     <div class="exercise-tag"  id="ex-tag">LOWER · QUAD</div>
     <div class="exercise-name" id="ex-name">BULGARIAN SPLIT SQUAT</div>
     <div class="exercise-meta" id="ex-meta">4 sets · 6–10 · 2 min rest</div>
+    <div class="overload-nudge" id="overload-nudge" style="display:none"></div>
     <div class="exercise-tip"  id="ex-tip"></div>
   </div>
 
