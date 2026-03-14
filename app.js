@@ -1011,24 +1011,54 @@ function renderHistory() {
 }
 
 function renderHistoryCard(s, i) {
-  const dayName = DAYS[s.templateId]?.name ?? `Day ${s.templateId}`;
-  const prEntries = s.entries?.filter(e => Object.keys(e.prs || {}).length > 0) ?? [];
+  const day     = DAYS[s.templateId];
+  const dayName = day?.name ?? `Day ${s.templateId}`;
+  const entries = s.entries ?? [];
+
+  // Session total volume (sum across all exercises, BW = 0)
+  const sessionVolume = entries.reduce((total, e) =>
+    total + e.sets.reduce((sum, set) =>
+      sum + (parseWeight(set.weight) ?? 0) * (parseInt(set.reps) || 0), 0
+    ), 0);
+
+  const prEntries = entries.filter(e => Object.keys(e.prs || {}).length > 0);
   const prLine    = prEntries.length > 0
     ? `<div class="history-card-prs">✦ PRs: ${prEntries.map(e => e.exerciseName).join(', ')}</div>`
     : '';
-  const detail = (s.entries ?? []).map(e => `
-    <div class="history-entry">
-      <div><span class="history-entry-name">${e.exerciseName}</span>
-           &nbsp;<span class="history-entry-cat">${e.categoryLabel}</span></div>
-      <div class="history-entry-sets">${e.sets.map((set, si) =>
-        `Set ${si + 1}: ${set.weight}kg × ${set.reps}`).join('  |  ')}</div>
-    </div>`).join('');
+
+  const volStat = sessionVolume > 0 ? ` · ${sessionVolume.toLocaleString()}kg vol` : '';
+
+  const detail = entries.map(e => {
+    const exVolume = e.sets.reduce((sum, set) =>
+      sum + (parseWeight(set.weight) ?? 0) * (parseInt(set.reps) || 0), 0);
+    const hasPR    = Object.keys(e.prs || {}).length > 0;
+
+    const chips = e.sets.map((set, si) => {
+      const wStr = parseWeight(set.weight) !== null ? `${set.weight}kg` : 'BW';
+      return `<span class="history-set-chip">${si + 1}: ${wStr} × ${set.reps}</span>`;
+    }).join('');
+
+    const volLine = exVolume > 0
+      ? `<div class="history-entry-vol">${exVolume.toLocaleString()}kg vol${hasPR ? '<span class="history-pr-tag">✦ PR</span>' : ''}</div>`
+      : (hasPR ? `<div class="history-entry-vol"><span class="history-pr-tag">✦ PR</span></div>` : '');
+
+    return `
+      <div class="history-entry">
+        <div class="history-entry-header">
+          <span class="history-entry-name">${e.exerciseName}</span>
+          <span class="history-entry-cat">${e.categoryLabel}</span>
+        </div>
+        <div class="history-entry-sets">${chips}</div>
+        ${volLine}
+      </div>`;
+  }).join('');
 
   return `
     <div class="history-card fadein" data-history-idx="${i}">
       <div class="history-card-meta">${s.date} · ${dayName} · ${s.durationMinutes}m</div>
-      <div class="history-card-stats">${s.entries?.length ?? '?'} exercises · ${s.totalSets} sets</div>
+      <div class="history-card-stats">${entries.length} exercises · ${s.totalSets} sets${volStat}</div>
       ${prLine}
+      <div class="history-expand-hint">details</div>
       <div class="history-card-detail">${detail}</div>
     </div>`;
 }

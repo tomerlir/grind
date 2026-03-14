@@ -556,10 +556,44 @@
       display: none;
     }
     .history-card.expanded .history-card-detail { display: block; }
-    .history-entry        { margin-bottom: 10px; }
+    .history-entry        { margin-bottom: 12px; }
+    .history-entry:last-child { margin-bottom: 0; }
+    .history-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
     .history-entry-name   { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text); text-transform: uppercase; }
-    .history-entry-cat    { font-size: 11px; color: var(--gold); display: inline; }
-    .history-entry-sets   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .history-entry-cat    { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--gold); text-transform: uppercase; white-space: nowrap; }
+    /* Set chips — one per set, flex-wrapped */
+    .history-entry-sets   { display: flex; flex-wrap: wrap; gap: 5px; }
+    .history-set-chip     {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+    }
+    .history-entry-vol    { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 5px; }
+    .history-pr-tag       { color: var(--gold-bright); margin-left: 4px; }
+    /* Expand affordance */
+    .history-expand-hint {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted2);
+      text-transform: uppercase;
+      text-align: right;
+      margin-top: 8px;
+      transition: color 0.15s;
+    }
+    .history-card.expanded .history-expand-hint { color: var(--neon-dim); }
+    .history-expand-hint::after         { content: '  ↓'; }
+    .history-card.expanded .history-expand-hint::after { content: '  ↑'; }
     .history-empty {
       flex: 1;
       display: flex;
