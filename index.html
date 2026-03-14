@@ -4,43 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>GRIND — Workout Roulette</title>
-  <!-- PWA manifest & iOS meta tags -->
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GRIND">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <meta name="theme-color" content="#c8f135">
-
-  <!-- Fonts — cached by SW after first online visit -->
+  <meta name="theme-color" content="#0B0914">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* ── DESIGN TOKENS ─────────────────────────────────────────────── */
+    /* ── DESIGN TOKENS — ZEUS SLOTS ──────────────────────────────── */
     :root {
-      --bg:             #080604;
-      --surface:        #100D09;
-      --surface2:       #1A1510;
-      --border:         #2A2218;
-      --border-gold:    #3D3015;
-      --neon:           #c8f135;
-      --neon-dim:       #6B8018;
-      --gold:           #C9A84C;
-      --gold-bright:    #F0C843;
+      --bg:             #0B0914;
+      --bg2:            #100B1C;
+      --surface:        #1A1028;
+      --surface2:       #221535;
+      --reel-bg:        #06040E;
+      --border:         #2D1F4E;
+      --border-gold:    #3D2A06;
+      --gold:           #F5C842;
+      --gold2:          #C8960C;
+      --gold3:          #3D2A06;
+      --gold-glow:      rgba(245, 200, 66, 0.45);
+      --chrome:         #B8A070;
+      --text:           #FFFFFF;
+      --text2:          #D0C0E8;
+      --muted:          #7060A0;
+      --muted2:         #3D2A6A;
+      --purple:         #5B2A9E;
+      --purple-dim:     #2A1050;
       --crimson:        #8B1A1A;
       --crimson-bright: #C0392B;
-      --text:           #F0E6D3;
-      --muted:          #6B5F4E;
-      --muted2:         #3D3328;
+      --neon:           #c8f135;  /* kept for PRs only */
       --font-display:   'Bebas Neue', sans-serif;
       --font-body:      'DM Sans', sans-serif;
       --font-mono:      'DM Mono', monospace;
       --radius:         10px;
       --radius-card:    16px;
+      --reel-h:         64px;
     }
 
-    /* ── RESET ─────────────────────────────────────────────────────── */
+    /* ── RESET ───────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { height: 100%; }
     body {
@@ -53,30 +58,34 @@
     }
     button { font-family: inherit; cursor: pointer; }
 
-    /* ── SCREENS ───────────────────────────────────────────────────── */
-    .screen {
-      display: none;
-      min-height: 100vh;
-      padding: 24px 20px 48px;
-      max-width: 480px;
-      margin: 0 auto;
-      flex-direction: column;
+    /* Grain texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
     }
+
+    /* ── SCREENS ─────────────────────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; padding: 20px 18px 48px; max-width: 480px; margin: 0 auto; flex-direction: column; }
     .screen.active { display: flex; }
 
-    /* ── HOME ──────────────────────────────────────────────────────── */
-    .home-header { text-align: center; padding: 28px 0 24px; }
+    /* ── DAY PICKER ──────────────────────────────────────────────── */
+    .day-picker-header { text-align: center; padding: 28px 0 20px; }
     .logo {
       font-family: var(--font-display);
       font-size: 64px;
-      color: var(--neon);
+      color: var(--gold);
       letter-spacing: 8px;
       line-height: 1;
+      text-shadow: 0 0 20px rgba(245,200,66,0.4), 0 0 60px rgba(245,200,66,0.12);
     }
     .logo-sub {
       font-family: var(--font-mono);
       font-size: 11px;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       color: var(--muted);
       text-transform: uppercase;
       margin-top: 6px;
@@ -84,7 +93,7 @@
 
     .resume-banner {
       background: var(--surface);
-      border: 1px solid var(--neon);
+      border: 1px solid var(--gold2);
       border-radius: var(--radius);
       padding: 12px 16px;
       display: flex;
@@ -92,17 +101,16 @@
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 24px;
+      box-shadow: 0 0 16px rgba(245,200,66,0.1);
     }
-    .resume-text {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 1.5px;
-      color: var(--neon);
-      text-transform: uppercase;
-      flex: 1;
+    @keyframes goldPulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(245,200,66,0.15); }
+      50%       { box-shadow: 0 0 20px rgba(245,200,66,0.35); }
     }
+    .resume-banner { animation: goldPulse 2.8s ease-in-out infinite; }
+    .resume-text { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--gold2); text-transform: uppercase; flex: 1; }
     .resume-btn {
-      background: var(--neon);
+      background: var(--gold);
       color: #000;
       border: none;
       border-radius: 6px;
@@ -123,6 +131,7 @@
       text-transform: uppercase;
       margin-bottom: 12px;
     }
+    .section-label::before { content: '⚡  '; color: var(--gold2); opacity: 0.6; }
 
     /* Week strip */
     .week-strip { display: flex; gap: 6px; margin-bottom: 28px; }
@@ -139,86 +148,55 @@
       font-family: var(--font-mono);
       font-size: 11px;
       color: var(--muted);
+      box-shadow: 0 0 0 2px var(--bg2), 0 0 0 4px var(--border);
     }
-    .week-day.today    { border-color: var(--neon); color: var(--neon); }
-    .week-day .dot     { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
-    .week-day.done .dot { background: var(--gold); }
+    .week-day.today { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 2px var(--bg2), 0 0 0 4px var(--gold), 0 0 8px rgba(245,200,66,0.2); }
+    .week-day .dot  { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+    .week-day.done  { box-shadow: 0 0 0 2px var(--bg2), 0 0 0 4px var(--gold2); }
+    .week-day.done .dot { background: var(--gold2); }
 
-    /* Day cards */
-    .day-cards { display: flex; flex-direction: column; gap: 12px; }
-    .day-card {
-      background: var(--surface);
-      border: 1px solid var(--border-gold);
+    /* Day picker cards */
+    .day-picker-cards { display: flex; flex-direction: column; gap: 12px; }
+    .day-picker-card {
+      background: linear-gradient(135deg, #1E1430 0%, #14102A 100%);
+      border: 1px solid var(--gold3);
       border-radius: var(--radius-card);
-      padding: 18px;
+      padding: 18px 20px;
       cursor: pointer;
-      transition: border-color 0.2s, opacity 0.2s;
       position: relative;
-      user-select: none;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.1s, box-shadow 0.2s;
     }
-    .day-card:active { border-color: var(--gold); }
-    .day-card.completed { opacity: 0.45; }
-    .day-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 4px;
+    .day-picker-card:active { transform: scale(0.984); }
+    .day-picker-card.today-card {
+      border-color: var(--gold2);
+      box-shadow: 0 0 24px rgba(245,200,66,0.15), inset 0 1px 0 rgba(245,200,66,0.08);
     }
-    .day-letter { font-family: var(--font-display); font-size: 44px; color: var(--gold); line-height: 1; }
-    .day-done-badge {
-      display: none;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--gold);
-      background: rgba(201,168,76,0.1);
-      border: 1px solid var(--gold);
-      border-radius: 4px;
-      padding: 3px 8px;
+    .day-picker-card.completed { opacity: 0.38; }
+    /* Decorative suit watermark per day */
+    .day-picker-card[data-day="A"]::after { content: '♠'; }
+    .day-picker-card[data-day="B"]::after { content: '♥'; }
+    .day-picker-card[data-day="C"]::after { content: '♦'; }
+    .day-picker-card::after {
+      position: absolute;
+      bottom: 8px; right: 14px;
+      font-size: 64px;
+      color: rgba(245,200,66,0.06);
+      pointer-events: none;
+      line-height: 1;
     }
-    .day-card.completed .day-done-badge { display: block; }
-    .day-name  { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; margin-bottom: 3px; }
-    .day-focus { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    .day-slots { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-    .slot-tag {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: var(--muted2);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 3px 7px;
-    }
-    .day-cta {
-      font-family: var(--font-display);
-      font-size: 16px;
-      letter-spacing: 2px;
-      color: var(--gold);
-      text-align: right;
-    }
-    /* Today's strength day gets a neon accent border */
-    .day-card.today-card {
-      border-color: var(--neon);
-      box-shadow: 0 0 0 1px var(--neon-dim);
-    }
-    .day-card.today-card .day-cta { color: var(--neon); }
-    .day-weekday-label {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-    .day-card.today-card .day-weekday-label { color: var(--neon); }
+    .day-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+    .day-card-letter { font-family: var(--font-display); font-size: 48px; color: var(--gold); line-height: 1; }
+    .day-card-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .day-card-weekday { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .day-card-check   { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; color: var(--gold); background: rgba(245,200,66,0.1); border: 1px solid var(--gold3); border-radius: 4px; padding: 2px 8px; display: none; }
+    .day-picker-card.completed .day-card-check { display: block; }
+    .day-card-name   { font-family: var(--font-display); font-size: 22px; letter-spacing: 2px; color: var(--text2); margin-bottom: 3px; }
+    .day-card-focus  { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .day-card-cta    { font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; color: var(--gold2); text-align: right; }
+    .day-picker-card.today-card .day-card-cta { color: var(--gold); }
 
-    .home-footer {
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      padding-top: 24px;
-      margin-top: auto;
-    }
+    .day-picker-footer { display: flex; justify-content: flex-start; padding-top: 24px; margin-top: auto; }
     .btn-ghost {
       background: none;
       border: 1px solid var(--border);
@@ -233,8 +211,8 @@
     }
     .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
 
-    /* ── SESSION ───────────────────────────────────────────────────── */
-    .session-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    /* ── SLOT MACHINE SCREEN ─────────────────────────────────────── */
+    .slot-machine-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
     .back-btn {
       background: none;
       border: 1px solid var(--border);
@@ -246,307 +224,175 @@
       flex-shrink: 0;
       transition: all 0.15s;
     }
-    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
-    .session-title { font-family: var(--font-display); font-size: 28px; color: var(--gold); letter-spacing: 3px; }
-    .session-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .back-btn:hover { border-color: var(--gold2); color: var(--gold); }
+    .slot-day-title { font-family: var(--font-display); font-size: 32px; color: var(--gold); letter-spacing: 4px; }
+    .slot-day-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    .progress-bar-wrap {
-      height: 3px;
-      background: var(--surface2);
-      border-radius: 2px;
-      margin-bottom: 36px;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--gold);
-      border-radius: 2px;
-      transition: width 0.4s ease;
-    }
-
-    .spin-zone {
+    .slot-machine-frame {
+      background: linear-gradient(160deg, #1A1028 0%, #0B0914 100%);
+      border: 2px solid var(--gold2);
+      border-radius: 18px;
+      padding: 18px 14px 22px;
+      box-shadow:
+        0 0 0 1px rgba(245,200,66,0.08),
+        0 0 40px rgba(0,0,0,0.8),
+        inset 0 0 60px rgba(0,0,0,0.6);
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
     }
-    .slot-label {
+    .slot-frame-badge {
       font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 3px;
-      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: var(--gold2);
+      text-align: center;
       text-transform: uppercase;
+      margin-bottom: 16px;
+      opacity: 0.7;
     }
-    .slot-machine {
-      width: 100%;
-      background: var(--surface2);
-      border: 2px solid var(--gold);
-      border-radius: 14px;
-      padding: 36px 24px;
-      text-align: center;
-      min-height: 130px;
+
+    /* Reel rows — vertical stack */
+    .reels-container { display: flex; flex-direction: column; gap: 6px; }
+    .reel-wrap {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 10px;
-      box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+      transition: opacity 0.2s;
     }
-    #slot-display {
-      font-family: var(--font-display);
-      font-size: 30px;
-      letter-spacing: 2px;
-      color: var(--muted2);
-      transition: color 0.15s;
-      line-height: 1.2;
-    }
-    #slot-display.landed { color: var(--neon); }
-    @keyframes slotLand {
-      0%   { transform: scale(1.06); }
-      100% { transform: scale(1); }
-    }
-    #slot-display.landed { animation: slotLand 0.18s ease-out forwards; }
-
-    /* ═══════════════════════════════════════════════════════════════
-       PHASE 7 — CASINO POLISH
-       All rules here are purely additive — enhancing elements already
-       styled above. Nothing is overridden, only layered on top.
-    ═══════════════════════════════════════════════════════════════ */
-
-    /* Subtle film-grain texture over the entire background.
-       pointer-events:none so it never blocks taps.
-       opacity × SVG inner opacity ≈ 1.6% — barely visible but adds depth. */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 999;
-      opacity: 0.4;
-    }
-
-    /* GRIND logo — neon sign glow */
-    .logo {
-      text-shadow:
-        0 0 16px rgba(200,241,53,0.6),
-        0 0 48px rgba(200,241,53,0.2),
-        0 0 100px rgba(200,241,53,0.05);
-    }
-
-    /* Suit divider between logo and week strip */
-    .suit-divider {
-      text-align: center;
-      color: var(--muted2);
-      font-size: 13px;
-      letter-spacing: 8px;
-      margin: 2px 0 8px;
-      user-select: none;
-    }
-
-    /* Section label — gold leading accent */
-    .section-label::before { content: '✦  '; color: var(--gold); opacity: 0.5; }
-
-    /* ── Week strip — casino chip double-ring ── */
-    .week-day {
-      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border);
-    }
-    .week-day.today {
-      box-shadow:
-        0 0 0 2px var(--surface),
-        0 0 0 4px var(--neon),
-        0 0 8px rgba(200,241,53,0.2);
-    }
-    .week-day.done {
-      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--gold);
-    }
-
-    /* ── Day cards — suit watermark & press feedback ── */
-    .day-card[data-day="A"]::after { content: '♠'; }
-    .day-card[data-day="B"]::after { content: '♥'; }
-    .day-card[data-day="C"]::after { content: '♦'; }
-    .day-card::after {
-      position: absolute;
-      bottom: 10px; right: 14px;
-      font-size: 56px;
-      color: rgba(201,168,76,0.07);
-      pointer-events: none;
-      line-height: 1;
-    }
-    .day-card          { transition: transform 0.1s, border-color 0.2s; }
-    .day-card:active   { transform: scale(0.985); }
-    .day-card.today-card {
-      box-shadow: 0 0 16px rgba(200,241,53,0.12);
-    }
-
-    /* ── Slot machine — chrome frame & outer glow ── */
-    .slot-machine {
-      box-shadow:
-        0 0 0 1px rgba(201,168,76,0.2),
-        0 0 32px rgba(0,0,0,0.7),
-        inset 0 0 48px rgba(0,0,0,0.8);
-    }
-    /* Corner screws */
-    .slot-machine::before,
-    .slot-machine::after {
-      content: '✦';
-      position: absolute;
-      color: var(--gold);
-      font-size: 10px;
-      opacity: 0.55;
-      top: 9px;
-      line-height: 1;
-    }
-    .slot-machine::before { left: 12px; }
-    .slot-machine::after  { right: 12px; }
-
-    /* Slot display — neon glow on landing */
-    #slot-display.landed {
-      text-shadow:
-        0 0 14px rgba(200,241,53,0.7),
-        0 0 36px rgba(200,241,53,0.2);
-    }
-
-    /* Spin button — press feedback & hover glow */
-    .spin-btn { transition: all 0.15s; }
-    .spin-btn:hover:not(:disabled) {
-      box-shadow: 0 0 16px rgba(201,168,76,0.35);
-    }
-    .spin-btn:active:not(:disabled) { transform: scale(0.97); }
-
-    /* Progress bar — gold glow */
-    .progress-bar-fill { box-shadow: 0 0 6px rgba(201,168,76,0.4); }
-
-    /* ── Exercise screen ── */
-    /* Gold left-bar accent on exercise header */
-    .exercise-header {
-      border-left: 3px solid var(--gold);
-      padding-left: 14px;
-    }
-
-    /* ── Action buttons ── */
-    .complete-ex-btn { transition: all 0.15s; }
-    .complete-ex-btn:active:not(:disabled) { transform: scale(0.98); }
-    .done-back-btn   { transition: opacity 0.15s, transform 0.1s; }
-    .done-back-btn:active   { transform: scale(0.98); }
-
-    /* ── Done screen — JACKPOT. neon glow ── */
-    .done-title {
-      text-shadow:
-        0 0 20px rgba(200,241,53,0.5),
-        0 0 60px rgba(200,241,53,0.15);
-    }
-    .done-stat {
-      transition: box-shadow 0.3s;
-      box-shadow: inset 0 1px 0 rgba(201,168,76,0.08);
-    }
-
-    /* PR flash — dramatic gold glow */
-    .pr-flash {
-      box-shadow: 0 0 24px rgba(240,200,67,0.5), 0 0 60px rgba(240,200,67,0.15);
-      text-shadow: 0 0 8px rgba(0,0,0,0.2);
-    }
-
-    /* ── History cards — subtle press ── */
-    .history-card { transition: border-color 0.15s, transform 0.1s; }
-    .history-card:active { transform: scale(0.99); }
-
-    /* Resume banner — slow neon pulse to draw attention */
-    @keyframes neonPulse {
-      0%, 100% { box-shadow: 0 0 0 1px rgba(200,241,53,0.2); }
-      50%       { box-shadow: 0 0 10px rgba(200,241,53,0.4), 0 0 24px rgba(200,241,53,0.1); }
-    }
-    .resume-banner { animation: neonPulse 2.8s ease-in-out infinite; }
-    .slot-sets-info {
+    .reel-cat {
+      width: 82px;
+      flex-shrink: 0;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 8px;
       letter-spacing: 1.5px;
       color: var(--muted);
       text-transform: uppercase;
-      min-height: 16px;
+      line-height: 1.3;
+      text-align: right;
+      transition: color 0.3s;
     }
-    .spin-btn {
+    .reel-window {
+      flex: 1;
+      height: var(--reel-h);
+      overflow: hidden;
+      background: var(--reel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s, filter 0.25s;
+    }
+    /* Top/bottom gradient masks for scroll-off effect */
+    .reel-window::before,
+    .reel-window::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 18px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .reel-window::before { top: 0; background: linear-gradient(to bottom, var(--reel-bg), transparent); }
+    .reel-window::after  { bottom: 0; background: linear-gradient(to top, var(--reel-bg), transparent); }
+    .reel-drum {
+      will-change: transform;
+      transform: translateY(0);
+      /* transition applied dynamically per reel */
+    }
+    .reel-item {
+      height: var(--reel-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+    /* Spinning state — blur the drum */
+    .reel-wrap.spinning .reel-window {
+      filter: blur(1.5px);
+    }
+    /* Landed state — gold border + glow, unblur */
+    .reel-wrap.landed .reel-window {
+      border-color: var(--gold);
+      box-shadow: 0 0 14px rgba(245,200,66,0.5);
+      filter: none;
+    }
+    .reel-wrap.landed .reel-cat { color: var(--gold2); }
+    .reel-wrap.landed .reel-item { color: var(--gold); }
+    /* Win line — centre stripe visible on landed reels */
+    .reel-wrap.landed .reel-window::before,
+    .reel-wrap.landed .reel-window::after { display: none; }
+
+    /* START WORKOUT button */
+    .start-workout-btn {
       width: 100%;
-      padding: 18px;
-      background: var(--surface);
-      border: 2px solid var(--gold);
-      color: var(--gold);
+      padding: 20px;
+      background: var(--gold);
+      color: #000;
+      border: none;
       border-radius: var(--radius);
       font-family: var(--font-display);
-      font-size: 26px;
-      letter-spacing: 3px;
-      transition: all 0.15s;
+      font-size: 28px;
+      letter-spacing: 4px;
+      margin-top: 18px;
+      transition: opacity 0.15s, transform 0.1s;
+      box-shadow: 0 0 20px rgba(245,200,66,0.3);
     }
-    .spin-btn:hover:not(:disabled) { background: var(--gold); color: #000; }
-    .spin-btn.spinning { border-color: var(--neon); color: var(--neon); }
-    .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .start-workout-btn:hover { opacity: 0.9; }
+    .start-workout-btn:active { transform: scale(0.98); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .start-workout-btn.appearing { animation: fadeUp 0.35s ease forwards; }
 
-    /* ── EXERCISE ──────────────────────────────────────────────────── */
-    .exercise-header { margin-bottom: 20px; }
-    .exercise-tag {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 3px;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin-bottom: 6px;
+    /* ── EXERCISE SCREEN ─────────────────────────────────────────── */
+    /* Progress dots strip */
+    .exercise-progress-strip {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 0 16px;
     }
-    .exercise-name {
-      font-family: var(--font-display);
-      font-size: 40px;
-      letter-spacing: 2px;
-      line-height: 1.1;
-      margin-bottom: 4px;
+    .progress-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted2);
+      transition: background 0.25s, transform 0.25s;
     }
-    .exercise-meta {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 1px;
-      margin-bottom: 12px;
+    .progress-dot.done-dot   { background: var(--gold2); }
+    .progress-dot.active-dot { background: var(--gold); transform: scale(1.5); box-shadow: 0 0 6px rgba(245,200,66,0.5); }
+
+    /* Exercise header */
+    .exercise-header {
+      border-left: 3px solid var(--gold2);
+      padding-left: 14px;
+      margin-bottom: 18px;
     }
-    .exercise-tip {
-      font-size: 13px;
-      color: var(--muted);
-      border-left: 2px solid var(--neon);
-      padding-left: 10px;
-      line-height: 1.5;
-    }
+    .exercise-tag  { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: var(--gold2); text-transform: uppercase; margin-bottom: 6px; }
+    .exercise-name { font-family: var(--font-display); font-size: 40px; letter-spacing: 2px; line-height: 1.1; margin-bottom: 4px; }
+    .exercise-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; }
+    .exercise-tip  { font-size: 13px; color: var(--muted); border-left: 2px solid var(--purple); padding-left: 10px; line-height: 1.5; }
+
     .overload-nudge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(201,168,76,0.1);
-      border: 1px solid var(--border-gold);
+      background: rgba(245,200,66,0.08);
+      border: 1px solid var(--gold3);
       border-radius: 6px;
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 1.5px;
-      color: var(--gold);
+      color: var(--gold2);
       padding: 5px 10px;
       margin-bottom: 12px;
     }
-    /* PR flash — appears on Session screen after a PR exercise */
-    .pr-flash {
-      width: 100%;
-      background: var(--gold-bright);
-      color: #000;
-      font-family: var(--font-display);
-      font-size: 20px;
-      letter-spacing: 3px;
-      text-align: center;
-      padding: 10px 20px;
-      border-radius: var(--radius);
-    }
-    @keyframes prFlash {
-      0%   { opacity: 0; transform: scale(0.92); }
-      12%  { opacity: 1; transform: scale(1); }
-      70%  { opacity: 1; }
-      100% { opacity: 0; transform: scale(1); }
-    }
-    .pr-flash { animation: prFlash 2.8s ease forwards; }
 
     /* Rest timer */
     .rest-timer {
@@ -558,36 +404,27 @@
       margin-bottom: 16px;
       display: none;
     }
-    .rest-timer.active  { display: block; border-color: var(--neon-dim); }
+    .rest-timer.active  { display: block; border-color: var(--gold3); }
     .rest-label         { font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
-    .rest-countdown     { font-family: var(--font-display); font-size: 52px; color: var(--neon); line-height: 1; }
+    .rest-countdown     { font-family: var(--font-display); font-size: 52px; color: var(--gold); line-height: 1; }
     .rest-skip {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      padding: 5px 14px;
-      border-radius: 5px;
-      margin-top: 8px;
-      transition: all 0.15s;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px;
+      padding: 5px 14px; border-radius: 5px; margin-top: 8px; transition: all 0.15s;
     }
     .rest-skip:hover { border-color: var(--muted); color: var(--text); }
 
     /* Set rows */
     .sets-container { display: flex; flex-direction: column; gap: 8px; flex: 1; margin-bottom: 16px; }
     .set-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 10px 12px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       transition: border-color 0.15s, opacity 0.15s;
     }
-    .set-row.active-set { border-color: var(--gold); }
+    .set-row.active-set { border-color: var(--gold2); }
     .set-row.done-set   { opacity: 0.45; }
     .set-num { font-family: var(--font-mono); font-size: 10px; color: var(--muted); width: 18px; text-align: center; flex-shrink: 0; }
     .input-group { flex: 1; display: flex; flex-direction: column; gap: 2px; }
@@ -598,80 +435,90 @@
       border-radius: 6px;
       color: var(--text);
       font-family: var(--font-mono);
-      font-size: 18px;
-      font-weight: 500;
-      padding: 5px 8px;
-      width: 100%;
-      text-align: center;
+      font-size: 18px; font-weight: 500;
+      padding: 5px 8px; width: 100%; text-align: center;
       transition: border-color 0.15s;
-      -webkit-appearance: none;
-      appearance: none;
+      -webkit-appearance: none; appearance: none;
     }
-    .set-input:focus            { outline: none; border-color: var(--gold); }
-    .set-input:disabled         { opacity: 0.4; }
-    .set-input::placeholder     { color: var(--muted2); }
-    /* Hide number spinners */
+    .set-input:focus { outline: none; border-color: var(--gold2); }
+    .set-input:disabled { opacity: 0.4; }
+    .set-input::placeholder { color: var(--muted2); }
     .set-input::-webkit-outer-spin-button,
     .set-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .set-input[type=number]     { -moz-appearance: textfield; }
-
+    .set-input[type=number] { -moz-appearance: textfield; }
     .set-done-btn {
       width: 36px; height: 36px;
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 15px;
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 15px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: all 0.15s;
+      flex-shrink: 0; transition: all 0.15s;
     }
-    .set-done-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    .set-done-btn:hover:not(:disabled) { border-color: var(--gold2); color: var(--gold); }
     .set-done-btn.confirmed { background: var(--gold); border-color: var(--gold); color: #000; }
 
+    /* DONE button */
     .complete-ex-btn {
-      width: 100%;
-      padding: 16px;
+      width: 100%; padding: 16px;
       background: none;
-      border: 2px solid var(--neon);
-      color: var(--neon);
+      border: 2px solid var(--gold2);
+      color: var(--gold);
       border-radius: var(--radius);
       font-family: var(--font-display);
-      font-size: 22px;
-      letter-spacing: 2px;
-      transition: all 0.15s;
-      margin-top: auto;
+      font-size: 22px; letter-spacing: 2px;
+      transition: all 0.15s; margin-top: auto;
     }
-    .complete-ex-btn:hover:not(:disabled) { background: rgba(200,241,53,0.08); }
+    .complete-ex-btn:hover:not(:disabled) { background: rgba(245,200,66,0.08); }
     .complete-ex-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .complete-ex-btn:active:not(:disabled) { transform: scale(0.98); }
 
-    /* ── DONE ──────────────────────────────────────────────────────── */
-    .done-screen {
-      flex: 1;
-      display: flex;
+    /* PR overlay — covers exercise screen briefly after a PR */
+    .pr-overlay {
+      position: fixed; inset: 0;
+      background: rgba(6, 4, 14, 0.94);
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 32px 0;
+      gap: 12px;
+      z-index: 200;
+      pointer-events: none;
     }
-    .done-icon    { font-size: 56px; margin-bottom: 16px; }
-    .done-title   { font-family: var(--font-display); font-size: 72px; color: var(--neon); letter-spacing: 4px; line-height: 1; margin-bottom: 8px; }
-    .done-sub     { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 28px; }
-    .done-stats   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px; }
-    .done-stat    { background: var(--surface); border: 1px solid var(--border-gold); border-radius: var(--radius); padding: 14px 8px; }
+    .pr-overlay.show { display: flex; }
+    @keyframes prReveal {
+      0%   { opacity: 0; transform: scale(0.88); }
+      20%  { opacity: 1; transform: scale(1.04); }
+      35%  { transform: scale(1); }
+      75%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .pr-overlay-inner {
+      text-align: center;
+      animation: prReveal 1.6s ease forwards;
+    }
+    .pr-overlay-label {
+      font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 4px;
+      color: var(--gold2); text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .pr-overlay-text {
+      font-family: var(--font-display);
+      font-size: 32px; letter-spacing: 3px;
+      color: var(--gold);
+      text-shadow: 0 0 24px rgba(245,200,66,0.6);
+    }
+
+    /* ── DONE SCREEN ─────────────────────────────────────────────── */
+    .done-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 0; }
+    .done-icon   { font-size: 56px; margin-bottom: 14px; }
+    .done-title  { font-family: var(--font-display); font-size: 72px; color: var(--gold); letter-spacing: 4px; line-height: 1; margin-bottom: 8px; text-shadow: 0 0 24px rgba(245,200,66,0.4), 0 0 60px rgba(245,200,66,0.12); }
+    .done-sub    { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 28px; }
+    .done-stats  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px; }
+    .done-stat   { background: var(--surface); border: 1px solid var(--gold3); border-radius: var(--radius); padding: 14px 8px; box-shadow: inset 0 1px 0 rgba(245,200,66,0.06); }
     .done-stat-val   { font-family: var(--font-display); font-size: 36px; color: var(--gold); line-height: 1; }
     .done-stat-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
-    .done-section-block {
-      width: 100%;
-      text-align: left;
-      margin-bottom: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border-gold);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-    }
-    .done-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+    .done-section-block { width: 100%; text-align: left; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--gold3); border-radius: var(--radius); padding: 12px 16px; }
+    .done-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 3px; color: var(--gold2); text-transform: uppercase; margin-bottom: 8px; }
     .done-pr-item  { font-size: 13px; color: var(--text); padding: 4px 0; border-bottom: 1px solid var(--border); }
     .done-pr-item:last-child { border-bottom: none; }
     .done-sync { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 24px; transition: color 0.3s; }
@@ -679,152 +526,86 @@
     .done-sync.success { color: var(--neon); }
     .done-sync.error   { color: var(--crimson-bright); }
     .done-back-btn {
-      width: 100%;
-      padding: 16px;
-      background: var(--gold);
-      color: #000;
-      border: none;
+      width: 100%; padding: 16px;
+      background: var(--gold); color: #000; border: none;
       border-radius: var(--radius);
-      font-family: var(--font-display);
-      font-size: 22px;
-      letter-spacing: 2px;
-      transition: opacity 0.15s;
+      font-family: var(--font-display); font-size: 22px; letter-spacing: 2px;
+      transition: opacity 0.15s, transform 0.1s;
     }
-    .done-back-btn:hover { opacity: 0.85; }
+    .done-back-btn:hover   { opacity: 0.88; }
+    .done-back-btn:active  { transform: scale(0.98); }
 
-    /* ── HISTORY ───────────────────────────────────────────────────── */
+    /* ── HISTORY SCREEN ──────────────────────────────────────────── */
     .history-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
     .history-title  { font-family: var(--font-display); font-size: 32px; color: var(--gold); letter-spacing: 3px; }
     .history-list   { display: flex; flex-direction: column; gap: 10px; flex: 1; }
     .history-card {
       background: var(--surface);
-      border: 1px solid var(--border-gold);
+      border: 1px solid var(--gold3);
       border-radius: var(--radius-card);
-      padding: 16px;
-      cursor: pointer;
-      transition: border-color 0.15s;
+      padding: 16px; cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
     }
-    .history-card:hover { border-color: var(--gold); }
-    .history-card-meta  { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; }
-    .history-card-stats { font-size: 13px; color: var(--muted); }
-    .history-card-prs   { font-family: var(--font-mono); font-size: 9px; color: var(--neon); letter-spacing: 1px; margin-top: 4px; }
-    .history-card-detail {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      display: none;
-    }
+    .history-card:hover  { border-color: var(--gold2); }
+    .history-card:active { transform: scale(0.99); }
+    .history-card-meta   { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--gold2); text-transform: uppercase; margin-bottom: 5px; }
+    .history-card-stats  { font-size: 13px; color: var(--muted); }
+    .history-card-prs    { font-family: var(--font-mono); font-size: 9px; color: var(--gold); letter-spacing: 1px; margin-top: 4px; }
+    .history-expand-hint { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; color: var(--muted2); text-transform: uppercase; text-align: right; margin-top: 8px; transition: color 0.15s; }
+    .history-card.expanded .history-expand-hint { color: var(--gold2); }
+    .history-expand-hint::after         { content: '  ↓'; }
+    .history-card.expanded .history-expand-hint::after { content: '  ↑'; }
+    .history-card-detail { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
     .history-card.expanded .history-card-detail { display: block; }
     .history-entry        { margin-bottom: 12px; }
     .history-entry:last-child { margin-bottom: 0; }
-    .history-entry-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 5px;
-    }
+    .history-entry-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 5px; }
     .history-entry-name   { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; color: var(--text); text-transform: uppercase; }
-    .history-entry-cat    { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--gold); text-transform: uppercase; white-space: nowrap; }
-    /* Set chips — one per set, flex-wrapped */
+    .history-entry-cat    { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; color: var(--gold2); text-transform: uppercase; white-space: nowrap; }
     .history-entry-sets   { display: flex; flex-wrap: wrap; gap: 5px; }
-    .history-set-chip     {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 7px;
-    }
+    .history-set-chip     { font-family: var(--font-mono); font-size: 11px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
     .history-entry-vol    { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 5px; }
-    .history-pr-tag       { color: var(--gold-bright); margin-left: 4px; }
-    /* Expand affordance */
-    .history-expand-hint {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: var(--muted2);
-      text-transform: uppercase;
-      text-align: right;
-      margin-top: 8px;
-      transition: color 0.15s;
-    }
-    .history-card.expanded .history-expand-hint { color: var(--neon-dim); }
-    .history-expand-hint::after         { content: '  ↓'; }
-    .history-card.expanded .history-expand-hint::after { content: '  ↑'; }
-    .history-empty {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 14px;
-      padding: 48px 0;
-    }
+    .history-pr-tag       { color: var(--gold); margin-left: 4px; }
+    .history-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 48px 0; }
     .history-empty-icon { font-size: 40px; }
     .history-more-btn {
-      width: 100%;
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 2px;
-      padding: 10px;
-      border-radius: var(--radius);
-      margin-top: 8px;
-      transition: all 0.15s;
+      width: 100%; background: none; border: 1px solid var(--border); color: var(--muted);
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      padding: 10px; border-radius: var(--radius); margin-top: 8px; transition: all 0.15s;
     }
-    .history-more-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .history-more-btn:hover { border-color: var(--gold2); color: var(--gold); }
 
-    /* ── SYNC BAR ──────────────────────────────────────────────────── */
+    /* ── SYNC BAR ────────────────────────────────────────────────── */
     .sync-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
+      position: fixed; bottom: 0; left: 0; right: 0;
       padding: 10px 20px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-align: center;
-      transform: translateY(100%);
-      transition: transform 0.3s;
-      z-index: 100;
+      background: var(--surface); border-top: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      color: var(--muted); text-align: center;
+      transform: translateY(100%); transition: transform 0.3s; z-index: 100;
     }
     .sync-bar.show    { transform: translateY(0); }
-    .sync-bar.success { color: var(--neon); border-color: var(--neon-dim); }
+    .sync-bar.success { color: var(--neon); border-color: rgba(200,241,53,0.2); }
     .sync-bar.error   { color: var(--crimson-bright); }
 
-    /* ── CONFETTI CANVAS ───────────────────────────────────────────── */
-    #confetti-canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 50;
-    }
+    /* ── CONFETTI CANVAS ─────────────────────────────────────────── */
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
 
-    /* ── UTILITIES ─────────────────────────────────────────────────── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    /* ── UTILITIES ───────────────────────────────────────────────── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .fadein { animation: fadeIn 0.25s ease forwards; }
+
+    /* Screen-level position context for PR overlay */
+    #screen-exercise { position: relative; }
   </style>
 </head>
 <body>
 
-<!-- ═══ HOME ═══════════════════════════════════════════════════════════ -->
-<div class="screen active" id="screen-home">
-  <div class="home-header">
+<!-- ═══ DAY PICKER ══════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-day-picker">
+  <div class="day-picker-header">
     <div class="logo">GRIND</div>
-    <div class="logo-sub">✦ Workout Roulette ✦</div>
-    <div class="suit-divider" aria-hidden="true">♠ · ♥ · ♦ · ♣</div>
+    <div class="logo-sub">⚡ Workout Roulette ⚡</div>
   </div>
 
   <div class="resume-banner" id="resume-banner" style="display:none">
@@ -835,41 +616,48 @@
   <div class="section-label">This week</div>
   <div class="week-strip" id="week-strip"></div>
 
-  <div class="section-label">Choose your game</div>
-  <div class="day-cards" id="day-cards"></div>
+  <div class="section-label">Choose your day</div>
+  <div class="day-picker-cards" id="day-picker-cards"></div>
 
-  <div class="home-footer">
+  <div class="day-picker-footer">
     <button class="btn-ghost" id="history-btn">HISTORY</button>
   </div>
 </div>
 
-<!-- ═══ SESSION ════════════════════════════════════════════════════════ -->
-<div class="screen" id="screen-session">
-  <div class="session-header">
-    <button class="back-btn" id="session-back">←</button>
+<!-- ═══ SLOT MACHINE ════════════════════════════════════════════════ -->
+<div class="screen" id="screen-slot-machine">
+  <div class="slot-machine-header">
+    <button class="back-btn" id="slot-machine-back">←</button>
     <div>
-      <div class="session-title" id="sess-title">DAY A</div>
-      <div class="session-sub"  id="sess-sub">7 exercises</div>
+      <div class="slot-day-title" id="slot-day-title">DAY A</div>
+      <div class="slot-day-sub"   id="slot-day-sub">7 exercises</div>
     </div>
   </div>
 
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+  <div class="slot-machine-frame">
+    <div class="slot-frame-badge">⚡ Your Workout ⚡</div>
+    <div class="reels-container" id="reels-container">
+      <!-- Populated dynamically by renderSlotMachine() -->
+    </div>
   </div>
 
-  <div class="spin-zone">
-    <div id="pr-flash" style="display:none"></div>
-    <div class="slot-label" id="slot-label">READY TO SPIN</div>
-    <div class="slot-machine">
-      <div id="slot-display">?</div>
-      <div class="slot-sets-info" id="slot-sets-info"></div>
-    </div>
-    <button class="spin-btn" id="spin-btn">SPIN</button>
-  </div>
+  <button class="start-workout-btn" id="start-workout-btn" style="display:none">
+    START WORKOUT ▸
+  </button>
 </div>
 
-<!-- ═══ EXERCISE ═══════════════════════════════════════════════════════ -->
+<!-- ═══ EXERCISE ════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-exercise">
+  <!-- PR overlay — covers screen for 1.5s on PR then auto-advances -->
+  <div class="pr-overlay" id="pr-overlay">
+    <div class="pr-overlay-inner">
+      <div class="pr-overlay-label">New Record</div>
+      <div class="pr-overlay-text" id="pr-overlay-text"></div>
+    </div>
+  </div>
+
+  <div class="exercise-progress-strip" id="exercise-progress-strip"></div>
+
   <div class="exercise-header">
     <div class="exercise-tag"  id="ex-tag">LOWER · QUAD</div>
     <div class="exercise-name" id="ex-name">BULGARIAN SPLIT SQUAT</div>
@@ -886,38 +674,30 @@
 
   <div class="sets-container" id="sets-container"></div>
 
-  <button class="complete-ex-btn" id="complete-ex-btn" disabled>
-    DONE — SPIN NEXT ▸
-  </button>
+  <button class="complete-ex-btn" id="complete-ex-btn" disabled>DONE ▸</button>
 </div>
 
-<!-- ═══ DONE ════════════════════════════════════════════════════════════ -->
+<!-- ═══ DONE ════════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-done">
   <div class="done-screen">
-    <div class="done-icon">🎰</div>
+    <div class="done-icon">⚡</div>
     <div class="done-title">JACKPOT.</div>
-    <div class="done-sub" id="done-sub">Day A complete</div>
-
+    <div class="done-sub"   id="done-sub">Day A complete</div>
     <div class="done-stats" id="done-stats"></div>
-
-    <!-- Phase 4: populated by PR tracking -->
     <div class="done-section-block" id="done-prs" style="display:none">
       <div class="done-section-title">✦ New Records</div>
       <div id="done-prs-list"></div>
     </div>
-
-    <!-- Phase 4: populated by overload nudges -->
     <div class="done-section-block" id="done-nudges" style="display:none">
       <div class="done-section-title">⚡ Overload Nudges</div>
       <div id="done-nudges-list"></div>
     </div>
-
     <div class="done-sync" id="done-sync"></div>
     <button class="done-back-btn" id="done-back-btn">BACK TO HOME</button>
   </div>
 </div>
 
-<!-- ═══ HISTORY ════════════════════════════════════════════════════════ -->
+<!-- ═══ HISTORY ══════════════════════════════════════════════════════ -->
 <div class="screen" id="screen-history">
   <div class="history-header">
     <button class="back-btn" id="history-back">←</button>
@@ -930,7 +710,7 @@
 <!-- SYNC BAR -->
 <div class="sync-bar" id="sync-bar"></div>
 
-<!-- CONFETTI CANVAS — pointer-events:none, drawn over everything -->
+<!-- CONFETTI CANVAS -->
 <canvas id="confetti-canvas"></canvas>
 
 <script src="app.js"></script>

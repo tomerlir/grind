@@ -466,24 +466,25 @@ function clearSession() {
 }
 
 function startSession(templateId) {
-  const day = DAYS[templateId];
-  const weekKey = getWeekKey();  // snapshot here — prevents Sunday→Monday boundary bug
+  const day     = DAYS[templateId];
+  const weekKey = getWeekKey(); // snapshot — prevents Sunday→Monday boundary bug
 
   session = {
     templateId,
     weekKey,
-    slots: day.slots.slice(),     // snapshot so in-flight changes don't affect session
-    slotIndex: 0,
-    reservations: {},
+    slots:           day.slots.slice(),
+    slotIndex:       0,
+    pickedExercises: [],          // filled by pickAllExercises() immediately below
+    reservations:    {},
     currentExercise: null,
-    currentSlot: null,
-    currentSets: [],
-    entries: [],
-    restEndsAt: null,
-    startTime: new Date().toISOString(),
-    status: 'in_progress',
+    currentSlot:     null,
+    currentSets:     [],
+    entries:         [],
+    restEndsAt:      null,
+    startTime:       new Date().toISOString(),
+    status:          'in_progress',
   };
-  saveSession();
+  pickAllExercises(); // picks all exercises at once; saves session
 }
 
 // ── SPIN ───────────────────────────────────────────────────────────────────
@@ -536,76 +537,126 @@ function pickExercise(categoryKey, slotPosition) {
   return chosen;
 }
 
-let spinTimerId = null;
+// ── pickAllExercises ───────────────────────────────────────────────
+// Picks all exercises for the session at once (called from startSession).
+// Respects existing reservations for resume safety — if an exercise was
+// already reserved (old session), re-uses it rather than re-picking.
+//
+//   slots[0..N-1]  ──►  pickedExercises[0..N-1]
+//   (via pickExercise which writes reservations per slot position)
 
-function handleSpin() {
-  if (spinTimerId !== null) return; // already spinning
-  spinToReveal();
+function pickAllExercises() {
+  session.pickedExercises = session.slots.map((slot, i) => {
+    const existingName = session.reservations[`${slot.key}:${i}`];
+    if (existingName) {
+      const pool  = EXERCISES[slot.key] ?? [];
+      const found = pool.find(e => e.name === existingName);
+      // Guard: name might no longer exist in pool after data changes
+      return found ?? pickExercise(slot.key, i);
+    }
+    return pickExercise(slot.key, i);
+  });
+  saveSession();
 }
 
-function spinToReveal() {
-  const slotPos = session.slotIndex;
-  const slot    = session.slots[slotPos];
+// ── spinAllReels ───────────────────────────────────────────────────
+// Animates all vertical reel drums simultaneously with staggered landing.
+//
+// Animation algorithm:
+//   - Drum = pool repeated REPEATS times (enough travel distance)
+//   - targetItemIdx = REP_TARGET × poolSize + indexOfChosenInPool
+//   - translateY = -(targetItemIdx × REEL_H)
+//   - Each reel i lands at BASE_MS + i × STAGGER_MS via its transition-duration
+//   - transitionend fires onReelLanded(i); setTimeout fallback if it never fires
+//   - spinGeneration guard prevents stale listeners from double-firing
 
-  // If this slot already has a reservation (e.g. resume after going home mid-spin),
-  // restore the result immediately without re-animating.
-  const reservationKey = `${slot.key}:${slotPos}`;
-  if (session.reservations[reservationKey]) {
-    const pool   = EXERCISES[slot.key] ?? [];
-    const chosen = pool.find(e => e.name === session.reservations[reservationKey]);
-    if (chosen) { onSpinComplete(chosen, slot); return; }
+const REEL_H      = 64;   // px — must match --reel-h CSS var
+const REPEATS     = 10;   // copies of the pool in each drum
+const REP_TARGET  = 7;    // which repetition to land on (0-based)
+const BASE_MS     = 2000; // reel 0 lands at 2000ms
+const STAGGER_MS  = 350;  // each subsequent reel 350ms later
+
+let spinGeneration = 0;   // incremented each spinAllReels() call to invalidate stale listeners
+
+function spinAllReels() {
+  spinGeneration++;
+  const gen = spinGeneration; // captured in closure
+
+  const N       = session.slots.length;
+  const maxTime = BASE_MS + (N - 1) * STAGGER_MS;
+
+  // Fallback: if ANY transitionend never fires, force-show the button
+  const fallbackTimer = setTimeout(() => showStartWorkoutButton(), maxTime + 600);
+
+  let landsCompleted = 0;
+
+  session.slots.forEach((slot, i) => {
+    const pool        = EXERCISES[slot.key] ?? [];
+    const picked      = session.pickedExercises[i];
+    if (!picked || pool.length === 0) return;
+
+    const pickedIdx   = pool.findIndex(e => e.name === picked.name);
+    const safeIdx     = pickedIdx < 0 ? 0 : pickedIdx; // guard: name not in pool
+    const targetIdx   = REP_TARGET * pool.length + safeIdx;
+    const translateY  = -(targetIdx * REEL_H);
+    const duration    = BASE_MS + i * STAGGER_MS;
+
+    const drum = document.getElementById(`reel-drum-${i}`);
+    const wrap = document.getElementById(`reel-wrap-${i}`);
+    if (!drum || !wrap) return;
+
+    // Mark as spinning (enables blur CSS)
+    wrap.classList.add('spinning');
+
+    // Reset to top with no transition (double-rAF ensures browser paints it)
+    drum.style.transition = 'none';
+    drum.style.transform  = 'translateY(0)';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      drum.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.7, 0.25, 1)`;
+      drum.style.transform  = `translateY(${translateY}px)`;
+
+      drum.addEventListener('transitionend', () => {
+        if (gen !== spinGeneration) return; // stale listener — different spin in progress
+        onReelLanded(i);
+        landsCompleted++;
+        if (landsCompleted >= N) {
+          clearTimeout(fallbackTimer);
+          showStartWorkoutButton();
+        }
+      }, { once: true });
+    }));
+  });
+}
+
+function onReelLanded(i) {
+  const wrap = document.getElementById(`reel-wrap-${i}`);
+  if (!wrap) return;
+  wrap.classList.remove('spinning');
+  wrap.classList.add('landed');
+  // Brief flash: brighter glow on landing, then settles to .landed CSS
+  const win = wrap.querySelector('.reel-window');
+  if (win) {
+    win.style.boxShadow = '0 0 28px rgba(245,200,66,0.85)';
+    setTimeout(() => { win.style.boxShadow = ''; }, 350);
   }
-
-  const chosen = pickExercise(slot.key, slotPos);
-  if (!chosen) return; // safety — empty pool
-
-  const pool  = EXERCISES[slot.key] ?? [];
-  const names = pool.map(e => e.name);
-
-  const display = document.getElementById('slot-display');
-  const btn     = document.getElementById('spin-btn');
-
-  display.classList.remove('landed');
-  display.textContent = '?';
-  btn.disabled  = true;
-  btn.textContent = 'SPINNING...';
-  btn.classList.add('spinning');
-
-  let i = 0;
-  spinTimerId = setInterval(() => {
-    display.textContent = names[i % names.length];
-    i++;
-  }, 80);
-
-  setTimeout(() => {
-    clearInterval(spinTimerId);
-    spinTimerId = null;
-    onSpinComplete(chosen, slot);
-  }, 1200);
 }
 
-function onSpinComplete(chosen, slot) {
-  const display = document.getElementById('slot-display');
-  const btn     = document.getElementById('spin-btn');
-
-  // Force reflow so the class change triggers the animation fresh
-  void display.offsetWidth;
-  display.textContent = chosen.name;
-  display.classList.add('landed');
-
-  const restMin = Math.floor(chosen.restSeconds / 60);
-  const restSec = String(chosen.restSeconds % 60).padStart(2, '0');
-  document.getElementById('slot-label').textContent    = slot.label;
-  document.getElementById('slot-sets-info').textContent =
-    `${chosen.sets} sets  ·  ${chosen.repsRange}  ·  ${restMin}:${restSec} rest`;
-
-  btn.textContent = 'PLACE YOUR BETS →';
-  btn.disabled    = false;
-  btn.classList.remove('spinning');
-  btn.onclick     = () => launchExercise(chosen, slot);
+function showStartWorkoutButton() {
+  const btn = document.getElementById('start-workout-btn');
+  if (!btn || btn.style.display === 'block') return;
+  btn.style.display = 'block';
+  btn.classList.add('appearing');
 }
 
-function launchExercise(exercise, slot) {
+function launchExercise() {
+  // Migration guard: old sessions pre-refactor won't have pickedExercises
+  if (!session.pickedExercises?.length) pickAllExercises();
+
+  const exercise   = session.pickedExercises[session.slotIndex];
+  const slot       = session.slots[session.slotIndex];
+  if (!exercise || !slot) { finishSession(); return; }
+
   const lastWeight = getLastWeight(exercise.name);
 
   session.currentExercise = exercise;
@@ -641,14 +692,27 @@ function launchExercise(exercise, slot) {
 
   const doneBtn = document.getElementById('complete-ex-btn');
   const isLast  = session.slotIndex === session.slots.length - 1;
-  doneBtn.textContent = isLast ? 'FINISH SESSION ▸' : 'DONE — SPIN NEXT ▸';
+  doneBtn.textContent = isLast ? 'FINISH ▸' : 'DONE ▸';
   doneBtn.disabled    = true;
 
-  stopRest(); // clear any leftover timer state
+  stopRest();
   document.getElementById('rest-timer').classList.remove('active');
+  document.getElementById('pr-overlay').classList.remove('show'); // clear any lingering overlay
 
+  renderExerciseProgress();
   renderSets();
   showScreen('screen-exercise');
+}
+
+function renderExerciseProgress() {
+  const strip = document.getElementById('exercise-progress-strip');
+  if (!strip) return;
+  strip.innerHTML = session.slots.map((_, i) => {
+    let cls = 'progress-dot';
+    if (i < session.slotIndex)      cls += ' done-dot';
+    else if (i === session.slotIndex) cls += ' active-dot';
+    return `<div class="${cls}"></div>`;
+  }).join('');
 }
 
 function renderSets() {
@@ -722,9 +786,6 @@ function completeExercise() {
   // PR detection + lastWeight write (checkAndUpdatePR handles both)
   const prs = checkAndUpdatePR(ex.name, session.currentSets);
 
-  // Store for PR flash on Session screen (consumed by renderSessionScreen)
-  lastCompletedPRs = Object.keys(prs).length > 0 ? prs : null;
-
   // Mark exercise used in the week store
   markExerciseUsed(slot.key, ex.name, session.weekKey);
 
@@ -744,14 +805,14 @@ function completeExercise() {
   session.currentSets     = [];
   saveSession();
 
+  const hasPR = Object.keys(prs).length > 0;
+
   if (session.slotIndex >= session.slots.length) {
-    finishSession();
+    hasPR ? showPROverlay(prs, finishSession) : finishSession();
     return;
   }
 
-  // Return to session screen for next spin
-  renderSessionScreen();
-  showScreen('screen-session');
+  hasPR ? showPROverlay(prs, launchExercise) : launchExercise();
 }
 
 function finishSession() {
@@ -1131,7 +1192,7 @@ function fireConfetti() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const COLORS  = ['#F0C843','#C9A84C','#c8f135','#F0E6D3','#d4af37','#ffffff'];
+  const COLORS  = ['#F5C842','#C8960C','#ffffff','#9B7FD0','#FFD700','#D0B8F0'];
   const COUNT   = 90;
   const GRAVITY = 0.12;
   const DURATION = 3200; // ms total
@@ -1204,29 +1265,28 @@ function showSyncBar(msg, type = '') {
   showSyncBar._timer = setTimeout(() => bar.classList.remove('show'), 3000);
 }
 
-// ── PR FLASH ───────────────────────────────────────────────────────────────
-// Carries PR data from completeExercise() → renderSessionScreen().
-// Module-level rather than in session to avoid polluting persisted state.
+// ── PR OVERLAY ─────────────────────────────────────────────────────────────
+// Shows a 1.6s fullscreen overlay celebrating a new PR, then calls onDone().
+// The DONE button is already disabled from the set-confirm flow; the overlay's
+// pointer-events:none in CSS means nothing can be tapped through it.
 
-let lastCompletedPRs = null;
-
-function showPRFlash(prs) {
-  const el = document.getElementById('pr-flash');
-  if (!el) return;
-
+function showPROverlay(prs, onDone) {
   const parts = [];
   if (prs.weight) parts.push(`+${fmtKg(prs.weight.new - prs.weight.prev)}KG MAX`);
   if (prs.volume) parts.push('VOLUME PR');
-  el.textContent  = `✦ ${parts.join(' · ')} ✦`;
-  el.style.display = 'block';
+  if (parts.length === 0) { onDone(); return; }
 
-  // Restart CSS animation by forcing reflow
-  el.style.animation = 'none';
-  void el.offsetWidth;
-  el.style.animation = '';
+  const overlay = document.getElementById('pr-overlay');
+  const text    = document.getElementById('pr-overlay-text');
+  if (!overlay || !text) { onDone(); return; }
 
-  clearTimeout(showPRFlash._timer);
-  showPRFlash._timer = setTimeout(() => { el.style.display = 'none'; }, 2800);
+  text.textContent = parts.join(' · ');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    onDone();
+  }, 1600);
 }
 
 // ── APP / ROUTER ────────────────────────────────────────────────────────────
@@ -1239,13 +1299,13 @@ function showScreen(id) {
 
 function goHome() {
   stopRest();
-  renderHome();
-  showScreen('screen-home');
+  renderDayPicker();
+  showScreen('screen-day-picker');
 }
 
-function renderHome() {
+function renderDayPicker() {
   renderWeekStrip();
-  renderDayCards();
+  renderDayPickerCards();
   renderResumeBanner();
 }
 
@@ -1269,36 +1329,32 @@ function renderWeekStrip() {
   }).join('');
 }
 
-function renderDayCards() {
+function renderDayPickerCards() {
   const weekKey      = getWeekKey();
-  const assignment   = getOrCreateDayAssignment(weekKey);   // { monday:'C', wednesday:'A', friday:'B' }
+  const assignment   = getOrCreateDayAssignment(weekKey);
   const completed    = getCompletedDays(weekKey);
   const todayWeekday = getTodayWeekday();
-  const isStrengthDay = STRENGTH_DAYS.includes(todayWeekday);
-  const container    = document.getElementById('day-cards');
+  const container    = document.getElementById('day-picker-cards');
 
-  // Show one card per strength day in Mon / Wed / Fri order
   container.innerHTML = STRENGTH_DAYS.map(weekday => {
     const templateId = assignment[weekday];
     const day        = DAYS[templateId];
     const isDone     = completed.includes(templateId);
     const isToday    = weekday === todayWeekday;
-    const tags       = day.slots.map(s => `<span class="slot-tag">${s.label}</span>`).join('');
 
     return `
-      <div class="day-card fadein ${isDone ? 'completed' : ''} ${isToday ? 'today-card' : ''}"
+      <div class="day-picker-card fadein ${isDone ? 'completed' : ''} ${isToday ? 'today-card' : ''}"
            data-day="${templateId}">
         <div class="day-card-top">
-          <div class="day-letter">${templateId}</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-            <div class="day-weekday-label">${WEEKDAY_SHORT[weekday]}</div>
-            <div class="day-done-badge">DONE ✓</div>
+          <div class="day-card-letter">${templateId}</div>
+          <div class="day-card-top-right">
+            <div class="day-card-weekday">${WEEKDAY_SHORT[weekday]}</div>
+            <div class="day-card-check">DONE ✓</div>
           </div>
         </div>
-        <div class="day-name">${day.name}</div>
-        <div class="day-focus">${day.focus}</div>
-        <div class="day-slots">${tags}</div>
-        <div class="day-cta">${isToday ? 'DEAL CARDS NOW →' : 'DEAL CARDS →'}</div>
+        <div class="day-card-name">${day.name.toUpperCase()}</div>
+        <div class="day-card-focus">${day.focus}</div>
+        <div class="day-card-cta">${isToday ? 'SPIN REELS NOW ▸' : 'SPIN REELS ▸'}</div>
       </div>`;
   }).join('');
 }
@@ -1313,7 +1369,7 @@ function renderResumeBanner() {
   const day       = DAYS[saved.templateId];
   const slotLabel = day ? `Exercise ${saved.slotIndex + 1}/${saved.slots.length}` : '';
   document.getElementById('resume-text').textContent =
-    `♠ SESSION IN PROGRESS · ${saved.templateId ? `Day ${saved.templateId}` : ''} · ${slotLabel}`;
+    `SESSION IN PROGRESS · Day ${saved.templateId} · ${slotLabel}`;
   banner.style.display = 'flex';
 }
 
@@ -1321,20 +1377,28 @@ function resumeSession() {
   session = loadSession();
   if (!session) return;
 
+  // Migration: old sessions pre-refactor won't have pickedExercises
+  if (!session.pickedExercises?.length) pickAllExercises();
+
   if (session.currentExercise) {
-    // Was mid-exercise — restore exercise screen with saved sets
     launchExerciseFromSession();
   } else {
-    // Was on spin screen — restore session screen
-    renderSessionScreen();
-    showScreen('screen-session');
-    resumeRestIfNeeded(); // unlikely but safe
+    // Was on slot machine (pre or post spin) — restore in landed state
+    renderSlotMachine(/* skipSpin = */ true);
+    showScreen('screen-slot-machine');
   }
 }
 
 function launchExerciseFromSession() {
   const exercise = session.currentExercise;
   const slot     = session.currentSlot;
+
+  const nudge   = getOverloadNudge(exercise.name);
+  const nudgeEl = document.getElementById('overload-nudge');
+  if (nudgeEl) {
+    nudgeEl.textContent   = nudge ? `⚡ Last 3× at ${nudge.currentWeight}kg — try ${nudge.suggestedWeight}kg?` : '';
+    nudgeEl.style.display = nudge ? 'inline-flex' : 'none';
+  }
 
   document.getElementById('ex-tag').textContent  = slot.label;
   document.getElementById('ex-name').textContent = exercise.name.toUpperCase();
@@ -1346,53 +1410,65 @@ function launchExerciseFromSession() {
 
   const doneBtn = document.getElementById('complete-ex-btn');
   const isLast  = session.slotIndex === session.slots.length - 1;
-  doneBtn.textContent = isLast ? 'FINISH SESSION ▸' : 'DONE — SPIN NEXT ▸';
+  doneBtn.textContent = isLast ? 'FINISH ▸' : 'DONE ▸';
   doneBtn.disabled    = !session.currentSets.every(s => s.done);
 
   document.getElementById('rest-timer').classList.remove('active');
+  document.getElementById('pr-overlay').classList.remove('show');
+  renderExerciseProgress();
   renderSets();
   showScreen('screen-exercise');
   resumeRestIfNeeded();
 }
 
-function renderSessionScreen() {
-  const day  = DAYS[session.templateId];
-  document.getElementById('sess-title').textContent = `DAY ${session.templateId}`;
-  document.getElementById('sess-sub').textContent   =
+// Builds the slot machine screen.
+// skipSpin=true: reels shown in landed state (resume path).
+// skipSpin=false (default): auto-spin 200ms after render.
+function renderSlotMachine(skipSpin = false) {
+  const day = DAYS[session.templateId];
+  document.getElementById('slot-day-title').textContent = `DAY ${session.templateId}`;
+  document.getElementById('slot-day-sub').textContent   =
     `${day.focus} · ${session.slots.length} exercises`;
 
-  // Show PR flash if the just-completed exercise set a new record
-  if (lastCompletedPRs) { showPRFlash(lastCompletedPRs); lastCompletedPRs = null; }
+  const container = document.getElementById('reels-container');
+  const startBtn  = document.getElementById('start-workout-btn');
 
-  updateProgress();
+  container.innerHTML = session.slots.map((slot, i) => {
+    const pool  = EXERCISES[slot.key] ?? [];
+    const items = Array.from({ length: REPEATS }, () => pool.map(e => e.name)).flat();
+    const drums = items.map(name => `<div class="reel-item">${name.toUpperCase()}</div>`).join('');
+    return `
+      <div class="reel-wrap" id="reel-wrap-${i}">
+        <div class="reel-cat">${slot.label}</div>
+        <div class="reel-window">
+          <div class="reel-drum" id="reel-drum-${i}" style="transform:translateY(0)">
+            ${drums}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 
-  const slot           = session.slots[session.slotIndex];
-  const reservationKey = `${slot.key}:${session.slotIndex}`;
-  const alreadySpun    = session.reservations[reservationKey];
-
-  const display = document.getElementById('slot-display');
-  const btn     = document.getElementById('spin-btn');
-
-  display.classList.remove('landed');
-
-  if (alreadySpun) {
-    // Slot was already spun before going Home — restore result
-    const pool   = EXERCISES[slot.key] ?? [];
-    const chosen = pool.find(e => e.name === alreadySpun);
-    if (chosen) {
-      onSpinComplete(chosen, slot);
-      return;
-    }
+  if (skipSpin) {
+    // Restore landed state (resume or coming back after START WORKOUT)
+    session.slots.forEach((slot, i) => {
+      const picked = session.pickedExercises?.[i];
+      if (!picked) return;
+      const pool      = EXERCISES[slot.key] ?? [];
+      const pidx      = pool.findIndex(e => e.name === picked.name);
+      const safeIdx   = pidx < 0 ? 0 : pidx;
+      const targetIdx = REP_TARGET * pool.length + safeIdx;
+      const drum      = document.getElementById(`reel-drum-${i}`);
+      const wrap      = document.getElementById(`reel-wrap-${i}`);
+      if (drum) drum.style.transform = `translateY(${-(targetIdx * REEL_H)}px)`;
+      if (wrap) wrap.classList.add('landed');
+    });
+    startBtn.style.display = 'block';
+    startBtn.classList.remove('appearing');
+  } else {
+    startBtn.style.display = 'none';
+    startBtn.classList.remove('appearing');
+    setTimeout(spinAllReels, 200); // slight delay so screen transition finishes
   }
-
-  // Fresh spin state
-  display.textContent = '?';
-  document.getElementById('slot-label').textContent     = 'READY TO SPIN';
-  document.getElementById('slot-sets-info').textContent = '';
-  btn.textContent = 'SPIN';
-  btn.disabled    = false;
-  btn.classList.remove('spinning');
-  btn.onclick     = handleSpin;
 }
 
 function renderDoneScreen({ templateId, totalSets, duration, sessionPRs, sessionNudges }) {
@@ -1443,42 +1519,34 @@ function renderDoneScreen({ templateId, totalSets, duration, sessionPRs, session
   document.getElementById('done-sync').className   = 'done-sync';
 }
 
-function updateProgress() {
-  const pct = session.slots.length > 0
-    ? (session.slotIndex / session.slots.length) * 100
-    : 0;
-  document.getElementById('progress-fill').style.width = `${pct}%`;
-}
-
 // ── EVENT WIRING ────────────────────────────────────────────────────────────
 
 function wireEvents() {
-  // Home
+  // Day picker
   document.getElementById('resume-btn').addEventListener('click', resumeSession);
   document.getElementById('history-btn').addEventListener('click', () => {
     renderHistory();
     showScreen('screen-history');
   });
 
-  // Day cards (event delegation)
-  document.getElementById('day-cards').addEventListener('click', e => {
+  // Day cards (event delegation on new container)
+  document.getElementById('day-picker-cards').addEventListener('click', e => {
     const card = e.target.closest('[data-day]');
     if (!card) return;
-    const id = card.dataset.day;
-    startSession(id);
-    renderSessionScreen();
-    showScreen('screen-session');
+    startSession(card.dataset.day); // picks all exercises inside startSession
+    renderSlotMachine();
+    showScreen('screen-slot-machine');
   });
 
-  // Session screen
-  document.getElementById('session-back').addEventListener('click', goHome);
-  document.getElementById('spin-btn').addEventListener('click', handleSpin);
+  // Slot machine screen
+  document.getElementById('slot-machine-back').addEventListener('click', goHome);
+  document.getElementById('start-workout-btn').addEventListener('click', launchExercise);
 
   // Exercise screen
   document.getElementById('rest-skip-btn').addEventListener('click', skipRest);
   document.getElementById('complete-ex-btn').addEventListener('click', completeExercise);
 
-  // Set confirm (event delegation on container)
+  // Set confirm (event delegation)
   document.getElementById('sets-container').addEventListener('click', e => {
     const btn = e.target.closest('[data-confirm]');
     if (btn) confirmSet(parseInt(btn.dataset.confirm, 10));
@@ -1488,13 +1556,11 @@ function wireEvents() {
   document.getElementById('done-back-btn').addEventListener('click', goHome);
 
   // History screen
-  document.getElementById('history-back').addEventListener('click', () => showScreen('screen-home'));
+  document.getElementById('history-back').addEventListener('click', () => showScreen('screen-day-picker'));
   document.getElementById('history-more-btn').addEventListener('click', () => {
     historyOffset += 30;
     renderHistory();
   });
-
-  // History card expand/collapse (event delegation)
   document.getElementById('history-list').addEventListener('click', e => {
     const card = e.target.closest('.history-card');
     if (card) card.classList.toggle('expanded');
@@ -1505,7 +1571,7 @@ function wireEvents() {
 
 function init() {
   wireEvents();
-  renderHome();
+  renderDayPicker();
 
   // Flush any queued sync payloads from previous offline sessions
   flushSyncQueue();
