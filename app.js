@@ -1278,15 +1278,19 @@ function showPROverlay(prs, onDone) {
 
   const overlay = document.getElementById('pr-overlay');
   const text    = document.getElementById('pr-overlay-text');
-  if (!overlay || !text) { onDone(); return; }
+  const btn     = document.getElementById('pr-overlay-continue');
+  if (!overlay || !text || !btn) { onDone(); return; }
 
   text.textContent = parts.join(' · ');
   overlay.classList.add('show');
 
-  setTimeout(() => {
+  // Replace any previous listener with a fresh one-shot handler
+  const handler = () => {
     overlay.classList.remove('show');
     onDone();
-  }, 1600);
+  };
+  btn.replaceWith(btn.cloneNode(true)); // strip old listeners
+  document.getElementById('pr-overlay-continue').addEventListener('click', handler, { once: true });
 }
 
 // ── APP / ROUTER ────────────────────────────────────────────────────────────
