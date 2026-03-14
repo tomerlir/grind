@@ -884,6 +884,11 @@ function parseWeight(w) {
   return isNaN(n) ? null : n;
 }
 
+// Format a kg value: omit trailing .0 for whole numbers (42 not 42.0, 42.5 stays 42.5)
+function fmtKg(n) {
+  return n % 1 === 0 ? String(n) : n.toFixed(1);
+}
+
 function todayFormatted() {
   return new Date().toLocaleDateString('en-GB'); // "dd/MM/yyyy"
 }
@@ -1055,7 +1060,7 @@ function renderHistoryCard(s, i) {
 
   return `
     <div class="history-card fadein" data-history-idx="${i}">
-      <div class="history-card-meta">${s.date} · ${dayName} · ${s.durationMinutes}m</div>
+      <div class="history-card-meta">${s.date} · ${dayName} · ${s.durationMinutes} min</div>
       <div class="history-card-stats">${entries.length} exercises · ${s.totalSets} sets${volStat}</div>
       ${prLine}
       <div class="history-expand-hint">details</div>
@@ -1210,7 +1215,7 @@ function showPRFlash(prs) {
   if (!el) return;
 
   const parts = [];
-  if (prs.weight) parts.push(`+${(prs.weight.new - prs.weight.prev).toFixed(1)}KG MAX`);
+  if (prs.weight) parts.push(`+${fmtKg(prs.weight.new - prs.weight.prev)}KG MAX`);
   if (prs.volume) parts.push('VOLUME PR');
   el.textContent  = `✦ ${parts.join(' · ')} ✦`;
   el.style.display = 'block';
@@ -1406,7 +1411,7 @@ function renderDoneScreen({ templateId, totalSets, duration, sessionPRs, session
       <div class="done-stat-label">Sets</div>
     </div>
     <div class="done-stat">
-      <div class="done-stat-val">${duration}m</div>
+      <div class="done-stat-val">${duration} MIN</div>
       <div class="done-stat-label">Duration</div>
     </div>`;
 
@@ -1414,7 +1419,7 @@ function renderDoneScreen({ templateId, totalSets, duration, sessionPRs, session
   const prsBlock = document.getElementById('done-prs');
   if (sessionPRs?.length > 0) {
     document.getElementById('done-prs-list').innerHTML = sessionPRs.map(pr =>
-      `<div class="done-pr-item">${pr.exerciseName} — ${pr.type === 'weight' ? `+${(pr.new - pr.prev).toFixed(1)}kg max weight` : `volume PR`}</div>`
+      `<div class="done-pr-item">${pr.exerciseName} — ${pr.type === 'weight' ? `+${fmtKg(pr.new - pr.prev)}kg max weight` : `volume PR`}</div>`
     ).join('');
     prsBlock.style.display = 'block';
   } else {
