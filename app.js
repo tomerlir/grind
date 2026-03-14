@@ -1531,6 +1531,15 @@ async function flushSyncQueue() {
 
 document.addEventListener('DOMContentLoaded', init);
 
+// Register service worker — enables offline use and "Add to Home Screen"
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[GRIND] SW registered, scope:', reg.scope))
+      .catch(err => console.warn('[GRIND] SW registration failed:', err));
+  });
+}
+
 // ── TESTS ──────────────────────────────────────────────────────────────────
 // Run via: open index.html?test in the browser, then check the console.
 // Tests run after DOM is ready (safe to call storage + logic functions).
