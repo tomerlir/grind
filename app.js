@@ -755,11 +755,12 @@ function completeExercise() {
 }
 
 function finishSession() {
-  const duration   = Math.round((Date.now() - new Date(session.startTime)) / 60000);
-  const totalSets  = session.entries.reduce((n, e) => n + e.sets.length, 0);
-  const templateId = session.templateId;
-  const weekKey    = session.weekKey;
-  const payload    = buildSyncPayload(duration, totalSets);
+  const duration      = Math.round((Date.now() - new Date(session.startTime)) / 60000);
+  const totalSets     = session.entries.reduce((n, e) => n + e.sets.length, 0);
+  const exerciseCount = session.entries.length;  // capture before clearSession
+  const templateId    = session.templateId;
+  const weekKey       = session.weekKey;
+  const payload       = buildSyncPayload(duration, totalSets);
 
   markDayComplete(templateId, weekKey);
   appendHistory({
@@ -771,8 +772,8 @@ function finishSession() {
     timestamp:       new Date().toISOString(),
   });
 
-  // Collect PRs and nudges across this session (Phase 4 populates these)
-  const sessionPRs    = session.entries.flatMap(e =>
+  // Collect PRs and nudges across this session
+  const sessionPRs = session.entries.flatMap(e =>
     Object.entries(e.prs || {}).map(([type, data]) =>
       ({ exerciseName: e.exerciseName, type, ...data })
     )
@@ -783,8 +784,9 @@ function finishSession() {
 
   clearSession();
 
-  renderDoneScreen({ templateId, exerciseCount: session?.entries?.length ?? payload.exercises.length, totalSets, duration, sessionPRs, sessionNudges });
+  renderDoneScreen({ templateId, exerciseCount, totalSets, duration, sessionPRs, sessionNudges });
   showScreen('screen-done');
+  setTimeout(fireConfetti, 80); // slight delay so screen transition completes first
   syncToSheets(payload);
 }
 
@@ -1083,6 +1085,79 @@ function enqueueSyncPayload(payload) {
   const queue = storageGet('grind:sync-queue', []);
   queue.push({ payload, failedAt: new Date().toISOString() });
   storageSet('grind:sync-queue', queue);
+}
+
+// Casino confetti: gold + neon strips and circles, falls ~3 seconds.
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const COLORS  = ['#F0C843','#C9A84C','#c8f135','#F0E6D3','#d4af37','#ffffff'];
+  const COUNT   = 90;
+  const GRAVITY = 0.12;
+  const DURATION = 3200; // ms total
+
+  const particles = Array.from({ length: COUNT }, () => ({
+    x:  Math.random() * canvas.width,
+    y: -10 - Math.random() * 120,
+    vx: (Math.random() - 0.5) * 4,
+    vy: 1.5 + Math.random() * 4,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 0.18,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    w: 5 + Math.random() * 8,
+    h: 3 + Math.random() * 4,
+    circle: Math.random() < 0.25,
+  }));
+
+  let start = null;
+
+  function frame(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let alive = false;
+    for (const p of particles) {
+      p.vy += GRAVITY;
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.rotation += p.rotSpeed;
+
+      // Fade out in second half of duration
+      const fade  = elapsed < DURATION * 0.55
+        ? 1
+        : Math.max(0, 1 - (elapsed - DURATION * 0.55) / (DURATION * 0.45));
+      if (p.y < canvas.height + 30) alive = true;
+
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle = p.color;
+      if (p.circle) {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+      ctx.restore();
+    }
+
+    if (alive && elapsed < DURATION + 800) {
+      requestAnimationFrame(frame);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  requestAnimationFrame(frame);
 }
 
 function showSyncBar(msg, type = '') {
