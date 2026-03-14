@@ -300,6 +300,157 @@
       100% { transform: scale(1); }
     }
     #slot-display.landed { animation: slotLand 0.18s ease-out forwards; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PHASE 7 — CASINO POLISH
+       All rules here are purely additive — enhancing elements already
+       styled above. Nothing is overridden, only layered on top.
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* Subtle film-grain texture over the entire background.
+       pointer-events:none so it never blocks taps.
+       opacity × SVG inner opacity ≈ 1.6% — barely visible but adds depth. */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* GRIND logo — neon sign glow */
+    .logo {
+      text-shadow:
+        0 0 16px rgba(200,241,53,0.6),
+        0 0 48px rgba(200,241,53,0.2),
+        0 0 100px rgba(200,241,53,0.05);
+    }
+
+    /* Suit divider between logo and week strip */
+    .suit-divider {
+      text-align: center;
+      color: var(--muted2);
+      font-size: 13px;
+      letter-spacing: 8px;
+      margin: 2px 0 8px;
+      user-select: none;
+    }
+
+    /* Section label — gold leading accent */
+    .section-label::before { content: '✦  '; color: var(--gold); opacity: 0.5; }
+
+    /* ── Week strip — casino chip double-ring ── */
+    .week-day {
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--border);
+    }
+    .week-day.today {
+      box-shadow:
+        0 0 0 2px var(--surface),
+        0 0 0 4px var(--neon),
+        0 0 8px rgba(200,241,53,0.2);
+    }
+    .week-day.done {
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--gold);
+    }
+
+    /* ── Day cards — suit watermark & press feedback ── */
+    .day-card[data-day="A"]::after { content: '♠'; }
+    .day-card[data-day="B"]::after { content: '♥'; }
+    .day-card[data-day="C"]::after { content: '♦'; }
+    .day-card::after {
+      position: absolute;
+      bottom: 10px; right: 14px;
+      font-size: 56px;
+      color: rgba(201,168,76,0.07);
+      pointer-events: none;
+      line-height: 1;
+    }
+    .day-card          { transition: transform 0.1s, border-color 0.2s; }
+    .day-card:active   { transform: scale(0.985); }
+    .day-card.today-card {
+      box-shadow: 0 0 16px rgba(200,241,53,0.12);
+    }
+
+    /* ── Slot machine — chrome frame & outer glow ── */
+    .slot-machine {
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.2),
+        0 0 32px rgba(0,0,0,0.7),
+        inset 0 0 48px rgba(0,0,0,0.8);
+    }
+    /* Corner screws */
+    .slot-machine::before,
+    .slot-machine::after {
+      content: '✦';
+      position: absolute;
+      color: var(--gold);
+      font-size: 10px;
+      opacity: 0.55;
+      top: 9px;
+      line-height: 1;
+    }
+    .slot-machine::before { left: 12px; }
+    .slot-machine::after  { right: 12px; }
+
+    /* Slot display — neon glow on landing */
+    #slot-display.landed {
+      text-shadow:
+        0 0 14px rgba(200,241,53,0.7),
+        0 0 36px rgba(200,241,53,0.2);
+    }
+
+    /* Spin button — press feedback & hover glow */
+    .spin-btn { transition: all 0.15s; }
+    .spin-btn:hover:not(:disabled) {
+      box-shadow: 0 0 16px rgba(201,168,76,0.35);
+    }
+    .spin-btn:active:not(:disabled) { transform: scale(0.97); }
+
+    /* Progress bar — gold glow */
+    .progress-bar-fill { box-shadow: 0 0 6px rgba(201,168,76,0.4); }
+
+    /* ── Exercise screen ── */
+    /* Gold left-bar accent on exercise header */
+    .exercise-header {
+      border-left: 3px solid var(--gold);
+      padding-left: 14px;
+    }
+
+    /* ── Action buttons ── */
+    .complete-ex-btn { transition: all 0.15s; }
+    .complete-ex-btn:active:not(:disabled) { transform: scale(0.98); }
+    .done-back-btn   { transition: opacity 0.15s, transform 0.1s; }
+    .done-back-btn:active   { transform: scale(0.98); }
+
+    /* ── Done screen — JACKPOT. neon glow ── */
+    .done-title {
+      text-shadow:
+        0 0 20px rgba(200,241,53,0.5),
+        0 0 60px rgba(200,241,53,0.15);
+    }
+    .done-stat {
+      transition: box-shadow 0.3s;
+      box-shadow: inset 0 1px 0 rgba(201,168,76,0.08);
+    }
+
+    /* PR flash — dramatic gold glow */
+    .pr-flash {
+      box-shadow: 0 0 24px rgba(240,200,67,0.5), 0 0 60px rgba(240,200,67,0.15);
+      text-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+
+    /* ── History cards — subtle press ── */
+    .history-card { transition: border-color 0.15s, transform 0.1s; }
+    .history-card:active { transform: scale(0.99); }
+
+    /* Resume banner — slow neon pulse to draw attention */
+    @keyframes neonPulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(200,241,53,0.2); }
+      50%       { box-shadow: 0 0 10px rgba(200,241,53,0.4), 0 0 24px rgba(200,241,53,0.1); }
+    }
+    .resume-banner { animation: neonPulse 2.8s ease-in-out infinite; }
     .slot-sets-info {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -665,6 +816,7 @@
   <div class="home-header">
     <div class="logo">GRIND</div>
     <div class="logo-sub">✦ Workout Roulette ✦</div>
+    <div class="suit-divider">♠ · ♥ · ♦ · ♣</div>
   </div>
 
   <div class="resume-banner" id="resume-banner" style="display:none">
