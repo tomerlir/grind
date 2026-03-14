@@ -283,16 +283,7 @@
       height: 2px;
       background: linear-gradient(90deg, transparent 5%, var(--gold3) 20%, var(--gold2) 50%, var(--gold3) 80%, transparent 95%);
     }
-    /* Suit watermark */
-    .day-picker-card[data-day="A"]::after { content: '♠'; }
-    .day-picker-card[data-day="B"]::after { content: '♥'; }
-    .day-picker-card[data-day="C"]::after { content: '♦'; }
-    .day-picker-card::after {
-      position: absolute; bottom: 8px; right: 14px;
-      font-size: 64px;
-      color: rgba(245,200,66,0.06);
-      pointer-events: none; line-height: 1;
-    }
+    /* No suit watermarks — removed (rendered as color emoji on iOS, overlaid CTA) */
     .day-picker-card:active { transform: scale(0.984); }
     .day-picker-card.today-card {
       border-color: var(--electric);
