@@ -637,8 +637,9 @@ function onReelLanded(i) {
   // Brief flash: brighter glow on landing, then settles to .landed CSS
   const win = wrap.querySelector('.reel-window');
   if (win) {
-    win.style.boxShadow = '0 0 28px rgba(245,200,66,0.85)';
-    setTimeout(() => { win.style.boxShadow = ''; }, 350);
+    // Thunder strike flash — peaks at electric white, settles to steady electric glow
+    win.style.boxShadow = '0 0 40px rgba(0,220,255,0.95), 0 0 80px rgba(0,200,255,0.5)';
+    setTimeout(() => { win.style.boxShadow = ''; }, 380); // CSS .landed takes over
   }
 }
 
@@ -1192,7 +1193,7 @@ function fireConfetti() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const COLORS  = ['#F5C842','#C8960C','#ffffff','#9B7FD0','#FFD700','#D0B8F0'];
+  const COLORS  = ['#F5C842','#00C8FF','#ffffff','#C8960C','#00EEFF','#B8D8F0'];
   const COUNT   = 90;
   const GRAVITY = 0.12;
   const DURATION = 3200; // ms total
