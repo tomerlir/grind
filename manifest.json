@@ -1,7 +1,7 @@
 {
   "name": "GRIND — Workout Roulette",
   "short_name": "GRIND",
-  "description": "Casino-style workout randomiser. Deal your training hand daily.",
+  "description": "Choose A, B, or C each week, then spin for exercise variations.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

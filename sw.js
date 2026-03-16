@@ -3,7 +3,7 @@
 // n8n webhook calls and Google Fonts CSS are never cached here
 // (fonts are cached naturally on first fetch by the cache handler below).
 
-const CACHE  = 'grind-v2';
+const CACHE  = 'grind-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -37,6 +37,7 @@ self.addEventListener('activate', e =>
 self.addEventListener('fetch', e => {
   // Never intercept webhook POSTs — must always go to the network
   if (e.request.url.includes('n8n')) return;
+  if (new URL(e.request.url).pathname === '/config.js') return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {
