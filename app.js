@@ -2644,12 +2644,10 @@ function wireEvents() {
   document
     .getElementById("exercise-back")
     .addEventListener("click", (e) => openExitSessionModal(e.currentTarget));
-  document
-    .getElementById("complete-ex-btn")
-    .addEventListener("click", () => {
-      dismissKeyboard();
-      setTimeout(handleExercisePrimaryAction, 50);
-    });
+  document.getElementById("complete-ex-btn").addEventListener("click", () => {
+    dismissKeyboard();
+    setTimeout(handleExercisePrimaryAction, 50);
+  });
   document.getElementById("sets-container").addEventListener("input", (e) => {
     const input = e.target.closest("[data-field]");
     if (!input) return;
