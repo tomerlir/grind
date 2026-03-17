@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta
             name="viewport"
-            content="width=device-width, initial-scale=1.0, user-scalable=no"
+            content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
         />
         <title>GRIND</title>
         <link rel="manifest" href="/manifest.json" />
@@ -74,12 +74,22 @@
                 --radius: 10px;
                 --radius-card: 16px;
                 --app-max-width: 34rem;
+                --safe-top: env(safe-area-inset-top, 0px);
+                --safe-right: env(safe-area-inset-right, 0px);
+                --safe-bottom: env(safe-area-inset-bottom, 0px);
+                --safe-left: env(safe-area-inset-left, 0px);
                 --screen-pad-inline: clamp(14px, 4.5vw, 24px);
+                --screen-pad-left: calc(
+                    var(--screen-pad-inline) + var(--safe-left)
+                );
+                --screen-pad-right: calc(
+                    var(--screen-pad-inline) + var(--safe-right)
+                );
                 --screen-pad-top: calc(
-                    clamp(14px, 4vw, 24px) + env(safe-area-inset-top, 0px)
+                    clamp(14px, 4vw, 24px) + var(--safe-top)
                 );
                 --screen-pad-bottom: calc(
-                    clamp(26px, 8vw, 56px) + env(safe-area-inset-bottom, 0px)
+                    clamp(26px, 8vw, 56px) + var(--safe-bottom)
                 );
                 --space-xs: clamp(6px, 1.8vw, 8px);
                 --space-sm: clamp(10px, 2.8vw, 12px);
@@ -115,6 +125,7 @@
                 --lh-title: 1.1;
                 --lh-body: 1.45;
                 --lh-label: 1.1;
+                --version-badge-clearance: 42px;
                 --reel-h: clamp(56px, 15vw, 64px);
             }
 
@@ -130,6 +141,7 @@
                 height: 100%;
                 min-height: 100svh;
                 min-height: 100dvh;
+                background: var(--bg);
                 -webkit-text-size-adjust: 100%;
             }
             body {
@@ -151,6 +163,7 @@
                 line-height: var(--lh-body);
                 min-height: 100svh;
                 min-height: 100dvh;
+                background-color: var(--bg);
                 overflow-x: hidden;
                 -webkit-tap-highlight-color: transparent;
             }
@@ -278,13 +291,12 @@
             /* ── SCREENS ─────────────────────────────────────────────────── */
             .screen {
                 display: none;
+                min-height: 100vh;
                 min-height: 100svh;
                 min-height: 100dvh;
-                height: 100svh;
-                height: 100dvh;
                 width: min(100%, var(--app-max-width));
-                padding: var(--screen-pad-top) var(--screen-pad-inline)
-                    var(--screen-pad-bottom);
+                padding: var(--screen-pad-top) var(--screen-pad-right)
+                    calc(120px + var(--safe-bottom)) var(--screen-pad-left);
                 margin: 0 auto;
                 flex-direction: column;
                 overflow-x: hidden;
@@ -296,6 +308,9 @@
             }
             #screen-exercise {
                 position: relative;
+                padding-bottom: calc(
+                    120px + var(--safe-bottom) + var(--version-badge-clearance)
+                );
             }
 
             /* ── SHARED — BACK BUTTON ────────────────────────────────────── */
@@ -1372,6 +1387,8 @@
             }
             .set-row.active-set {
                 border-color: var(--electric);
+                color: var(--gold);
+                background: linear-gradient(155deg, #12244c 0%, #09142d 100%);
                 box-shadow:
                     inset 0 0 0 1px var(--electric3),
                     inset 0 0 36px rgba(0, 100, 180, 0.14),
@@ -1394,7 +1411,7 @@
                 opacity: 0.82;
             }
             .set-row.focused-set {
-                padding: clamp(14px, 4vw, 18px);
+                padding: clamp(16px, 4.8vw, 22px);
             }
             .all-done-set {
                 opacity: 1;
@@ -1413,6 +1430,13 @@
                 letter-spacing: var(--tracking-label);
                 text-transform: uppercase;
             }
+            .set-row.active-set .set-num {
+                font-family: var(--font-display);
+                font-size: var(--type-display-sm);
+                letter-spacing: var(--tracking-display);
+                line-height: var(--lh-display);
+                text-shadow: 0 0 10px rgba(245, 200, 66, 0.18);
+            }
             .set-status {
                 font-family: var(--font-mono);
                 font-size: var(--type-label-xs);
@@ -1425,9 +1449,12 @@
                 background: rgba(255, 255, 255, 0.03);
             }
             .set-row.active-set .set-status {
-                color: var(--electric);
-                border-color: var(--electric3);
-                background: rgba(0, 200, 255, 0.08);
+                color: var(--gold);
+                border-color: rgba(245, 200, 66, 0.35);
+                background: rgba(245, 200, 66, 0.12);
+                font-size: var(--type-label-md);
+                letter-spacing: var(--tracking-label);
+                text-shadow: 0 0 8px rgba(245, 200, 66, 0.2);
             }
             .set-row.done-set .set-status {
                 color: var(--gold2);
@@ -1452,6 +1479,12 @@
                 color: var(--silver2);
                 text-transform: uppercase;
             }
+            .set-row.active-set .input-label {
+                font-size: var(--type-label-lg);
+                letter-spacing: var(--tracking-label);
+                color: var(--gold);
+                text-shadow: 0 0 8px rgba(245, 200, 66, 0.18);
+            }
             .set-input {
                 background: rgba(5, 13, 29, 0.85);
                 border: 1px solid var(--border);
@@ -1471,16 +1504,33 @@
                 -webkit-appearance: none;
                 appearance: none;
             }
+            .set-row.active-set .set-input {
+                min-height: 52px;
+                font-size: var(--type-title-lg);
+                color: var(--gold);
+                background: rgba(3, 9, 22, 0.92);
+                border-color: rgba(245, 200, 66, 0.24);
+                box-shadow: inset 0 0 0 1px rgba(245, 200, 66, 0.06);
+            }
             .set-input:focus {
                 outline: none;
                 border-color: var(--electric2);
                 box-shadow: 0 0 0 2px rgba(0, 200, 255, 0.12);
+            }
+            .set-row.active-set .set-input:focus {
+                border-color: var(--gold2);
+                box-shadow:
+                    0 0 0 2px rgba(245, 200, 66, 0.16),
+                    0 0 14px rgba(245, 200, 66, 0.12);
             }
             .set-input:disabled {
                 opacity: 0.42;
             }
             .set-input::placeholder {
                 color: var(--muted2);
+            }
+            .set-row.active-set .set-input::placeholder {
+                color: rgba(245, 200, 66, 0.32);
             }
             .set-input::-webkit-outer-spin-button,
             .set-input::-webkit-inner-spin-button {
@@ -1793,7 +1843,8 @@
                 display: none;
                 align-items: center;
                 justify-content: center;
-                padding: var(--screen-pad-inline);
+                padding: var(--screen-pad-top) var(--screen-pad-right)
+                    var(--screen-pad-bottom) var(--screen-pad-left);
                 z-index: 120;
             }
             .modal-backdrop.show {
@@ -1875,6 +1926,13 @@
                 background: transparent;
                 color: var(--silver2);
             }
+            .modal-card.update-modal {
+                border-color: var(--electric2);
+                box-shadow:
+                    inset 0 0 0 1px var(--electric3),
+                    0 18px 48px rgba(0, 0, 0, 0.45),
+                    0 0 22px rgba(0, 200, 255, 0.12);
+            }
 
             /* ── HISTORY SCREEN ──────────────────────────────────────────── */
             .history-header {
@@ -1886,15 +1944,6 @@
             .history-header-copy {
                 min-width: 0;
                 flex: 1;
-            }
-            .history-label {
-                font-family: var(--font-mono);
-                font-size: var(--type-label-md);
-                letter-spacing: var(--tracking-label-wide);
-                color: var(--electric);
-                text-transform: uppercase;
-                margin-bottom: 4px;
-                text-shadow: 0 0 8px var(--electric-glow);
             }
             .history-title {
                 font-family: var(--font-display);
@@ -2170,8 +2219,9 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                padding: var(--space-sm) var(--screen-pad-inline)
-                    calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+                padding: var(--space-sm) var(--screen-pad-right)
+                    calc(var(--space-sm) + var(--safe-bottom))
+                    var(--screen-pad-left);
                 background: var(--surface);
                 border-top: 1px solid var(--border);
                 font-family: var(--font-mono);
@@ -2193,14 +2243,34 @@
             .sync-bar.error {
                 color: var(--crimson-bright);
             }
+            .app-version-badge {
+                position: fixed;
+                right: calc(clamp(12px, 4vw, 18px) + var(--safe-right));
+                bottom: calc(8px + var(--safe-bottom));
+                padding: 6px 10px;
+                border: 1px solid rgba(0, 200, 255, 0.22);
+                border-radius: 999px;
+                background: rgba(4, 9, 26, 0.82);
+                color: var(--silver2);
+                font-family: var(--font-mono);
+                font-size: var(--type-label-xs);
+                letter-spacing: var(--tracking-label);
+                text-transform: uppercase;
+                box-shadow:
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+                    0 0 14px rgba(0, 200, 255, 0.08);
+                pointer-events: none;
+                z-index: 80;
+                backdrop-filter: blur(10px);
+            }
 
             @media (max-height: 760px) {
                 :root {
                     --screen-pad-top: calc(
-                        12px + env(safe-area-inset-top, 0px)
+                        12px + var(--safe-top)
                     );
                     --screen-pad-bottom: calc(
-                        22px + env(safe-area-inset-bottom, 0px)
+                        22px + var(--safe-bottom)
                     );
                     --reel-h: clamp(50px, 12vw, 58px);
                 }
@@ -2430,7 +2500,6 @@
             <div class="history-header">
                 <button class="back-btn" id="history-back">←</button>
                 <div class="history-header-copy">
-                    <div class="history-label">Chronicle</div>
                     <div class="history-title">HISTORY</div>
                 </div>
             </div>
@@ -2445,6 +2514,7 @@
         </div>
 
         <div class="sync-bar" id="sync-bar"></div>
+        <div class="app-version-badge" id="app-version-badge">V1 BETA</div>
         <div class="modal-backdrop" id="exit-session-modal" aria-hidden="true">
             <div
                 class="modal-card"
@@ -2482,9 +2552,39 @@
                 </div>
             </div>
         </div>
+        <div class="modal-backdrop" id="update-app-modal" aria-hidden="true">
+            <div
+                class="modal-card update-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="update-app-title"
+            >
+                <div class="modal-label">Update available</div>
+                <div class="modal-title" id="update-app-title">
+                    New version ready
+                </div>
+                <div class="modal-copy">
+                    A newer version of GRIND has finished downloading. Update
+                    now to load the latest changes.
+                </div>
+                <div class="modal-actions">
+                    <button
+                        class="modal-btn modal-btn-primary"
+                        id="update-app-confirm"
+                    >
+                        UPDATE NOW
+                    </button>
+                    <button
+                        class="modal-btn modal-btn-ghost"
+                        id="update-app-later"
+                    >
+                        LATER
+                    </button>
+                </div>
+            </div>
+        </div>
         <canvas id="confetti-canvas"></canvas>
 
-        <script src="config.js"></script>
         <script src="app.js"></script>
     </body>
 </html>

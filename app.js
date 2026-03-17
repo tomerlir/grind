@@ -17,13 +17,9 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
+  versionLabel: "v1 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
-};
-
-const CONFIG = {
-  ...DEFAULT_CONFIG,
-  ...(globalThis.GRIND_CONFIG || {}),
 };
 
 // ── DATA ───────────────────────────────────────────────────────────────────
@@ -1331,11 +1327,6 @@ function renderSets() {
   }
 
   const activeSet = session.currentSets[activeIdx];
-  const remainingAfterActive = session.currentSets.length - activeIdx - 1;
-  const upcomingLabel =
-    remainingAfterActive > 0
-      ? `${remainingAfterActive} set${remainingAfterActive === 1 ? "" : "s"} remaining after this one`
-      : "This is the final set for this exercise";
 
   container.innerHTML = `${completedBlock}
     <div class="set-row fadein active-set focused-set" id="set-row-${activeIdx}">
@@ -1347,7 +1338,7 @@ function renderSets() {
         <div class="input-group">
           <div class="input-label">Weight</div>
           <input class="set-input"
-            type="number" inputmode="decimal" step="0.5"
+            type="number" inputmode="decimal" enterkeyhint="next" step="0.5" autocomplete="off"
             placeholder="${activeSet.weight || "—"}"
             value="${activeSet.weight || ""}"
             ${isResting ? "disabled" : ""}
@@ -1356,7 +1347,7 @@ function renderSets() {
         <div class="input-group">
           <div class="input-label">Reps</div>
           <input class="set-input"
-            type="number" inputmode="numeric"
+            type="number" inputmode="numeric" enterkeyhint="done" autocomplete="off"
             placeholder="—"
             value="${activeSet.reps || ""}"
             ${isResting ? "disabled" : ""}
@@ -1364,6 +1355,13 @@ function renderSets() {
         </div>
       </div>
     </div>`;
+
+  const weightInput = document.getElementById(`weight-${activeIdx}`);
+  const repsInput = document.getElementById(`reps-${activeIdx}`);
+  [weightInput, repsInput].forEach((input) => {
+    if (!input) return;
+    input.addEventListener("focus", () => scrollIntoViewCentered(input));
+  });
 }
 
 function getActiveSetIndex() {
@@ -1423,6 +1421,27 @@ function handleExercisePrimaryAction() {
   }
 
   completeExercise();
+}
+
+function dismissKeyboard() {
+  const active = document.activeElement;
+  if (
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLTextAreaElement
+  ) {
+    active.blur();
+  }
+}
+
+function scrollIntoViewCentered(el) {
+  if (!el) return;
+
+  setTimeout(() => {
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, 300);
 }
 
 function syncExercisePrimaryAction() {
@@ -1783,6 +1802,8 @@ function appendHistory(entry) {
 }
 
 let historyOffset = 30; // display cap — shows last 30, "Show more" adds 30
+let updateRegistration = null;
+let isApplyingAppUpdate = false;
 
 function rebuildPRStateFromHistory(historyEntries = loadHistory()) {
   const previousPR = storageGet("grind:pr", {});
@@ -2028,12 +2049,12 @@ async function syncToSheets(payload) {
   const syncEl = document.getElementById("done-sync");
 
   if (
-    CONFIG.dryRun ||
-    !CONFIG.webhookUrl ||
-    CONFIG.webhookUrl.includes("YOUR_N8N")
+    DEFAULT_CONFIG.dryRun ||
+    !DEFAULT_CONFIG.webhookUrl ||
+    DEFAULT_CONFIG.webhookUrl.includes("YOUR_N8N")
   ) {
     if (syncEl) {
-      syncEl.textContent = "DRY RUN — set webhookUrl in CONFIG";
+      syncEl.textContent = "DRY RUN — set webhookUrl in DEFAULT_CONFIG";
       syncEl.className = "done-sync success";
     }
     return;
@@ -2044,7 +2065,7 @@ async function syncToSheets(payload) {
     syncEl.className = "done-sync syncing";
   }
   try {
-    const res = await fetch(CONFIG.webhookUrl, {
+    const res = await fetch(DEFAULT_CONFIG.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -2159,6 +2180,80 @@ function showSyncBar(msg, type = "") {
   bar.className = `sync-bar show ${type}`;
   clearTimeout(showSyncBar._timer);
   showSyncBar._timer = setTimeout(() => bar.classList.remove("show"), 3000);
+}
+
+function renderAppVersionBadge() {
+  const badge = document.getElementById("app-version-badge");
+  if (!badge) return;
+  badge.textContent = String(DEFAULT_CONFIG.versionLabel).trim().toUpperCase();
+}
+
+function openUpdateAppModal(registration) {
+  updateRegistration = registration;
+  const modal = document.getElementById("update-app-modal");
+  if (!modal) return;
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeUpdateAppModal() {
+  const modal = document.getElementById("update-app-modal");
+  if (!modal) return;
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function promptForWaitingServiceWorker(registration) {
+  if (!registration?.waiting) return;
+  openUpdateAppModal(registration);
+}
+
+function applyAppUpdate() {
+  const waiting = updateRegistration?.waiting;
+  if (!waiting) {
+    closeUpdateAppModal();
+    return;
+  }
+  isApplyingAppUpdate = true;
+  waiting.postMessage({ type: "SKIP_WAITING" });
+}
+
+function watchServiceWorkerRegistration(registration) {
+  if (!registration) return;
+  promptForWaitingServiceWorker(registration);
+
+  registration.addEventListener("updatefound", () => {
+    const installing = registration.installing;
+    if (!installing) return;
+
+    installing.addEventListener("statechange", () => {
+      if (
+        installing.state === "installed" &&
+        navigator.serviceWorker.controller
+      ) {
+        promptForWaitingServiceWorker(registration);
+      }
+    });
+  });
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => {
+        console.log("[GRIND] SW registered, scope:", reg.scope);
+        watchServiceWorkerRegistration(reg);
+      })
+      .catch((err) => console.warn("[GRIND] SW registration failed:", err));
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!isApplyingAppUpdate) return;
+    window.location.reload();
+  });
 }
 
 // ── PR OVERLAY ─────────────────────────────────────────────────────────────
@@ -2534,7 +2629,10 @@ function wireEvents() {
     .addEventListener("click", (e) => openExitSessionModal(e.currentTarget));
   document
     .getElementById("complete-ex-btn")
-    .addEventListener("click", handleExercisePrimaryAction);
+    .addEventListener("click", () => {
+      dismissKeyboard();
+      setTimeout(handleExercisePrimaryAction, 50);
+    });
   document.getElementById("sets-container").addEventListener("input", (e) => {
     const input = e.target.closest("[data-field]");
     if (!input) return;
@@ -2543,6 +2641,22 @@ function wireEvents() {
       input.dataset.field,
       input.value,
     );
+  });
+  document.getElementById("sets-container").addEventListener("keydown", (e) => {
+    const input = e.target.closest("[data-field]");
+    if (!input || e.key !== "Enter") return;
+
+    e.preventDefault();
+
+    if (input.dataset.field === "weight") {
+      const repsInput = document.getElementById(`reps-${input.dataset.idx}`);
+      if (repsInput) repsInput.focus();
+      return;
+    }
+
+    if (input.dataset.field === "reps") {
+      input.blur();
+    }
   });
 
   // Done screen
@@ -2583,10 +2697,21 @@ function wireEvents() {
     .addEventListener("click", (e) => {
       if (e.target.id === "exit-session-modal") closeExitSessionModal();
     });
+  document
+    .getElementById("update-app-confirm")
+    .addEventListener("click", applyAppUpdate);
+  document
+    .getElementById("update-app-later")
+    .addEventListener("click", closeUpdateAppModal);
+  document.getElementById("update-app-modal").addEventListener("click", (e) => {
+    if (e.target.id === "update-app-modal") closeUpdateAppModal();
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     const modal = document.getElementById("exit-session-modal");
     if (modal?.classList.contains("show")) closeExitSessionModal();
+    const updateModal = document.getElementById("update-app-modal");
+    if (updateModal?.classList.contains("show")) closeUpdateAppModal();
   });
 }
 
@@ -2594,7 +2719,20 @@ function wireEvents() {
 
 function init() {
   wireEvents();
+  renderAppVersionBadge();
   renderDayPicker();
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      const active = document.activeElement;
+      if (
+        active &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+      ) {
+        active.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  }
 
   // Flush any queued sync payloads from previous offline sessions
   flushSyncQueue();
@@ -2605,16 +2743,16 @@ async function flushSyncQueue() {
   if (queue.length === 0) return;
   if (!navigator.onLine) return;
   if (
-    CONFIG.dryRun ||
-    !CONFIG.webhookUrl ||
-    CONFIG.webhookUrl.includes("YOUR_N8N")
+    DEFAULT_CONFIG.dryRun ||
+    !DEFAULT_CONFIG.webhookUrl ||
+    DEFAULT_CONFIG.webhookUrl.includes("YOUR_N8N")
   )
     return;
 
   const remaining = [];
   for (const item of queue) {
     try {
-      const res = await fetch(CONFIG.webhookUrl, {
+      const res = await fetch(DEFAULT_CONFIG.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(item.payload),
@@ -2632,16 +2770,7 @@ async function flushSyncQueue() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-// Register service worker — enables offline use and "Add to Home Screen"
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((reg) => console.log("[GRIND] SW registered, scope:", reg.scope))
-      .catch((err) => console.warn("[GRIND] SW registration failed:", err));
-  });
-}
+registerServiceWorker();
 
 // ── TESTS ──────────────────────────────────────────────────────────────────
 // Run via: open index.html?test in the browser, then check the console.

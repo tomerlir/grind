@@ -1,7 +1,7 @@
 {
-  "name": "GRIND — Workout Roulette",
-  "short_name": "GRIND",
-  "description": "Choose A, B, or C each week, then spin for exercise variations.",
+  "name": "Grind: Olympus Workout",
+  "short_name": "Grind",
+  "description": "Structured full-body workouts with built-in variation. Let the God of Thunder generate your training.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
