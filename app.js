@@ -1303,23 +1303,22 @@ function renderSets() {
       const weightLabel =
         set.weight && set.weight !== "—" ? `${set.weight}kg` : "BW";
       const repsLabel = set.reps || "—";
-      return `<div class="set-history-chip">SET ${set.idx + 1} · ${weightLabel} × ${repsLabel}</div>`;
+      return `<div class="set-history-chip chip chip--muted">SET ${set.idx + 1} · ${weightLabel} × ${repsLabel}</div>`;
     })
     .join("");
 
   const completedBlock = completedMarkup
-    ? `<div class="set-history fadein">
-        <div class="set-history-label">Previous Sets</div>
+    ? `<div class="set-history card card--muted fadein">
+        <div class="set-history-label title-block__eyebrow">Previous Sets</div>
         <div class="set-history-chips">${completedMarkup}</div>
       </div>`
     : "";
 
   if (activeIdx === -1) {
     container.innerHTML = `${completedBlock}
-      <div class="set-row fadein done-set all-done-set">
+      <div class="set-row card card--completed fadein done-set all-done-set">
         <div class="set-row-top">
-          <div class="set-num">ALL SETS LOGGED</div>
-          <div class="set-status">READY</div>
+          <div class="set-num title-block__title">ALL SETS LOGGED</div>
         </div>
         <div class="set-summary-copy">Proceed when you are ready for the next exercise.</div>
       </div>`;
@@ -1329,14 +1328,13 @@ function renderSets() {
   const activeSet = session.currentSets[activeIdx];
 
   container.innerHTML = `${completedBlock}
-    <div class="set-row fadein active-set focused-set" id="set-row-${activeIdx}">
+    <div class="set-row card card--active fadein active-set focused-set" id="set-row-${activeIdx}">
       <div class="set-row-top">
-        <div class="set-num">SET ${activeIdx + 1}</div>
-        <div class="set-status">${isResting ? "RESTING" : "ACTIVE"}</div>
+        <div class="set-num title-block__title">SET ${activeIdx + 1}</div>
       </div>
       <div class="set-fields">
         <div class="input-group">
-          <div class="input-label">Weight</div>
+          <div class="input-label title-block__eyebrow">Weight</div>
           <input class="set-input"
             type="number" inputmode="decimal" enterkeyhint="next" step="0.5" autocomplete="off"
             placeholder="${activeSet.weight || "—"}"
@@ -1345,7 +1343,7 @@ function renderSets() {
             id="weight-${activeIdx}" data-idx="${activeIdx}" data-field="weight">
         </div>
         <div class="input-group">
-          <div class="input-label">Reps</div>
+          <div class="input-label title-block__eyebrow">Reps</div>
           <input class="set-input"
             type="number" inputmode="numeric" enterkeyhint="done" autocomplete="off"
             placeholder="—"
@@ -1453,7 +1451,7 @@ function syncExercisePrimaryAction() {
   const allDone = activeIdx === -1;
   const isLastExercise = session.slotIndex === session.slots.length - 1;
 
-  btn.className = "complete-ex-btn";
+  btn.className = "complete-ex-btn button-primary";
 
   if (remaining > 0) {
     const m = Math.floor(remaining / 60);
@@ -2355,26 +2353,45 @@ function renderDayPickerCards() {
       );
       let statusLabel = "";
       let ctaLabel = "START SESSION ▸";
+      let chipLabel = `${day.slots.length} slots`;
+      let chipClass = "chip chip--muted day-card-status";
 
       if (isDone) {
         statusLabel = `Completed on ${completedWeekday || "this week"}`;
         ctaLabel = `COMPLETED ON ${(completedWeekday || "THIS WEEK").toUpperCase()}`;
+        chipLabel = "Completed";
+        chipClass = "chip chip--completed day-card-status";
       } else if (isActiveSession) {
         statusLabel = "Session in progress";
         ctaLabel = "RESUME FROM BANNER ABOVE";
+        chipLabel = "In progress";
+        chipClass = "chip chip--active day-card-status";
       } else if (isLocked) {
         statusLabel = "Locked while session is active";
         ctaLabel = "FINISH OR DISCARD CURRENT SESSION";
       }
 
+      const stateClass = isDone
+        ? "completed card--completed"
+        : isActiveSession
+          ? "active-session card--active"
+          : isLocked
+            ? "locked card--muted"
+            : "";
+      const metaText = statusLabel || `${day.slots.length} exercises`;
+
       return `
-      <div class="day-picker-card fadein ${isDone ? "completed" : ""} ${isLocked ? "locked" : ""} ${isActiveSession ? "active-session" : ""}"
+      <div class="day-picker-card card fadein ${stateClass}"
            data-day="${templateId}">
         <div class="day-card-top">
           <div class="day-card-letter">${templateId}</div>
+          <div class="${chipClass}">${chipLabel}</div>
         </div>
-        <div class="day-card-name">${day.focus.toUpperCase()}</div>
-        <div class="day-card-cta">${ctaLabel}</div>
+        <div class="title-block">
+          <div class="day-card-name title-block__title">${day.focus.toUpperCase()}</div>
+          <div class="day-card-focus title-block__meta">${metaText}</div>
+          <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
+        </div>
       </div>`;
     })
     .join("");
@@ -2470,7 +2487,7 @@ function renderSlotMachine(skipSpin = false) {
         .map((name) => `<div class="reel-item">${name.toUpperCase()}</div>`)
         .join("");
       return `
-      <div class="reel-wrap" id="reel-wrap-${i}">
+      <div class="reel-wrap card card--muted" id="reel-wrap-${i}">
         <div class="reel-window">
           <div class="reel-drum" id="reel-drum-${i}" style="transform:translateY(0)">
             ${drums}
