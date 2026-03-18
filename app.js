@@ -145,13 +145,6 @@ const EXERCISES = {
       restSeconds: 90,
       tip: "Hips high, body in an inverted V. Head goes to the floor between your hands. Vertical pressing pattern.",
     },
-    {
-      name: "Dumbbell High Pull",
-      sets: 3,
-      repsRange: "10–12",
-      restSeconds: 90,
-      tip: "Pull DBs to chin height, elbows flare out above hands. Explosive up, controlled down.",
-    },
   ],
 
   "pull-vertical": [
@@ -192,13 +185,6 @@ const EXERCISES = {
       repsRange: "10–12 each",
       restSeconds: 90,
       tip: "Knee and hand on a sturdy chair or sofa. Drive the elbow back and up, not just up. Full stretch at the bottom.",
-    },
-    {
-      name: "Dumbbell Rear Delt Fly",
-      sets: 3,
-      repsRange: "12–15",
-      restSeconds: 60,
-      tip: "Hinge forward 45°. Arms out to the sides with a slight bend. Lead with the elbows, not the hands.",
     },
   ],
 
@@ -281,10 +267,34 @@ const EXERCISES = {
     },
   ],
 
+  accessory: [
+    {
+      name: "Dumbbell High Pull",
+      sets: 3,
+      repsRange: "10–12",
+      restSeconds: 90,
+      tip: "Pull DBs to chin height, elbows flare out above hands. Explosive up, controlled down.",
+    },
+    {
+      name: "Dumbbell Rear Delt Fly",
+      sets: 3,
+      repsRange: "12–15",
+      restSeconds: 90,
+      tip: "Hinge forward 45°. Arms out to the sides with a slight bend. Lead with the elbows, not the hands.",
+    },
+    {
+      name: "Dumbbell Side Raise",
+      sets: 3,
+      repsRange: "8–12",
+      restSeconds: 90,
+      tip: "Lean forward slightly (maybe 10–15°) and perform slow eccentrics.",
+    },
+  ],
+
   calves: [
     {
       name: "Single-Leg Calf Raise",
-      sets: 4,
+      sets: 3,
       repsRange: "12–15 each",
       restSeconds: 60,
       tip: "On a step edge for full ROM. Slow up, pause at top, slow down. Add weight in one hand when it gets easy.",
@@ -292,25 +302,26 @@ const EXERCISES = {
   ],
 };
 
-// Day definitions: { id → { name, focus, slots: [{ key, label }] } }
+// Day definitions: { id → { name, slots: [{ key, label }] } }
 // Slot position index (0-based) is used as the reservation key.
 const DAYS = {
   A: {
-    name: "Day A",
-    focus: "Squat · Push · Pull",
+    name: "Workout A",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
       { key: "pull-vertical", label: "PULL · VERTICAL" },
       { key: "lower-hinge", label: "LOWER · HINGE" },
       { key: "push-vertical", label: "PUSH · VERTICAL" },
+      { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
+      { key: "arms-tricep", label: "ARMS · TRICEP" },
       { key: "arms-bicep", label: "ARMS · BICEP" },
       { key: "core", label: "CORE" },
+      { key: "calves", label: "CALVES" },
     ],
   },
   B: {
-    name: "Day B",
-    focus: "Hinge · Push · Pull",
+    name: "Workout B",
     slots: [
       { key: "lower-hinge", label: "LOWER · HINGE" },
       { key: "pull-vertical", label: "PULL · VERTICAL" }, // slot 1
@@ -318,20 +329,24 @@ const DAYS = {
       { key: "lower-glute", label: "LOWER · GLUTE" },
       { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
+      { key: "accessory", label: "ACCESSORY" },
       { key: "core", label: "CORE" },
+      { key: "calves", label: "CALVES" },
     ],
   },
   C: {
-    name: "Day C",
-    focus: "Lunge · Unilateral · Arms",
+    name: "Workout C",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
       { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
-      { key: "lower-quad", label: "LOWER · LUNGE" }, // same pool, different label — intentional
-      { key: "pull-vertical", label: "PULL · LAT" },
+      { key: "lower-glute", label: "LOWER · GLUTE" },
+      { key: "pull-vertical", label: "PULL · VERTICAL" },
       { key: "arms-bicep", label: "ARMS · BICEP" },
       { key: "arms-tricep", label: "ARMS · TRICEP" },
+      { key: "accessory", label: "ACCESSORY" },
+      { key: "core", label: "CORE" },
+      { key: "calves", label: "CALVES" },
     ],
   },
 };
@@ -1333,7 +1348,7 @@ function renderSets() {
         <div class="set-num title-block__title">SET ${activeIdx + 1}</div>
       </div>
       <div class="set-fields">
-        <div class="input-group">
+        <div class="slot-day-sub-group">
           <div class="input-label title-block__eyebrow">Weight</div>
           <input class="set-input"
             type="number" inputmode="decimal" enterkeyhint="next" step="0.5" autocomplete="off"
@@ -2244,6 +2259,12 @@ function registerServiceWorker() {
       .then((reg) => {
         console.log("[GRIND] SW registered, scope:", reg.scope);
         watchServiceWorkerRegistration(reg);
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            reg.update();
+          }
+        });
       })
       .catch((err) => console.warn("[GRIND] SW registration failed:", err));
   });
@@ -2378,17 +2399,17 @@ function renderDayPickerCards() {
           : isLocked
             ? "locked card--muted"
             : "";
-      const metaText = statusLabel || `${day.slots.length} exercises`;
+      const metaText = statusLabel;
 
       return `
       <div class="day-picker-card card fadein ${stateClass}"
            data-day="${templateId}">
         <div class="day-card-top">
-          <div class="day-card-letter">${templateId}</div>
+          <div class="day-card-letter">Workout ${templateId}</div>
           <div class="${chipClass}">${chipLabel}</div>
+
         </div>
         <div class="title-block">
-          <div class="day-card-name title-block__title">${day.focus.toUpperCase()}</div>
           <div class="day-card-focus title-block__meta">${metaText}</div>
           <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
         </div>
@@ -2469,9 +2490,7 @@ function launchExerciseFromSession() {
 function renderSlotMachine(skipSpin = false) {
   const day = DAYS[session.templateId];
   document.getElementById("slot-day-title").textContent =
-    `DAY ${session.templateId}`;
-  document.getElementById("slot-day-sub").textContent =
-    `${day.focus} · ${session.slots.length} exercises`;
+    `Workout ${session.templateId}`;
 
   const container = document.getElementById("reels-container");
   const statusBtn = document.getElementById("slot-trigger-status");
