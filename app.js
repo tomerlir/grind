@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1 beta",
+  versionLabel: "v1.1 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -2410,7 +2410,6 @@ function renderDayPickerCards() {
 
         </div>
         <div class="title-block">
-          <div class="day-card-focus title-block__meta">${metaText}</div>
           <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
         </div>
       </div>`;

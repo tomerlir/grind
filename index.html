@@ -772,7 +772,7 @@
                 display: flex;
                 align-items: center;
                 gap: var(--space-md);
-                margin-bottom: var(--space-md);
+                margin-bottom: var(--space-sm);
             }
             .slot-machine-header > div {
                 min-width: 0;
@@ -806,6 +806,7 @@
                 flex-direction: column;
                 gap: var(--space-sm);
                 min-height: 0;
+                max-height: 85vh;
             }
 
             /* Zeus slot machine frame — Greek double-rule border + electric inner glow */
@@ -822,7 +823,7 @@
                     /* outer electric glow */ 0 0 30px rgba(0, 200, 255, 0.15),
                     0 0 60px rgba(0, 200, 255, 0.06);
                 border-radius: clamp(16px, 4.5vw, 18px);
-                padding: var(--space-md) var(--space-sm) var(--space-lg);
+                padding: var(--space-xs);
                 position: relative;
                 display: flex;
                 flex-direction: column;
@@ -1196,7 +1197,7 @@
                 justify-content: center;
                 padding: 0 clamp(8px, 2.5vw, 10px);
                 font-family: var(--font-display);
-                font-size: var(--type-title-md);
+                font-size: var(--type-title-sm);
                 font-weight: 400;
                 letter-spacing: var(--tracking-display-tight);
                 color: var(--text2);
@@ -1636,20 +1637,17 @@
                 color: var(--gold);
                 letter-spacing: var(--tracking-display);
                 line-height: var(--lh-display);
-                margin-bottom: var(--space-xs);
+                margin-bottom: var(--space-sm);
                 text-shadow:
                     0 0 10px rgba(245, 200, 66, 0.8),
                     0 0 30px rgba(245, 200, 66, 0.4),
                     0 0 70px rgba(0, 200, 255, 0.25);
             }
             .done-sub {
-                font-family: var(--font-mono);
-                font-size: var(--type-label-lg);
-                letter-spacing: var(--tracking-label-wide);
-                color: var(--electric);
-                text-transform: uppercase;
+                font-size: var(--type-label-md);
+                letter-spacing: var(--tracking-label-tight);
+                color: var(--silver);
                 margin-bottom: var(--space-lg);
-                text-shadow: 0 0 8px var(--electric-glow);
             }
             .done-stats {
                 display: grid;
@@ -2207,10 +2205,6 @@
                 .history-header {
                     margin-bottom: var(--space-sm);
                 }
-                .slot-machine-frame {
-                    padding-top: var(--space-sm);
-                    padding-bottom: var(--space-md);
-                }
                 .exercise-progress-strip {
                     padding: var(--space-xs) 0 var(--space-sm);
                 }
@@ -2447,7 +2441,7 @@
         </div>
 
         <div class="sync-bar" id="sync-bar"></div>
-        <div class="app-version-badge" id="app-version-badge">V1.2 BETA</div>
+        <div class="app-version-badge" id="app-version-badge"></div>
         <div class="modal-backdrop" id="exit-session-modal" aria-hidden="true">
             <div
                 class="modal-card"
