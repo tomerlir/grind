@@ -468,7 +468,7 @@
             .title-block__subtitle {
                 font-size: var(--type-label-md);
                 letter-spacing: var(--tracking-label-tight);
-                color: var(--silver2);
+                color: var(--silver);
                 line-height: 1.35;
             }
 
@@ -602,69 +602,55 @@
                     0 0 20px rgba(245, 200, 66, 0.5),
                     0 0 50px rgba(0, 200, 255, 0.35),
                     0 0 90px rgba(0, 200, 255, 0.15);
+                margin-bottom: var(--space-md);
             }
             .logo-sub {
-                font-family: var(--font-mono);
-                font-size: var(--type-label-md);
-                letter-spacing: var(--tracking-label);
-                color: var(--electric);
-                text-transform: uppercase;
-                margin-top: var(--space-xs);
-                text-shadow: 0 0 10px var(--electric-glow);
+                font-size: var(--type-body-md);
+                color: var(--silver);
+                line-height: var(--lh-body);
+            }
+            .logo-sub div:first-child {
+                font-size: 16px;
+                /*color: white;*/
             }
 
+            .logo-sub div:last-child {
+                font-size: 14px;
+                /*color: rgba(255, 255, 255, 0.7);*/
+                margin-top: 2px;
+            }
             /* Greek ornamental divider */
-            .zeus-divider {
-                display: flex;
-                align-items: center;
-                gap: var(--space-sm);
-                margin: 0 0 var(--space-lg);
-                height: 16px;
-                user-select: none;
-            }
-            .zeus-divider::before,
-            .zeus-divider::after {
-                content: "";
-                flex: 1;
-                height: 12px;
-                border-top: 2px solid var(--gold2);
-                border-bottom: 2px solid var(--gold2);
-                background: linear-gradient(
-                        90deg,
-                        transparent 0 4px,
-                        var(--gold2) 4px 6px,
-                        transparent 6px 14px,
-                        var(--gold2) 14px 16px,
-                        transparent 16px 24px
-                    )
-                    repeat-x center / 24px 100%;
-                box-shadow:
-                    0 0 10px rgba(245, 200, 66, 0.18),
-                    inset 0 0 6px rgba(0, 200, 255, 0.08);
-            }
-            .zeus-divider::after {
-                transform: scaleX(-1);
-            }
-            .zeus-divider::before {
-                transform-origin: center;
-            }
-            .zeus-divider span {
-                width: clamp(28px, 10vw, 40px);
-                height: 12px;
-                flex: 0 0 auto;
-                border: 2px solid var(--gold2);
-                background: linear-gradient(
-                        90deg,
-                        transparent 0 6px,
-                        var(--gold2) 6px 8px,
-                        transparent 8px 16px,
-                        var(--gold2) 16px 18px,
-                        transparent 18px 100%
-                    )
-                    repeat-x center / 24px 100%;
-                box-shadow:
-                    0 0 10px rgba(245, 200, 66, 0.18),
-                    inset 0 0 6px rgba(0, 200, 255, 0.08);
+            .meander-divider {
+                height: 20px;
+                width: 100%;
+                margin: 16px 0;
+                opacity: 0.95;
+
+                background-image: url("data:image/svg+xml;utf8,\
+            <svg xmlns='http://www.w3.org/2000/svg' width='48' height='20' viewBox='0 0 48 20'>\
+              <path d='\
+                M0 2\
+                H46\
+                V18\
+                H28\
+                V10\
+                H38\
+                V2\
+                H10\
+                V10\
+                H20\
+                V18\
+                H0\
+                Z'\
+                fill='none'\
+                stroke='%23D4AF37'\
+                stroke-width='2'\
+                stroke-linejoin='miter'\
+                shape-rendering='crispEdges'/>\
+            </svg>");
+                background-repeat: repeat-x;
+                background-position: center;
+                background-size: 48px 20px;
             }
 
             /* Resume banner */
@@ -2253,10 +2239,11 @@
         <div class="screen active" id="screen-day-picker">
             <div class="day-picker-header">
                 <div class="logo">GRIND</div>
-                <!--<div class="logo-sub">⚡ Workout Slot Machine ⚡</div>-->
-                <!--<div class="zeus-divider" aria-hidden="true">
-                    <span></span>
-                </div>-->
+                <div class="meander-divider" aria-hidden="true"></div>
+                <div class="logo-sub">
+                    <div>Choose a workout</div>
+                    <div>Same structure. Different every time.</div>
+                </div>
             </div>
 
             <div
