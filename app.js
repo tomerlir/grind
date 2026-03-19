@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.1 beta",
+  versionLabel: "v1.2 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -2259,12 +2259,6 @@ function registerServiceWorker() {
       .then((reg) => {
         console.log("[GRIND] SW registered, scope:", reg.scope);
         watchServiceWorkerRegistration(reg);
-
-        document.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "visible") {
-            reg.update();
-          }
-        });
       })
       .catch((err) => console.warn("[GRIND] SW registration failed:", err));
   });
