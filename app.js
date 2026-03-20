@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.1 beta",
+  versionLabel: "v1.2 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -32,22 +32,22 @@ const EXERCISES = {
       name: "Bulgarian Split Squat",
       sets: 4,
       repsRange: "6–10",
-      restSeconds: 120,
-      tip: "Front foot flat, torso upright. Drive through the heel. Control the descent — 2s down.",
+      restSeconds: 90,
+      tip: "Keep your front foot flat and drive through your heel as you stand up.",
     },
     {
       name: "Dumbbell Goblet Squat",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "3-second eccentric. Elbows inside knees at the bottom. Pause 1s at depth.",
+      tip: "Pause for a second at the bottom and push your knees out as you stand.",
     },
     {
       name: "Dumbbell Alternating Lunges",
       sets: 3,
       repsRange: "20–24 steps",
       restSeconds: 90,
-      tip: "Long stride so the front shin stays vertical. Drive the back knee down, not forward.",
+      tip: "Take a long enough stride that your front shin stays vertical as you lower down.",
     },
   ],
 
@@ -57,21 +57,21 @@ const EXERCISES = {
       sets: 4,
       repsRange: "6–12",
       restSeconds: 90,
-      tip: "Hinge at the hip, not the waist. Feel the stretch in hamstrings before reversing. Neutral spine throughout.",
+      tip: "Push your hips back until you feel your hamstrings stretch, then drive them forward.",
     },
     {
       name: "Single-Leg Romanian Deadlift",
       sets: 3,
       repsRange: "8–10 each",
       restSeconds: 90,
-      tip: "Use a wall for balance if needed. Keep hips square — don't rotate to the standing leg.",
+      tip: "Keep both hips level — don't let the free side rotate open as you hinge.",
     },
     {
       name: "Dumbbell Good Morning",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "Light weight. DB on one shoulder or held at chest. Hinge until you feel hamstring tension, then drive hips forward.",
+      tip: "Hinge until you feel tension in your hamstrings, then stand by pushing your hips forward.",
     },
   ],
 
@@ -81,45 +81,47 @@ const EXERCISES = {
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "Shoulders on sofa edge, DB on hips. Squeeze hard at the top. Lower until hips nearly touch floor.",
+      tip: "Squeeze your glutes hard at the top and hold for a second before lowering.",
     },
     {
       name: "Single-Leg Hip Thrust",
       sets: 3,
       repsRange: "10–12 each",
       restSeconds: 90,
-      tip: "Same setup, one leg extended. Drives the contraction into the working glute exclusively.",
+      tip: "Drive through the heel of your planted foot and squeeze at the top of each rep.",
     },
   ],
 
   "push-horizontal": [
     {
       name: "Deficit Push-Up",
+      bodyweight: true,
       sets: 4,
       repsRange: "8–15",
       restSeconds: 90,
-      tip: "Hands on books or dumbbell plates for extra depth. Let chest sink below hand level. Full range is what makes this better.",
+      tip: "Let your chest sink below your hands at the bottom — that extra depth is the whole point.",
     },
     {
       name: "Dumbbell Floor Press",
       sets: 4,
       repsRange: "8–12",
       restSeconds: 90,
-      tip: "Elbows 45° from torso. Touch the floor lightly each rep — don't bounce. Control the descent.",
+      tip: "Lower until your elbows lightly touch the floor, then press — no bouncing.",
     },
     {
       name: "Dumbbell Floor Fly",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "Slight bend in the elbows throughout. Stretch is everything here — feel the pecs at the bottom.",
+      tip: "Focus on feeling the stretch across your chest at the bottom of each rep.",
     },
     {
       name: "Archer Push-Up",
+      bodyweight: true,
       sets: 3,
       repsRange: "8–12 each",
       restSeconds: 90,
-      tip: "Wide hand position. Shift weight to one arm and lower. The other arm stays straight as a guide. Brutal on the chest.",
+      tip: "Shift your weight onto one arm as you lower, keeping the other arm straight out to the side.",
     },
   ],
 
@@ -129,45 +131,48 @@ const EXERCISES = {
       sets: 3,
       repsRange: "10–12",
       restSeconds: 90,
-      tip: "Press straight up, not forward. Lock out at the top. Lower to shoulder height with control.",
+      tip: "Press straight up over your head, not out in front of you.",
     },
     {
       name: "Arnold Press",
       sets: 3,
       repsRange: "10–12",
       restSeconds: 90,
-      tip: "Start with palms facing you, rotate as you press. Slow rotation on the way down is where the work is.",
+      tip: "Rotate your palms away from you as you press up, and reverse the rotation on the way down.",
     },
     {
       name: "Pike Push-Up",
+      bodyweight: true,
       sets: 3,
       repsRange: "10–15",
       restSeconds: 90,
-      tip: "Hips high, body in an inverted V. Head goes to the floor between your hands. Vertical pressing pattern.",
+      tip: "Keep your hips high and lower the top of your head toward the floor between your hands.",
     },
   ],
 
   "pull-vertical": [
     {
       name: "Pull-Up",
+      bodyweight: true,
       sets: 4,
       repsRange: "6–10",
       restSeconds: 90,
-      tip: "Dead hang start. Pull elbows to your hips, not your shoulders to the bar. Full ROM every rep.",
+      tip: "Think about pulling your elbows down to your sides rather than pulling your chin to the bar.",
     },
     {
       name: "Chin-Up",
+      bodyweight: true,
       sets: 4,
       repsRange: "6–10",
       restSeconds: 90,
-      tip: "Supinated grip. Biceps assist more here. Same cue: elbows to hips. Squeeze the lat at the top.",
+      tip: "Think about driving your elbows down and back, and squeeze at the top.",
     },
     {
       name: "Dumbbell Pullover",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "Lie across a sofa edge, shoulders supported. Arms straight, arc the DB from over your chest to behind your head. Feel the lat stretch.",
+      tip: "Keep your arms straight and focus on feeling the stretch in your sides as the weight goes back.",
     },
   ],
 
@@ -177,14 +182,14 @@ const EXERCISES = {
       sets: 3,
       repsRange: "10–12 each",
       restSeconds: 90,
-      tip: "Lie face-down over a sofa arm or ottoman, chest hanging off. Pull elbows back and squeeze shoulder blades. No momentum.",
+      tip: "Pull your elbows straight back and squeeze your shoulder blades together at the top.",
     },
     {
       name: "Single-Arm Dumbbell Row",
       sets: 3,
       repsRange: "10–12 each",
       restSeconds: 90,
-      tip: "Knee and hand on a sturdy chair or sofa. Drive the elbow back and up, not just up. Full stretch at the bottom.",
+      tip: "Drive your elbow back and up — think about putting it in your back pocket.",
     },
   ],
 
@@ -194,14 +199,14 @@ const EXERCISES = {
       sets: 3,
       repsRange: "10–12",
       restSeconds: 60,
-      tip: "Start neutral, supinate at the top. The twist is where the peak contraction lives. Squeeze hard.",
+      tip: "Rotate your palm to face the ceiling as you curl up and squeeze hard at the top.",
     },
     {
       name: "Hammer Curl",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 60,
-      tip: "Neutral grip throughout. Hits brachialis and brachioradialis. Slower tempo = more time under tension.",
+      tip: "Keep your palms facing each other the whole way and go slow on the way down.",
     },
   ],
 
@@ -211,59 +216,64 @@ const EXERCISES = {
       sets: 3,
       repsRange: "10–12",
       restSeconds: 60,
-      tip: "Upper arm parallel to floor throughout. Extend fully and hold 1s. Squeeze hard at lockout.",
+      tip: "Keep your upper arms still and extend fully, squeezing for a second at lockout.",
     },
     {
       name: "Dumbbell Tricep Kickback",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 60,
-      tip: "Hinge forward, upper arm parallel to floor. Extend to full lockout. Slow on the way back.",
+      tip: "Extend your arm to fully straight and go slow on the way back — that's where the work is.",
     },
     {
       name: "Diamond Push-Up",
+      bodyweight: true,
       sets: 3,
       repsRange: "10–15",
       restSeconds: 60,
-      tip: "Hands close, forming a diamond. Elbows track back alongside the torso, not out wide.",
+      tip: "Keep your elbows tracking back alongside your body, not flaring out to the sides.",
     },
   ],
 
   core: [
     {
       name: "Hanging Knee Raise",
+      bodyweight: true,
       sets: 3,
       repsRange: "12–15",
       restSeconds: 60,
-      tip: "2s up, 2s down. No swinging. At the top, posterior-tilt the pelvis to fully contract the abs.",
+      tip: "Take two seconds up and two seconds down — no swinging.",
     },
     {
       name: "Hollow Body Hold",
+      bodyweight: true,
       sets: 3,
       repsRange: "20–30s",
       restSeconds: 60,
-      tip: "Lower back pressed into floor. Arms by ears, legs straight and low. If lower back lifts, raise legs higher.",
+      tip: "Press your lower back into the floor — if it lifts off, raise your legs higher.",
     },
     {
       name: "Weighted Crunch",
       sets: 3,
       repsRange: "15–20",
       restSeconds: 60,
-      tip: "Hold DB on chest. Curl the ribcage toward the pelvis — don't just lift the head. Slow and controlled.",
+      tip: "Curl your ribcage toward your hips rather than just lifting your head.",
     },
     {
       name: "Plank Hold",
+      bodyweight: true,
       sets: 3,
       repsRange: "30–45s",
       restSeconds: 60,
-      tip: "Forearms down, squeeze everything: quads, glutes, abs. Body in one rigid line. Don't let hips drop.",
+      tip: "Squeeze your glutes and abs together — your body should feel like one rigid plank.",
     },
     {
       name: "Dead Bug",
+      bodyweight: true,
       sets: 3,
       repsRange: "10–12 each",
       restSeconds: 60,
-      tip: "Press lower back into floor the entire time. Opposite arm and leg extend slowly. Breathing matters here.",
+      tip: "Keep your lower back pressed into the floor the entire time, even as your limbs extend.",
     },
   ],
 
@@ -273,21 +283,21 @@ const EXERCISES = {
       sets: 3,
       repsRange: "10–12",
       restSeconds: 90,
-      tip: "Pull DBs to chin height, elbows flare out above hands. Explosive up, controlled down.",
+      tip: "Pull the dumbbells up to chin height with your elbows flaring out above your hands.",
     },
     {
       name: "Dumbbell Rear Delt Fly",
       sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
-      tip: "Hinge forward 45°. Arms out to the sides with a slight bend. Lead with the elbows, not the hands.",
+      tip: "Lead with your elbows out to the sides rather than lifting with your hands.",
     },
     {
       name: "Dumbbell Side Raise",
       sets: 3,
       repsRange: "8–12",
       restSeconds: 90,
-      tip: "Lean forward slightly (maybe 10–15°) and perform slow eccentrics.",
+      tip: "Lean slightly forward and go slow on the way down — that's the part that actually builds the shoulder.",
     },
   ],
 
@@ -297,7 +307,7 @@ const EXERCISES = {
       sets: 3,
       repsRange: "12–15 each",
       restSeconds: 60,
-      tip: "On a step edge for full ROM. Slow up, pause at top, slow down. Add weight in one hand when it gets easy.",
+      tip: "Go slow in both directions and pause at the top — rushing this one kills the effect.",
     },
   ],
 };
@@ -378,6 +388,396 @@ function storageDel(key) {
   } catch {
     /* ignore */
   }
+}
+
+// ── ONBOARDING ─────────────────────────────────────────────────────────────
+
+const ONBOARDING_STORAGE_KEY = "grind:onboarding";
+const ONBOARDING_STEP_HOME = "home_card";
+const ONBOARDING_STEP_PULL = "pull_handle";
+const ONBOARDING_STEP_START = "start_button";
+const ONBOARDING_STEP_EXERCISE_LOG = "exercise_log";
+const ONBOARDING_STEP_EXERCISE_BUTTON = "exercise_button";
+const ONBOARDING_STEPS = [
+  ONBOARDING_STEP_HOME,
+  ONBOARDING_STEP_PULL,
+  ONBOARDING_STEP_START,
+  ONBOARDING_STEP_EXERCISE_LOG,
+  ONBOARDING_STEP_EXERCISE_BUTTON,
+];
+const ONBOARDING_STATUSES = ["active", "completed", "dismissed"];
+const ONBOARDING_SHOW_DELAY_MS = 1400;
+
+const ONBOARDING_CONFIG = {
+  [ONBOARDING_STEP_HOME]: {
+    label: "Home",
+    copy: "Tap a workout to begin",
+    getTargets: () =>
+      document.querySelector('[data-onboarding-target="home-card"]'),
+  },
+  [ONBOARDING_STEP_PULL]: {
+    label: "Pull Screen",
+    copy: "Pull down to randomize your exercises",
+    getTargets: () => document.getElementById("pull-trigger-handle"),
+  },
+  [ONBOARDING_STEP_START]: {
+    label: "Pull Screen",
+    copy: "Your workout is set — start when ready",
+    getTargets: () => {
+      const button = document.getElementById("slot-trigger-status");
+      return button && !button.disabled ? button : null;
+    },
+  },
+  [ONBOARDING_STEP_EXERCISE_LOG]: {
+    label: "Exercise",
+    copy: "Log each set to move forward",
+    getTargets: () => {
+      const activeIdx =
+        session?.currentSets?.findIndex((set) => !set.done) ?? -1;
+      return activeIdx >= 0
+        ? document.getElementById(`set-row-${activeIdx}`)
+        : null;
+    },
+    getTooltipAnchor: () => document.getElementById("complete-ex-btn"),
+    tooltipPlacement: "above",
+  },
+  [ONBOARDING_STEP_EXERCISE_BUTTON]: {
+    label: "Exercise",
+    copy: "Tap the button to log this set",
+    getTargets: () => {
+      const button = document.getElementById("complete-ex-btn");
+      return button && !button.disabled ? button : null;
+    },
+    getTooltipAnchor: () => document.getElementById("complete-ex-btn"),
+    tooltipPlacement: "above",
+  },
+};
+
+let onboarding = null;
+let onboardingTargetNodes = [];
+let onboardingRefreshFrame = 0;
+let onboardingShowTimer = null;
+let onboardingScheduledKey = "";
+let onboardingShownKey = "";
+
+function createDefaultOnboardingState() {
+  return {
+    step: ONBOARDING_STEP_HOME,
+    status: "active",
+    hasCompletedOnboarding: false,
+    hasDismissedOnboarding: false,
+  };
+}
+
+function normalizeOnboardingState(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const normalized = {
+    ...createDefaultOnboardingState(),
+    ...value,
+  };
+
+  if (normalized.step === "exercise_log_ready") {
+    normalized.step = ONBOARDING_STEP_EXERCISE_BUTTON;
+  }
+
+  if (!ONBOARDING_STEPS.includes(normalized.step)) {
+    normalized.step = ONBOARDING_STEP_HOME;
+  }
+
+  if (normalized.hasCompletedOnboarding) normalized.status = "completed";
+  if (normalized.hasDismissedOnboarding) normalized.status = "dismissed";
+  if (!ONBOARDING_STATUSES.includes(normalized.status)) {
+    normalized.status = "active";
+  }
+
+  normalized.hasCompletedOnboarding = normalized.status === "completed";
+  normalized.hasDismissedOnboarding = normalized.status === "dismissed";
+
+  return normalized;
+}
+
+function saveOnboarding() {
+  if (!onboarding) return;
+  storageSet(ONBOARDING_STORAGE_KEY, onboarding);
+}
+
+function ensureOnboardingState() {
+  const stored = normalizeOnboardingState(
+    storageGet(ONBOARDING_STORAGE_KEY, null),
+  );
+
+  if (stored) {
+    onboarding = stored;
+    return onboarding;
+  }
+
+  const hasExistingActivity =
+    loadHistory().length > 0 || loadSession()?.status === "in_progress";
+
+  onboarding = {
+    ...createDefaultOnboardingState(),
+    status: hasExistingActivity ? "completed" : "active",
+    hasCompletedOnboarding: hasExistingActivity,
+  };
+  saveOnboarding();
+  return onboarding;
+}
+
+function isOnboardingActive() {
+  return onboarding?.status === "active";
+}
+
+function clearOnboardingTargets() {
+  onboardingTargetNodes.forEach((node) =>
+    node.classList.remove("coachmark-target-active"),
+  );
+  onboardingTargetNodes = [];
+}
+
+function hideOnboardingOverlay() {
+  clearOnboardingTargets();
+  const overlay = document.getElementById("coachmark-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("show");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function clearOnboardingShowTimer() {
+  if (onboardingShowTimer) clearTimeout(onboardingShowTimer);
+  onboardingShowTimer = null;
+  onboardingScheduledKey = "";
+}
+
+function finishOnboarding(status = "completed") {
+  ensureOnboardingState();
+  onboarding.status = status === "dismissed" ? "dismissed" : "completed";
+  onboarding.hasCompletedOnboarding = onboarding.status === "completed";
+  onboarding.hasDismissedOnboarding = onboarding.status === "dismissed";
+  saveOnboarding();
+  clearOnboardingShowTimer();
+  hideOnboardingOverlay();
+}
+
+function advanceOnboardingStep(currentStep, nextStep) {
+  if (!isOnboardingActive() || onboarding.step !== currentStep) return;
+  if (!ONBOARDING_STEPS.includes(nextStep)) {
+    finishOnboarding("completed");
+    return;
+  }
+  onboarding.step = nextStep;
+  saveOnboarding();
+  queueOnboardingRefresh();
+}
+
+function isElementVisible(el) {
+  if (!(el instanceof Element)) return false;
+  const rect = el.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const style = window.getComputedStyle(el);
+  return style.display !== "none" && style.visibility !== "hidden";
+}
+
+function getOnboardingTargetNodes() {
+  const config = ONBOARDING_CONFIG[onboarding?.step];
+  if (!config) return [];
+  const targets = config.getTargets?.();
+  return (Array.isArray(targets) ? targets : [targets]).filter(
+    isElementVisible,
+  );
+}
+
+function getOnboardingTargetRect(nodes) {
+  const rects = nodes.map((node) => node.getBoundingClientRect());
+  return {
+    left: Math.min(...rects.map((rect) => rect.left)),
+    top: Math.min(...rects.map((rect) => rect.top)),
+    right: Math.max(...rects.map((rect) => rect.right)),
+    bottom: Math.max(...rects.map((rect) => rect.bottom)),
+  };
+}
+
+function getOnboardingAnchorRect(targetRect) {
+  const config = ONBOARDING_CONFIG[onboarding?.step];
+  const anchor = config?.getTooltipAnchor?.();
+  return isElementVisible(anchor) ? anchor.getBoundingClientRect() : targetRect;
+}
+
+function syncExerciseOnboardingState() {
+  if (!isOnboardingActive()) return;
+  if (
+    onboarding.step !== ONBOARDING_STEP_EXERCISE_LOG &&
+    onboarding.step !== ONBOARDING_STEP_EXERCISE_BUTTON
+  ) {
+    return;
+  }
+
+  const activeIdx = session?.currentSets?.findIndex((set) => !set.done) ?? -1;
+  if (activeIdx !== 0) {
+    finishOnboarding("completed");
+    return;
+  }
+
+  const ready = isSetReady(activeIdx);
+  if (ready && onboarding.step === ONBOARDING_STEP_EXERCISE_LOG) {
+    onboarding.step = ONBOARDING_STEP_EXERCISE_BUTTON;
+    saveOnboarding();
+  } else if (!ready && onboarding.step === ONBOARDING_STEP_EXERCISE_BUTTON) {
+    onboarding.step = ONBOARDING_STEP_EXERCISE_LOG;
+    saveOnboarding();
+  }
+}
+
+function isOverlayBlocked() {
+  return (
+    document.getElementById("exit-session-modal")?.classList.contains("show") ||
+    document.getElementById("update-app-modal")?.classList.contains("show") ||
+    document.getElementById("pr-overlay")?.classList.contains("show")
+  );
+}
+
+function getActiveScreenId() {
+  return document.querySelector(".screen.active")?.id ?? "";
+}
+
+function getOnboardingDisplayKey() {
+  const screenId = getActiveScreenId();
+  const step = onboarding?.step ?? "";
+  return screenId && step ? `${screenId}:${step}` : "";
+}
+
+function scheduleOnboardingDisplay(displayKey) {
+  if (
+    !displayKey ||
+    onboardingScheduledKey === displayKey ||
+    onboardingShowTimer
+  ) {
+    return;
+  }
+
+  onboardingScheduledKey = displayKey;
+  onboardingShowTimer = setTimeout(() => {
+    onboardingShowTimer = null;
+    onboardingScheduledKey = "";
+
+    if (!isOnboardingActive()) return;
+    if (getOnboardingDisplayKey() !== displayKey) return;
+
+    onboardingShownKey = displayKey;
+    queueOnboardingRefresh();
+  }, ONBOARDING_SHOW_DELAY_MS);
+}
+
+function positionOnboardingOverlay(rect) {
+  const spotlight = document.getElementById("coachmark-spotlight");
+  const tooltip = document.getElementById("coachmark-tooltip");
+  if (!spotlight || !tooltip) return;
+  const config = ONBOARDING_CONFIG[onboarding?.step];
+  const anchorRect = getOnboardingAnchorRect(rect);
+
+  const padding = 10;
+  const left = Math.max(8, rect.left - padding);
+  const top = Math.max(8, rect.top - padding);
+  const width = Math.min(
+    window.innerWidth - left - 8,
+    rect.right - rect.left + padding * 2,
+  );
+  const height = Math.min(
+    window.innerHeight - top - 8,
+    rect.bottom - rect.top + padding * 2,
+  );
+
+  spotlight.style.left = `${left}px`;
+  spotlight.style.top = `${top}px`;
+  spotlight.style.width = `${Math.max(0, width)}px`;
+  spotlight.style.height = `${Math.max(0, height)}px`;
+  spotlight.style.borderRadius =
+    onboarding?.step === ONBOARDING_STEP_PULL ? "999px" : "20px";
+
+  const tooltipWidth = Math.min(280, window.innerWidth - 32);
+  const tooltipHeight = tooltip.getBoundingClientRect().height;
+  const targetCenter =
+    anchorRect.left + (anchorRect.right - anchorRect.left) / 2;
+  const tooltipLeft = clamp(
+    targetCenter - tooltipWidth / 2,
+    16,
+    window.innerWidth - tooltipWidth - 16,
+  );
+  const preferredBelow = anchorRect.bottom + 16;
+  const preferredAbove = anchorRect.top - tooltipHeight - 12;
+  const tooltipTop =
+    config?.tooltipPlacement === "above"
+      ? preferredAbove >= 16
+        ? preferredAbove
+        : Math.min(preferredBelow, window.innerHeight - tooltipHeight - 16)
+      : preferredBelow + tooltipHeight <= window.innerHeight - 16
+        ? preferredBelow
+        : Math.max(16, preferredAbove);
+
+  tooltip.style.width = `${tooltipWidth}px`;
+  tooltip.style.left = `${tooltipLeft}px`;
+  tooltip.style.top = `${tooltipTop}px`;
+  tooltip.style.visibility = "";
+}
+
+function refreshOnboarding() {
+  if (!isOnboardingActive() || isOverlayBlocked()) {
+    clearOnboardingShowTimer();
+    hideOnboardingOverlay();
+    return;
+  }
+
+  syncExerciseOnboardingState();
+  if (!isOnboardingActive()) {
+    hideOnboardingOverlay();
+    return;
+  }
+
+  const config = ONBOARDING_CONFIG[onboarding.step];
+  const overlay = document.getElementById("coachmark-overlay");
+  const tooltip = document.getElementById("coachmark-tooltip");
+  if (!config || !overlay || !tooltip) {
+    clearOnboardingShowTimer();
+    hideOnboardingOverlay();
+    return;
+  }
+
+  const nodes = getOnboardingTargetNodes();
+  if (nodes.length === 0) {
+    clearOnboardingShowTimer();
+    hideOnboardingOverlay();
+    return;
+  }
+
+  const displayKey = getOnboardingDisplayKey();
+  if (displayKey && onboardingShownKey !== displayKey) {
+    hideOnboardingOverlay();
+    scheduleOnboardingDisplay(displayKey);
+    return;
+  }
+
+  clearOnboardingShowTimer();
+
+  clearOnboardingTargets();
+  onboardingTargetNodes = nodes;
+  onboardingTargetNodes.forEach((node) =>
+    node.classList.add("coachmark-target-active"),
+  );
+
+  document.getElementById("coachmark-step").textContent = config.label;
+  document.getElementById("coachmark-copy").textContent = config.copy;
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+  tooltip.style.visibility = "hidden";
+  positionOnboardingOverlay(getOnboardingTargetRect(nodes));
+}
+
+function queueOnboardingRefresh() {
+  if (onboardingRefreshFrame) cancelAnimationFrame(onboardingRefreshFrame);
+  onboardingRefreshFrame = requestAnimationFrame(() => {
+    onboardingRefreshFrame = 0;
+    refreshOnboarding();
+  });
 }
 
 // ── WEEK STORE ─────────────────────────────────────────────────────────────
@@ -651,6 +1051,7 @@ function closeExitSessionModal() {
     exitSessionReturnFocus.focus();
   }
   exitSessionReturnFocus = null;
+  queueOnboardingRefresh();
 }
 
 function openExitSessionModal(triggerEl = null) {
@@ -669,6 +1070,7 @@ function openExitSessionModal(triggerEl = null) {
   modal.classList.add("show");
   modal.setAttribute("aria-hidden", "false");
   document.getElementById("exit-session-resume-later")?.focus();
+  queueOnboardingRefresh();
 }
 
 function startSession(templateId) {
@@ -872,12 +1274,14 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
 
   if (spinState === SPIN_STATE_READY) {
     setReelLandProgress(0);
-    setSlotTriggerStatus("Pull the gold handle down and release.", "idle");
+    setSlotTriggerStatus("Pull the handle to randomize your workout.", "idle");
+    queueOnboardingRefresh();
     return;
   }
 
   if (spinState === SPIN_STATE_SPINNING) {
     setSlotTriggerStatus("The fates are turning.", "spinning");
+    queueOnboardingRefresh();
     return;
   }
 
@@ -886,6 +1290,7 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
     "The Omens Are Set,\n Click Here to Start Workout",
     "landed",
   );
+  queueOnboardingRefresh();
 }
 
 function getSessionReserved(categoryKey) {
@@ -964,6 +1369,7 @@ function triggerSlotSpin() {
 
   setSessionSpinState(SPIN_STATE_SPINNING);
   syncSlotTriggerState({ preservePull: true });
+  advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
 
   trigger?.classList.add("is-firing");
   vibrate([18, 34, 26]);
@@ -982,6 +1388,8 @@ function handlePullTriggerStart(e) {
 
   const trigger = document.getElementById("slot-pull-trigger");
   if (!trigger) return;
+
+  advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
 
   pullGesture.active = true;
   pullGesture.pointerId = e.pointerId ?? null;
@@ -1078,7 +1486,7 @@ function finishPullTrigger(e, { cancel = false } = {}) {
   } else {
     setPullProgress(0);
     if (!cancel && releasedPull >= 28) {
-      setSlotTriggerStatus("Not enough force. Pull deeper.", "idle", 900);
+      setSlotTriggerStatus("Not enough force. Pull harder.", "idle", 900);
     } else {
       syncSlotTriggerState();
     }
@@ -1093,6 +1501,7 @@ function handlePullTriggerKeydown(e) {
 
   const pullMetrics = getPullMetrics();
   e.preventDefault();
+  advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
   setPullProgress(pullMetrics.maxPull);
   triggerSlotSpin();
 }
@@ -1245,6 +1654,8 @@ function launchExercise() {
   // Migration guard: old sessions pre-refactor won't have pickedExercises
   if (!session.pickedExercises?.length) pickAllExercises();
 
+  advanceOnboardingStep(ONBOARDING_STEP_START, ONBOARDING_STEP_EXERCISE_LOG);
+
   const exercise = session.pickedExercises[session.slotIndex];
   const slot = session.slots[session.slotIndex];
   if (!exercise || !slot) {
@@ -1253,12 +1664,13 @@ function launchExercise() {
   }
 
   const lastWeight = getLastWeight(exercise.name);
+  const initialWeight = getInitialWeightValue(exercise, lastWeight);
 
   session.currentExercise = exercise;
   session.currentSlot = slot;
   session.currentSets = Array.from({ length: exercise.sets }, (_, i) => ({
     setNum: i + 1,
-    weight: lastWeight ?? "", // pre-fill from PR history (null until Phase 4)
+    weight: initialWeight,
     reps: "",
     done: false,
   }));
@@ -1279,6 +1691,8 @@ function launchExercise() {
   // Render exercise screen
   document.getElementById("ex-tag").textContent = slot.label;
   document.getElementById("ex-name").textContent = exercise.name.toUpperCase();
+  document.getElementById("exercise-topbar-day").textContent =
+    `Workout ${session.templateId}`;
   const restMin = Math.floor(exercise.restSeconds / 60);
   const restSec = String(exercise.restSeconds % 60).padStart(2, "0");
   document.getElementById("ex-meta").textContent =
@@ -1315,8 +1729,7 @@ function renderSets() {
     .map((set, i) => ({ ...set, idx: i }))
     .filter((set) => set.done)
     .map((set) => {
-      const weightLabel =
-        set.weight && set.weight !== "—" ? `${set.weight}kg` : "BW";
+      const weightLabel = formatWeightLabel(set.weight);
       const repsLabel = set.reps || "—";
       return `<div class="set-history-chip chip chip--muted">SET ${set.idx + 1} · ${weightLabel} × ${repsLabel}</div>`;
     })
@@ -1351,7 +1764,7 @@ function renderSets() {
         <div class="slot-day-sub-group">
           <div class="input-label title-block__eyebrow">Weight</div>
           <input class="set-input"
-            type="number" inputmode="decimal" enterkeyhint="next" step="0.5" autocomplete="off"
+            type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off"
             placeholder="${activeSet.weight || "—"}"
             value="${activeSet.weight || ""}"
             ${isResting ? "disabled" : ""}
@@ -1375,6 +1788,8 @@ function renderSets() {
     if (!input) return;
     input.addEventListener("focus", () => scrollIntoViewCentered(input));
   });
+
+  queueOnboardingRefresh();
 }
 
 function getActiveSetIndex() {
@@ -1385,6 +1800,49 @@ function isSetReady(idx) {
   if (idx < 0) return false;
   const set = session.currentSets[idx];
   return Boolean(set?.reps?.trim());
+}
+
+function getAutofillValue(value) {
+  if (value === null || value === undefined) return "";
+  const normalized = String(value).trim();
+  return normalized === "—" ? "" : normalized;
+}
+
+function normalizeWeightValue(value) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+  if (!normalized) return session?.currentExercise?.bodyweight ? "BW" : "—";
+  if (normalized.toLowerCase() === "bw") return "BW";
+  if (/^(?:\d+\.?\d*|\.\d+)$/.test(normalized)) return normalized;
+  return session?.currentExercise?.bodyweight ? "BW" : "—";
+}
+
+function formatWeightLabel(value) {
+  return parseWeight(value) !== null ? `${value}kg` : "BW";
+}
+
+function getInitialWeightValue(exercise, lastWeight) {
+  if (
+    lastWeight !== null &&
+    lastWeight !== undefined &&
+    String(lastWeight).trim()
+  ) {
+    return String(lastWeight).trim();
+  }
+  return exercise?.bodyweight ? "BW" : "";
+}
+
+function prefillNextSetFromCurrent(idx) {
+  const currentSet = session?.currentSets?.[idx];
+  const nextSet = session?.currentSets?.[idx + 1];
+  if (!currentSet || !nextSet || nextSet.done) return;
+
+  if (!nextSet.weight?.trim()) {
+    nextSet.weight = getAutofillValue(currentSet.weight);
+  }
+
+  if (!nextSet.reps?.trim()) {
+    nextSet.reps = getAutofillValue(currentSet.reps);
+  }
 }
 
 function getRemainingRestSeconds() {
@@ -1404,17 +1862,20 @@ function confirmCurrentSet(idx) {
   const set = session.currentSets[idx];
   if (!set) return;
 
-  set.weight = set.weight.trim() || "—";
+  const isLastSet = idx === session.currentSets.length - 1;
+  set.weight = normalizeWeightValue(set.weight);
   set.reps = set.reps.trim() || "—";
   set.done = true;
+  prefillNextSetFromCurrent(idx);
   saveSession();
+  if (idx === 0 && isOnboardingActive()) finishOnboarding("completed");
 
-  renderSets();
-
-  if (session.currentSets.every((s) => s.done)) {
-    syncExercisePrimaryAction();
+  if (isLastSet) {
+    completeExercise();
     return;
   }
+
+  renderSets();
 
   startRest(session.currentExercise.restSeconds);
 }
@@ -1475,16 +1936,23 @@ function syncExercisePrimaryAction() {
     btn.disabled = false;
     btn.dataset.mode = "rest";
     btn.classList.add("resting");
+    queueOnboardingRefresh();
     return;
   }
 
   if (!allDone) {
+    const isLastSet = activeIdx === session.currentSets.length - 1;
     btn.textContent = isSetReady(activeIdx)
-      ? "PROCEED ▸"
+      ? isLastSet
+        ? isLastExercise
+          ? "LOG SET + FINISH WORKOUT ▸"
+          : "LOG SET + NEXT EXERCISE ▸"
+        : "PROCEED ▸"
       : "ENTER REPS TO PROCEED";
     btn.disabled = !isSetReady(activeIdx);
     btn.dataset.mode = "proceed";
     btn.classList.toggle("ready", isSetReady(activeIdx));
+    queueOnboardingRefresh();
     return;
   }
 
@@ -1492,6 +1960,7 @@ function syncExercisePrimaryAction() {
   btn.disabled = false;
   btn.dataset.mode = "next";
   btn.classList.add("advance");
+  queueOnboardingRefresh();
 }
 
 function completeExercise() {
@@ -1993,8 +2462,7 @@ function renderHistoryCard(s, historyIndex) {
 
       const chips = e.sets
         .map((set, si) => {
-          const wStr =
-            parseWeight(set.weight) !== null ? `${set.weight}kg` : "BW";
+          const wStr = formatWeightLabel(set.weight);
           return `<span class="history-set-chip">${si + 1}: ${wStr} × ${set.reps}</span>`;
         })
         .join("");
@@ -2044,7 +2512,9 @@ function buildSyncPayload(duration, totalSets) {
       exercise: e.exerciseName,
       category: e.categoryLabel,
       sets: e.sets
-        .map((s, i) => `Set ${i + 1}: ${s.weight}kg × ${s.reps}`)
+        .map(
+          (s, i) => `Set ${i + 1}: ${formatWeightLabel(s.weight)} × ${s.reps}`,
+        )
         .join(" | "),
       session_volume_kg: e.sets.reduce(
         (sum, s) =>
@@ -2207,6 +2677,7 @@ function openUpdateAppModal(registration) {
   if (!modal) return;
   modal.classList.add("show");
   modal.setAttribute("aria-hidden", "false");
+  queueOnboardingRefresh();
 }
 
 function closeUpdateAppModal() {
@@ -2214,6 +2685,7 @@ function closeUpdateAppModal() {
   if (!modal) return;
   modal.classList.remove("show");
   modal.setAttribute("aria-hidden", "true");
+  queueOnboardingRefresh();
 }
 
 function promptForWaitingServiceWorker(registration) {
@@ -2294,10 +2766,12 @@ function showPROverlay(prs, onDone) {
 
   text.textContent = parts.join(" · ");
   overlay.classList.add("show");
+  queueOnboardingRefresh();
 
   // Replace any previous listener with a fresh one-shot handler
   const handler = () => {
     overlay.classList.remove("show");
+    queueOnboardingRefresh();
     onDone();
   };
   btn.replaceWith(btn.cloneNode(true)); // strip old listeners
@@ -2314,6 +2788,7 @@ function showScreen(id) {
     .forEach((s) => s.classList.remove("active"));
   document.getElementById(id)?.classList.add("active");
   window.scrollTo(0, 0);
+  queueOnboardingRefresh();
 }
 
 function goHome() {
@@ -2342,6 +2817,7 @@ function discardSessionAndGoHome() {
 function renderDayPicker() {
   renderDayPickerCards();
   renderResumeBanner();
+  queueOnboardingRefresh();
 }
 
 function getActiveHomeSession() {
@@ -2356,33 +2832,23 @@ function renderDayPickerCards() {
   const completed = week.completed;
   const activeSession = getActiveHomeSession();
   const container = document.getElementById("day-picker-cards");
+  let markedOnboardingTarget = false;
 
   container.innerHTML = templateChoices
     .map((templateId) => {
-      const day = DAYS[templateId];
       const isDone = completed.includes(templateId);
       const isActiveSession = activeSession?.templateId === templateId;
       const isLocked = Boolean(activeSession) && !isDone;
       const completedWeekday = formatWeekdayLabel(
         week.completedByTemplate?.[templateId],
       );
-      let statusLabel = "";
       let ctaLabel = "START SESSION ▸";
-      let chipLabel = `${day.slots.length} slots`;
-      let chipClass = "chip chip--muted day-card-status";
 
       if (isDone) {
-        statusLabel = `Completed on ${completedWeekday || "this week"}`;
         ctaLabel = `COMPLETED ON ${(completedWeekday || "THIS WEEK").toUpperCase()}`;
-        chipLabel = "Completed";
-        chipClass = "chip chip--completed day-card-status";
       } else if (isActiveSession) {
-        statusLabel = "Session in progress";
         ctaLabel = "RESUME FROM BANNER ABOVE";
-        chipLabel = "In progress";
-        chipClass = "chip chip--active day-card-status";
       } else if (isLocked) {
-        statusLabel = "Locked while session is active";
         ctaLabel = "FINISH OR DISCARD CURRENT SESSION";
       }
 
@@ -2393,15 +2859,17 @@ function renderDayPickerCards() {
           : isLocked
             ? "locked card--muted"
             : "";
-      const metaText = statusLabel;
+      const onboardingTarget =
+        !markedOnboardingTarget && !isDone && !isActiveSession && !isLocked
+          ? ' data-onboarding-target="home-card"'
+          : "";
+      if (onboardingTarget) markedOnboardingTarget = true;
 
       return `
       <div class="day-picker-card card fadein ${stateClass}"
-           data-day="${templateId}">
+           data-day="${templateId}"${onboardingTarget}>
         <div class="day-card-top">
-          <div class="day-card-letter">Workout ${templateId}</div>
-          <div class="${chipClass}">${chipLabel}</div>
-
+          <div class="day-card-letter">Full-body ${templateId}</div>
         </div>
         <div class="title-block">
           <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
@@ -2409,6 +2877,7 @@ function renderDayPickerCards() {
       </div>`;
     })
     .join("");
+  queueOnboardingRefresh();
 }
 
 function renderResumeBanner() {
@@ -2449,8 +2918,9 @@ function resumeSession() {
 function launchExerciseFromSession() {
   const exercise = session.currentExercise;
   const slot = session.currentSlot;
+  advanceOnboardingStep(ONBOARDING_STEP_START, ONBOARDING_STEP_EXERCISE_LOG);
   document.getElementById("exercise-topbar-day").textContent =
-    `DAY ${session.templateId}`;
+    `Workout ${session.templateId}`;
 
   const nudge = getOverloadNudge(exercise.name);
   const nudgeEl = document.getElementById("overload-nudge");
@@ -2475,6 +2945,7 @@ function launchExerciseFromSession() {
   syncExercisePrimaryAction();
   showScreen("screen-exercise");
   resumeRestIfNeeded();
+  queueOnboardingRefresh();
 }
 
 // Builds the slot machine screen.
@@ -2547,6 +3018,7 @@ function renderSlotMachine(skipSpin = false) {
   }
 
   syncSlotTriggerState();
+  queueOnboardingRefresh();
 }
 
 function renderDoneScreen({
@@ -2629,14 +3101,15 @@ function wireEvents() {
     if (card.classList.contains("completed")) return;
     if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
     startSession(card.dataset.day); // picks all exercises inside startSession
+    advanceOnboardingStep(ONBOARDING_STEP_HOME, ONBOARDING_STEP_PULL);
     renderSlotMachine();
     showScreen("screen-slot-machine");
   });
 
   // Slot machine screen
-  document
-    .getElementById("slot-machine-back")
-    .addEventListener("click", (e) => openExitSessionModal(e.currentTarget));
+  document.getElementById("slot-machine-back").addEventListener("click", () => {
+    discardSessionAndGoHome();
+  });
   document
     .getElementById("slot-trigger-status")
     .addEventListener("click", launchExercise);
@@ -2733,6 +3206,11 @@ function wireEvents() {
   document.getElementById("update-app-modal").addEventListener("click", (e) => {
     if (e.target.id === "update-app-modal") closeUpdateAppModal();
   });
+  document
+    .getElementById("coachmark-skip")
+    .addEventListener("click", () => finishOnboarding("dismissed"));
+  window.addEventListener("resize", queueOnboardingRefresh);
+  document.addEventListener("scroll", queueOnboardingRefresh, true);
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     const modal = document.getElementById("exit-session-modal");
@@ -2745,9 +3223,11 @@ function wireEvents() {
 // ── INIT ───────────────────────────────────────────────────────────────────
 
 function init() {
+  ensureOnboardingState();
   wireEvents();
   renderAppVersionBadge();
   renderDayPicker();
+  queueOnboardingRefresh();
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
@@ -2758,6 +3238,7 @@ function init() {
       ) {
         active.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      queueOnboardingRefresh();
     });
   }
 
@@ -2843,6 +3324,22 @@ function runTests() {
     assert(parseWeight("40") === 40, 'parseWeight("40") → 40');
     assert(parseWeight("42.5") === 42.5, 'parseWeight("42.5") → 42.5');
     assert(parseWeight(null) === null, "parseWeight(null) → null");
+  }
+
+  // 2b. Bodyweight defaults + formatting
+  {
+    assert(
+      normalizeWeightValue("bw") === "BW",
+      'normalizeWeightValue("bw") → "BW"',
+    );
+    assert(
+      getInitialWeightValue({ bodyweight: true }, null) === "BW",
+      "Bodyweight exercise defaults weight to BW",
+    );
+    assert(
+      formatWeightLabel("BW") === "BW",
+      'formatWeightLabel("BW") keeps BW without kg',
+    );
   }
 
   // 3. pickExercise — basic pick

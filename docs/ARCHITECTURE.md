@@ -17,8 +17,8 @@ grind/
   manifest.json
   sw.js               ← service worker (cache-first)
   icons/
-    icon-192.png
-    icon-512.png
+    web-app-manifest-192x192.png
+    web-app-manifest-512x512.png
 ```
 
 **Why 4 files instead of 17:** Vanilla JS without a bundler gets no benefit from file splitting — it creates `<script>` load-order fragility, a brittle SW asset list, and global namespace coordination issues. One `app.js` with clear section comments is both simpler and more explicit.

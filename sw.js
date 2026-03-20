@@ -3,14 +3,14 @@
 // n8n webhook calls and Google Fonts CSS are never cached here
 // (fonts are cached naturally on first fetch by the cache handler below).
 
-const CACHE = "grind-beta-v1.1";
+const CACHE = "grind-beta-v1.2";
 const ASSETS = [
   "/",
   "/index.html",
   "/app.js",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/icons/web-app-manifest-192x192.png",
+  "/icons/web-app-manifest-512x512.png",
 ];
 
 // Install: pre-cache app shell

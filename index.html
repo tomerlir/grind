@@ -16,17 +16,17 @@
         <link
             rel="icon"
             type="image/png"
-            href="/favicon/favicon-96x96.png"
+            href="/icons/favicon-96x96.png"
             sizes="96x96"
         />
-        <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon/favicon.ico" />
+        <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+        <link rel="shortcut icon" href="/icons/favicon.ico" />
         <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="/favicon/apple-touch-icon.png"
+            href="/icons/apple-touch-icon.png"
         />
-        <link rel="manifest" href="/favicon/site.webmanifest" />
+        <link rel="manifest" href="/icons/site.webmanifest" />
         <meta name="theme-color" content="#04091A" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -318,6 +318,45 @@
                 animation: fadeIn 0.25s ease forwards;
             }
 
+            /* Idle pulse — runs only when the handle hasn't been touched yet */
+            @keyframes handle-idle-pulse {
+                0%,
+                100% {
+                    box-shadow:
+                        0 12px 18px rgba(0, 0, 0, 0.28),
+                        0 0 0 3px rgba(74, 54, 8, 0.8),
+                        0 0 22px rgba(245, 200, 66, 0.22);
+                    filter: brightness(1);
+                }
+                50% {
+                    box-shadow:
+                        0 12px 18px rgba(0, 0, 0, 0.28),
+                        0 0 0 3px rgba(74, 54, 8, 0.8),
+                        0 0 38px rgba(245, 200, 66, 0.55);
+                    filter: brightness(1.12);
+                }
+            }
+
+            @keyframes track-idle-pulse {
+                0%,
+                100% {
+                    border-color: rgba(245, 200, 66, 0.35);
+                    box-shadow:
+                        inset 0 0 0 1px rgba(255, 236, 177, 0.1),
+                        inset 0 0 28px rgba(245, 200, 66, 0.12),
+                        0 10px 28px rgba(0, 0, 0, 0.35),
+                        0 0 18px rgba(245, 200, 66, 0.12);
+                }
+                50% {
+                    border-color: rgba(245, 200, 66, 0.6);
+                    box-shadow:
+                        inset 0 0 0 1px rgba(255, 236, 177, 0.16),
+                        inset 0 0 34px rgba(245, 200, 66, 0.18),
+                        0 10px 28px rgba(0, 0, 0, 0.35),
+                        0 0 26px rgba(245, 200, 66, 0.28);
+                }
+            }
+
             /* ── SCREENS ─────────────────────────────────────────────────── */
             .screen {
                 display: none;
@@ -588,7 +627,7 @@
             /* ── DAY PICKER ──────────────────────────────────────────────── */
             .day-picker-header {
                 text-align: center;
-                padding: var(--space-xl) 0 var(--space-lg);
+                padding: var(--space-lg) 0 var(--space-md);
             }
             .logo {
                 font-family: var(--font-display);
@@ -1147,6 +1186,24 @@
                 transform: translateY(-4px);
             }
 
+            .slot-pull-trigger:not(.is-dragging):not(.is-charged):not(
+                    .is-firing
+                ):not([data-spin-state="spinning"]):not(
+                    [data-spin-state="landed"]
+                )
+                .pull-trigger-handle {
+                animation: handle-idle-pulse 2.4s ease-in-out infinite;
+            }
+
+            .slot-pull-trigger:not(.is-dragging):not(.is-charged):not(
+                    .is-firing
+                ):not([data-spin-state="spinning"]):not(
+                    [data-spin-state="landed"]
+                )
+                .pull-trigger-track {
+                animation: track-idle-pulse 2.4s ease-in-out infinite;
+            }
+
             .reel-window {
                 width: 100%;
                 height: var(--reel-h);
@@ -1368,6 +1425,12 @@
                 align-self: flex-start;
             }
 
+            .exercise-flow-target {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                min-height: 0;
+            }
             .sets-container {
                 display: flex;
                 flex-direction: column;
@@ -1613,6 +1676,87 @@
             }
             .pr-overlay-continue:active {
                 transform: scale(0.97);
+            }
+
+            /* ── ONBOARDING ─────────────────────────────────────────────── */
+            .coachmark-target-active {
+                position: relative;
+                z-index: 160;
+            }
+            .coachmark-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 150;
+                display: none;
+                pointer-events: none;
+            }
+            .coachmark-overlay.show {
+                display: block;
+            }
+            .coachmark-backdrop {
+                position: absolute;
+                inset: 0;
+                background: rgba(2, 6, 18, 0.76);
+                backdrop-filter: blur(3px);
+            }
+            .coachmark-spotlight {
+                position: fixed;
+                border-radius: var(--radius-card);
+                border: 1px solid rgba(245, 200, 66, 0.88);
+                box-shadow:
+                    0 0 0 1px rgba(255, 244, 204, 0.2),
+                    0 0 24px rgba(245, 200, 66, 0.3),
+                    0 0 52px rgba(0, 200, 255, 0.18);
+                pointer-events: none;
+            }
+            .coachmark-tooltip {
+                position: fixed;
+                width: min(280px, calc(100vw - 32px));
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-sm);
+                padding: var(--space-md);
+                border-radius: var(--radius-card);
+                border: 1px solid rgba(245, 200, 66, 0.32);
+                background: linear-gradient(
+                    160deg,
+                    rgba(11, 22, 47, 0.98) 0%,
+                    rgba(5, 11, 27, 0.98) 100%
+                );
+                box-shadow:
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+                    0 18px 44px rgba(0, 0, 0, 0.38),
+                    0 0 24px rgba(0, 200, 255, 0.12);
+                pointer-events: auto;
+            }
+            .coachmark-step {
+                font-family: var(--font-ui);
+                font-size: var(--type-label-xs);
+                letter-spacing: var(--tracking-label-wide);
+                color: var(--gold);
+                text-transform: uppercase;
+            }
+            .coachmark-copy {
+                color: var(--text);
+                font-size: var(--type-body-md);
+                line-height: var(--lh-body);
+            }
+            .coachmark-actions {
+                display: flex;
+                justify-content: flex-end;
+            }
+            .coachmark-skip {
+                width: auto;
+                min-height: 40px;
+                padding: 8px 14px;
+                border-radius: 999px;
+                border: 1px solid rgba(26, 48, 80, 0.95);
+                background: rgba(4, 9, 26, 0.72);
+                color: var(--silver);
+                font-family: var(--font-ui);
+                font-size: var(--type-label-sm);
+                letter-spacing: var(--tracking-label-tight);
+                text-transform: uppercase;
             }
 
             /* ── DONE SCREEN ─────────────────────────────────────────────── */
@@ -2233,9 +2377,12 @@
             <div class="day-picker-header">
                 <div class="logo">GRIND</div>
                 <div class="meander-divider" aria-hidden="true"></div>
-                <div class="logo-sub">
-                    <div>Choose a workout</div>
-                </div>
+                <!--<div class="logo-sub">
+                    <div>
+                        Every session, different exercises. Never the same
+                        workout twice.
+                    </div>
+                </div>-->
             </div>
 
             <div
@@ -2348,9 +2495,10 @@
             <div class="exercise-topbar">
                 <button class="back-btn" id="exercise-back">←</button>
                 <div class="exercise-topbar-copy">
-                    <div class="exercise-topbar-day" id="exercise-topbar-day">
-                        DAY A
-                    </div>
+                    <div
+                        class="exercise-topbar-day"
+                        id="exercise-topbar-day"
+                    ></div>
                 </div>
             </div>
 
@@ -2379,15 +2527,17 @@
                 <div class="exercise-tip" id="ex-tip"></div>
             </div>
 
-            <div class="sets-container" id="sets-container"></div>
+            <div class="exercise-flow-target" id="exercise-flow-target">
+                <div class="sets-container" id="sets-container"></div>
 
-            <button
-                class="complete-ex-btn button-primary"
-                id="complete-ex-btn"
-                disabled
-            >
-                ENTER REPS TO PROCEED
-            </button>
+                <button
+                    class="complete-ex-btn button-primary"
+                    id="complete-ex-btn"
+                    disabled
+                >
+                    ENTER REPS TO PROCEED
+                </button>
+            </div>
         </div>
 
         <!-- ═══ DONE ════════════════════════════════════════════════════════ -->
@@ -2509,6 +2659,27 @@
             </div>
         </div>
         <canvas id="confetti-canvas"></canvas>
+        <div
+            class="coachmark-overlay"
+            id="coachmark-overlay"
+            aria-hidden="true"
+        >
+            <div class="coachmark-backdrop"></div>
+            <div class="coachmark-spotlight" id="coachmark-spotlight"></div>
+            <div class="coachmark-tooltip" id="coachmark-tooltip" role="dialog">
+                <div class="coachmark-step" id="coachmark-step"></div>
+                <div class="coachmark-copy" id="coachmark-copy"></div>
+                <div class="coachmark-actions">
+                    <button
+                        class="coachmark-skip"
+                        id="coachmark-skip"
+                        type="button"
+                    >
+                        Skip
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <script src="app.js"></script>
     </body>
