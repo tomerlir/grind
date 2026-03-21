@@ -2091,7 +2091,6 @@ function startRest(seconds) {
 
 function stopRest() {
   if (restTimerId) {
-    AudioEngine.play("rest-timer-end");
     clearTimeout(restTimerId);
     restTimerId = null;
   }
@@ -2106,6 +2105,7 @@ function skipRest() {
 }
 
 function onRestComplete() {
+  AudioEngine.play("rest-timer-end");
   stopRest();
   session.restEndsAt = null;
   saveSession();
@@ -3150,6 +3150,7 @@ function wireEvents() {
     openExitSessionModal(e.currentTarget);
   });
   document.getElementById("complete-ex-btn").addEventListener("click", () => {
+    AudioEngine.play("card-tap");
     dismissKeyboard();
     setTimeout(handleExercisePrimaryAction, 50);
   });
@@ -3183,10 +3184,12 @@ function wireEvents() {
   document.getElementById("done-back-btn").addEventListener("click", goHome);
 
   // History screen
-  document
-    .getElementById("history-back")
-    .addEventListener("click", () => showScreen("screen-day-picker"));
+  document.getElementById("history-back").addEventListener("click", () => {
+    AudioEngine.play("navigate-back");
+    showScreen("screen-day-picker");
+  });
   document.getElementById("history-more-btn").addEventListener("click", () => {
+    AudioEngine.play("card-tap");
     historyOffset += 30;
     renderHistory();
   });
