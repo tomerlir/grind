@@ -1373,7 +1373,7 @@ function triggerSlotSpin() {
 
   trigger?.classList.add("is-firing");
   vibrate([18, 34, 26]);
-
+  AudioEngine.startSpinning();
   pullGesture.recoilTimer = setTimeout(() => {
     trigger?.classList.remove("is-firing");
     setPullProgress(0);
@@ -1389,6 +1389,7 @@ function handlePullTriggerStart(e) {
   const trigger = document.getElementById("slot-pull-trigger");
   if (!trigger) return;
 
+  AudioEngine.play("pull-start");
   advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
 
   pullGesture.active = true;
@@ -1624,9 +1625,12 @@ function onReelLanded(i) {
   setReelLandProgress(pullGesture.landedCount / totalReels);
 
   if (pullGesture.landedCount < totalReels) {
+    AudioEngine.stopSpinning();
+    AudioEngine.play("reel-lock", { volume: 0.8 });
     setSlotTriggerStatus(`Reel ${i + 1} locked.`, "charged", 550);
     vibrate(12);
   } else {
+    AudioEngine.play("final-lock");
     setSlotTriggerStatus(
       "The Omens Are Set,\n Click Here to Start Workout",
       "landed",
@@ -1809,7 +1813,9 @@ function getAutofillValue(value) {
 }
 
 function normalizeWeightValue(value) {
-  const normalized = String(value ?? "").trim().replace(",", ".");
+  const normalized = String(value ?? "")
+    .trim()
+    .replace(",", ".");
   if (!normalized) return session?.currentExercise?.bodyweight ? "BW" : "—";
   if (normalized.toLowerCase() === "bw") return "BW";
   if (/^(?:\d+\.?\d*|\.\d+)$/.test(normalized)) return normalized;
@@ -1876,7 +1882,7 @@ function confirmCurrentSet(idx) {
   }
 
   renderSets();
-
+  AudioEngine.play("set-logged");
   startRest(session.currentExercise.restSeconds);
 }
 
@@ -1967,7 +1973,7 @@ function completeExercise() {
   // Required: clear rest timer state before anything else
   stopRest();
   session.restEndsAt = null;
-
+  AudioEngine.play("level-up");
   const ex = session.currentExercise;
   const slot = session.currentSlot;
 
@@ -2085,6 +2091,7 @@ function startRest(seconds) {
 
 function stopRest() {
   if (restTimerId) {
+    AudioEngine.play("rest-timer-end");
     clearTimeout(restTimerId);
     restTimerId = null;
   }
@@ -3028,6 +3035,7 @@ function renderDoneScreen({
   sessionPRs,
   sessionNudges,
 }) {
+  AudioEngine.play("workout-complete");
   const day = DAYS[templateId];
   document.getElementById("done-sub").textContent =
     `${day?.name ?? `Day ${templateId}`} complete`;
@@ -3084,12 +3092,21 @@ function renderDoneScreen({
 // ── EVENT WIRING ────────────────────────────────────────────────────────────
 
 function wireEvents() {
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      AudioEngine.preload();
+    },
+    { once: true },
+  );
+
   // Day picker
   document
     .getElementById("resume-btn")
     .addEventListener("click", resumeSession);
   document.getElementById("history-btn").addEventListener("click", () => {
     renderHistory({ resetOffset: true });
+    AudioEngine.play("card-tap");
     showScreen("screen-history");
   });
 
@@ -3100,6 +3117,7 @@ function wireEvents() {
     if (getActiveHomeSession()) return;
     if (card.classList.contains("completed")) return;
     if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
+    AudioEngine.play("card-tap");
     startSession(card.dataset.day); // picks all exercises inside startSession
     advanceOnboardingStep(ONBOARDING_STEP_HOME, ONBOARDING_STEP_PULL);
     renderSlotMachine();
@@ -3108,6 +3126,7 @@ function wireEvents() {
 
   // Slot machine screen
   document.getElementById("slot-machine-back").addEventListener("click", () => {
+    AudioEngine.play("navigate-back");
     discardSessionAndGoHome();
   });
   document
@@ -3126,9 +3145,10 @@ function wireEvents() {
   pullTrigger.addEventListener("keydown", handlePullTriggerKeydown);
 
   // Exercise screen
-  document
-    .getElementById("exercise-back")
-    .addEventListener("click", (e) => openExitSessionModal(e.currentTarget));
+  document.getElementById("exercise-back").addEventListener("click", (e) => {
+    AudioEngine.play("navigate-back");
+    openExitSessionModal(e.currentTarget);
+  });
   document.getElementById("complete-ex-btn").addEventListener("click", () => {
     dismissKeyboard();
     setTimeout(handleExercisePrimaryAction, 50);
