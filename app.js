@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.3 beta",
+  versionLabel: "v1.2.1 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
