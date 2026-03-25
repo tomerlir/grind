@@ -43,7 +43,7 @@ const AudioEngine = (() => {
     }
 
     const howl = new Howl({
-      src: [`/sounds/${name}.mp3`],
+      src: [`sounds/${name}.mp3`],
       format: ["mp3"],
       preload: true,
       html5: false,

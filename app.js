@@ -2795,7 +2795,7 @@ function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/sw.js")
+      .register("sw.js", { updateViaCache: "none" })
       .then((reg) => {
         console.log("[GRIND] SW registered, scope:", reg.scope);
         watchServiceWorkerRegistration(reg);
