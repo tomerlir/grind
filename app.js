@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.2 beta",
+  versionLabel: "v1.3 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -1353,7 +1353,7 @@ function pickAllExercises() {
   saveSession();
 }
 
-function triggerSlotSpin() {
+async function triggerSlotSpin() {
   if (!session || getSessionSpinState() !== SPIN_STATE_READY) return;
 
   const trigger = document.getElementById("slot-pull-trigger");
@@ -1364,6 +1364,7 @@ function triggerSlotSpin() {
   clearTimeout(pullGesture.recoilTimer);
   pullGesture.recoilTimer = null;
   pullGesture.landedCount = 0;
+
   setPullProgress(pullMetrics.maxPull);
   setReelLandProgress(0);
 
@@ -1373,23 +1374,31 @@ function triggerSlotSpin() {
 
   trigger?.classList.add("is-firing");
   vibrate([18, 34, 26]);
-  AudioEngine.startSpinning();
+
   pullGesture.recoilTimer = setTimeout(() => {
     trigger?.classList.remove("is-firing");
     setPullProgress(0);
   }, 180);
 
+  try {
+    await AudioEngine.startSpinning();
+  } catch (err) {
+    console.error("Failed to start spinning audio:", err);
+  }
+
+  if (!session || getSessionSpinState() !== SPIN_STATE_SPINNING) return;
+
   spinAllReels();
 }
 
-function handlePullTriggerStart(e) {
+async function handlePullTriggerStart(e) {
   if (getSessionSpinState() !== SPIN_STATE_READY) return;
   if (typeof e.button === "number" && e.button !== 0) return;
 
   const trigger = document.getElementById("slot-pull-trigger");
   if (!trigger) return;
 
-  AudioEngine.play("pull-start");
+  await AudioEngine.play("pull-start");
   advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
 
   pullGesture.active = true;
@@ -1542,13 +1551,12 @@ function spinAllReels() {
   if (!session?.slots?.length) return;
 
   spinGeneration++;
-  const gen = spinGeneration; // captured in closure
+  const gen = spinGeneration;
 
   const N = session.slots.length;
   const reelHeight = getReelHeight();
   const maxTime = BASE_MS + (N - 1) * STAGGER_MS;
 
-  // Fallback: if ANY transitionend never fires, force-show the button
   const fallbackTimer = setTimeout(() => {
     if (gen !== spinGeneration) return;
     showStartWorkoutButton();
@@ -1564,7 +1572,7 @@ function spinAllReels() {
     if (!picked || pool.length === 0) return;
 
     const pickedIdx = pool.findIndex((e) => e.name === picked.name);
-    const safeIdx = pickedIdx < 0 ? 0 : pickedIdx; // guard: name not in pool
+    const safeIdx = pickedIdx < 0 ? 0 : pickedIdx;
     const targetIdx = REP_TARGET * pool.length + safeIdx;
     const translateY = -(targetIdx * reelHeight);
     const duration = BASE_MS + i * STAGGER_MS;
@@ -1573,24 +1581,24 @@ function spinAllReels() {
     const wrap = document.getElementById(`reel-wrap-${i}`);
     if (!drum || !wrap) return;
 
-    // Mark as spinning (enables blur CSS)
     wrap.classList.remove("landed");
     wrap.classList.add("spinning");
 
-    // Reset to top with no transition (double-rAF ensures browser paints it)
     drum.style.transition = "none";
     drum.style.transform = "translateY(0)";
 
-    requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         drum.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.7, 0.25, 1)`;
         drum.style.transform = `translateY(${translateY}px)`;
 
         drum.addEventListener(
           "transitionend",
-          () => {
-            if (gen !== spinGeneration) return; // stale listener — different spin in progress
-            onReelLanded(i);
+          async () => {
+            if (gen !== spinGeneration) return;
+
+            await onReelLanded(i, gen);
+
             landsCompleted++;
             if (landsCompleted >= N) {
               clearTimeout(fallbackTimer);
@@ -1599,38 +1607,49 @@ function spinAllReels() {
           },
           { once: true },
         );
-      }),
-    );
+      });
+    });
   });
 }
 
-function onReelLanded(i) {
+async function onReelLanded(i, gen = spinGeneration) {
   const wrap = document.getElementById(`reel-wrap-${i}`);
   if (!wrap) return;
+
   wrap.classList.remove("spinning");
   wrap.classList.add("landed");
-  // Brief flash: brighter glow on landing, then settles to .landed CSS
+
   const win = wrap.querySelector(".reel-window");
   if (win) {
-    // Thunder strike flash — peaks at electric white, settles to steady electric glow
     win.style.boxShadow =
       "0 0 40px rgba(0,220,255,0.95), 0 0 80px rgba(0,200,255,0.5)";
     setTimeout(() => {
       win.style.boxShadow = "";
-    }, 380); // CSS .landed takes over
+    }, 380);
   }
 
   const totalReels = session?.slots?.length || 1;
   pullGesture.landedCount = clamp(pullGesture.landedCount + 1, 0, totalReels);
   setReelLandProgress(pullGesture.landedCount / totalReels);
 
+  if (gen !== spinGeneration) return;
+
   if (pullGesture.landedCount < totalReels) {
-    AudioEngine.stopSpinning();
-    AudioEngine.play("reel-lock", { volume: 0.8 });
+    await AudioEngine.stopSpinning();
+    if (gen !== spinGeneration) return;
+
+    await AudioEngine.play("reel-lock", { volume: 0.8 });
+    if (gen !== spinGeneration) return;
+
     setSlotTriggerStatus(`Reel ${i + 1} locked.`, "charged", 550);
     vibrate(12);
   } else {
-    AudioEngine.play("final-lock");
+    await AudioEngine.stopSpinning();
+    if (gen !== spinGeneration) return;
+
+    await AudioEngine.play("final-lock");
+    if (gen !== spinGeneration) return;
+
     setSlotTriggerStatus(
       "The Omens Are Set,\n Click Here to Start Workout",
       "landed",
@@ -1863,30 +1882,45 @@ function updateCurrentSetField(idx, field, value) {
   syncExercisePrimaryAction();
 }
 
-function confirmCurrentSet(idx) {
+async function confirmCurrentSet(idx) {
   if (idx < 0) return;
+
   const set = session.currentSets[idx];
   if (!set) return;
 
   const isLastSet = idx === session.currentSets.length - 1;
+
   set.weight = normalizeWeightValue(set.weight);
   set.reps = set.reps.trim() || "—";
   set.done = true;
+
   prefillNextSetFromCurrent(idx);
   saveSession();
-  if (idx === 0 && isOnboardingActive()) finishOnboarding("completed");
+
+  if (idx === 0 && isOnboardingActive()) {
+    finishOnboarding("completed");
+  }
 
   if (isLastSet) {
-    completeExercise();
+    await completeExercise();
     return;
   }
 
   renderSets();
-  AudioEngine.play("set-logged");
+
+  try {
+    await AudioEngine.play("set-logged");
+  } catch (err) {
+    console.error("Failed to play set-logged sound:", err);
+  }
+
+  // Guard in case session changed while awaiting audio
+  if (!session) return;
+
   startRest(session.currentExercise.restSeconds);
 }
 
-function handleExercisePrimaryAction() {
+async function handleExercisePrimaryAction() {
   const remaining = getRemainingRestSeconds();
   if (remaining > 0) {
     skipRest();
@@ -1896,11 +1930,11 @@ function handleExercisePrimaryAction() {
   const activeIdx = getActiveSetIndex();
   if (activeIdx >= 0) {
     if (!isSetReady(activeIdx)) return;
-    confirmCurrentSet(activeIdx);
+    await confirmCurrentSet(activeIdx);
     return;
   }
 
-  completeExercise();
+  await completeExercise();
 }
 
 function dismissKeyboard() {
@@ -1969,13 +2003,23 @@ function syncExercisePrimaryAction() {
   queueOnboardingRefresh();
 }
 
-function completeExercise() {
+async function completeExercise() {
   // Required: clear rest timer state before anything else
   stopRest();
   session.restEndsAt = null;
-  AudioEngine.play("level-up");
+
+  try {
+    await AudioEngine.play("level-up");
+  } catch (err) {
+    console.error("Failed to play level-up sound:", err);
+  }
+
+  // Guard in case session was cleared while awaiting audio
+  if (!session) return;
+
   const ex = session.currentExercise;
   const slot = session.currentSlot;
+  if (!ex || !slot) return;
 
   // PR detection + lastWeight write (checkAndUpdatePR handles both)
   const prs = checkAndUpdatePR(ex.name, session.currentSets);
@@ -2002,11 +2046,19 @@ function completeExercise() {
   const hasPR = Object.keys(prs).length > 0;
 
   if (session.slotIndex >= session.slots.length) {
-    hasPR ? showPROverlay(prs, finishSession) : finishSession();
+    if (hasPR) {
+      showPROverlay(prs, finishSession);
+    } else {
+      finishSession();
+    }
     return;
   }
 
-  hasPR ? showPROverlay(prs, launchExercise) : launchExercise();
+  if (hasPR) {
+    showPROverlay(prs, launchExercise);
+  } else {
+    launchExercise();
+  }
 }
 
 function finishSession() {
@@ -2104,11 +2156,20 @@ function skipRest() {
   syncExercisePrimaryAction();
 }
 
-function onRestComplete() {
-  AudioEngine.play("rest-timer-end");
+async function onRestComplete() {
+  try {
+    await AudioEngine.play("rest-timer-end");
+  } catch (err) {
+    console.error("Failed to play rest-timer-end sound:", err);
+  }
+
+  // Guard in case session changed while awaiting
+  if (!session) return;
+
   stopRest();
   session.restEndsAt = null;
   saveSession();
+
   renderSets();
   syncExercisePrimaryAction();
 
@@ -3028,14 +3089,18 @@ function renderSlotMachine(skipSpin = false) {
   queueOnboardingRefresh();
 }
 
-function renderDoneScreen({
+async function renderDoneScreen({
   templateId,
   totalSets,
   duration,
   sessionPRs,
   sessionNudges,
 }) {
-  AudioEngine.play("workout-complete");
+  // Start audio, but don't block UI rendering
+  const audioPromise = AudioEngine.play("workout-complete").catch((err) => {
+    console.error("Failed to play workout-complete sound:", err);
+  });
+
   const day = DAYS[templateId];
   document.getElementById("done-sub").textContent =
     `${day?.name ?? `Day ${templateId}`} complete`;
@@ -3055,13 +3120,17 @@ function renderDoneScreen({
       <div class="done-stat-label">Duration</div>
     </div>`;
 
-  // Phase 4: PR section
+  // PR section
   const prsBlock = document.getElementById("done-prs");
   if (sessionPRs?.length > 0) {
     document.getElementById("done-prs-list").innerHTML = sessionPRs
       .map(
         (pr) =>
-          `<div class="done-pr-item">${pr.exerciseName} — ${pr.type === "weight" ? `+${fmtKg(pr.new - pr.prev)}kg max weight` : `volume PR`}</div>`,
+          `<div class="done-pr-item">${pr.exerciseName} — ${
+            pr.type === "weight"
+              ? `+${fmtKg(pr.new - pr.prev)}kg max weight`
+              : `volume PR`
+          }</div>`,
       )
       .join("");
     prsBlock.style.display = "block";
@@ -3069,7 +3138,7 @@ function renderDoneScreen({
     prsBlock.style.display = "none";
   }
 
-  // Phase 4: Nudges section
+  // Nudges section
   const nudgesBlock = document.getElementById("done-nudges");
   if (sessionNudges?.length > 0) {
     document.getElementById("done-nudges-list").innerHTML = sessionNudges
@@ -3079,7 +3148,6 @@ function renderDoneScreen({
       )
       .join("");
     nudgesBlock.style.display = "block";
-    // Mark nudges shown
     sessionNudges.forEach((n) => markNudgeShown(n.exerciseName));
   } else {
     nudgesBlock.style.display = "none";
@@ -3087,48 +3155,61 @@ function renderDoneScreen({
 
   document.getElementById("done-sync").textContent = "";
   document.getElementById("done-sync").className = "done-sync";
+
+  // Ensure audio finishes initialization if needed
+  await audioPromise;
 }
+
+// SOUNDS WIRING
+const initAudioOnce = async () => {
+  try {
+    await AudioEngine.preload();
+  } catch (err) {
+    console.error("Audio preload failed:", err);
+  }
+};
 
 // ── EVENT WIRING ────────────────────────────────────────────────────────────
 
 function wireEvents() {
-  document.addEventListener(
-    "pointerdown",
-    () => {
-      AudioEngine.preload();
-    },
-    { once: true },
-  );
+  document.addEventListener("pointerdown", initAudioOnce, { once: true });
+  document.addEventListener("touchstart", initAudioOnce, { once: true });
 
   // Day picker
   document
     .getElementById("resume-btn")
     .addEventListener("click", resumeSession);
-  document.getElementById("history-btn").addEventListener("click", () => {
+  document.getElementById("history-btn").addEventListener("click", async () => {
     renderHistory({ resetOffset: true });
-    AudioEngine.play("card-tap");
+    await AudioEngine.play("card-tap");
     showScreen("screen-history");
   });
 
   // Day cards (event delegation on new container)
-  document.getElementById("day-picker-cards").addEventListener("click", (e) => {
-    const card = e.target.closest("[data-day]");
-    if (!card) return;
-    if (getActiveHomeSession()) return;
-    if (card.classList.contains("completed")) return;
-    if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
-    AudioEngine.play("card-tap");
-    startSession(card.dataset.day); // picks all exercises inside startSession
-    advanceOnboardingStep(ONBOARDING_STEP_HOME, ONBOARDING_STEP_PULL);
-    renderSlotMachine();
-    showScreen("screen-slot-machine");
-  });
+  document
+    .getElementById("day-picker-cards")
+    .addEventListener("click", async (e) => {
+      const card = e.target.closest("[data-day]");
+      if (!card) return;
+      if (getActiveHomeSession()) return;
+      if (card.classList.contains("completed")) return;
+      if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
+
+      await AudioEngine.play("card-tap");
+      startSession(card.dataset.day);
+      advanceOnboardingStep(ONBOARDING_STEP_HOME, ONBOARDING_STEP_PULL);
+      renderSlotMachine();
+      showScreen("screen-slot-machine");
+    });
 
   // Slot machine screen
-  document.getElementById("slot-machine-back").addEventListener("click", () => {
-    AudioEngine.play("navigate-back");
-    discardSessionAndGoHome();
-  });
+  document
+    .getElementById("slot-machine-back")
+    .addEventListener("click", async () => {
+      await AudioEngine.play("navigate-back");
+      discardSessionAndGoHome();
+    });
+
   document
     .getElementById("slot-trigger-status")
     .addEventListener("click", launchExercise);
@@ -3145,24 +3226,55 @@ function wireEvents() {
   pullTrigger.addEventListener("keydown", handlePullTriggerKeydown);
 
   // Exercise screen
-  document.getElementById("exercise-back").addEventListener("click", (e) => {
-    AudioEngine.play("navigate-back");
-    openExitSessionModal(e.currentTarget);
-  });
-  document.getElementById("complete-ex-btn").addEventListener("click", () => {
-    AudioEngine.play("card-tap");
-    dismissKeyboard();
-    setTimeout(handleExercisePrimaryAction, 50);
-  });
-  document.getElementById("sets-container").addEventListener("input", (e) => {
-    const input = e.target.closest("[data-field]");
-    if (!input) return;
-    updateCurrentSetField(
-      parseInt(input.dataset.idx, 10),
-      input.dataset.field,
-      input.value,
-    );
-  });
+  document
+    .getElementById("exercise-back")
+    .addEventListener("click", async (e) => {
+      document
+        .getElementById("exercise-back")
+        .addEventListener("click", async (e) => {
+          try {
+            await AudioEngine.play("navigate-back");
+          } catch (err) {
+            console.error("Failed to play navigate-back sound:", err);
+          }
+
+          openExitSessionModal(e.currentTarget);
+        });
+      openExitSessionModal(e.currentTarget);
+    });
+
+  // Exercise screen
+  document
+    .getElementById("exercise-back")
+    .addEventListener("click", async (e) => {
+      try {
+        await AudioEngine.play("navigate-back");
+      } catch (err) {
+        console.error("Failed to play navigate-back sound:", err);
+      }
+
+      openExitSessionModal(e.currentTarget);
+    });
+
+  document
+    .getElementById("complete-ex-btn")
+    .addEventListener("click", async () => {
+      dismissKeyboard();
+      setTimeout(() => {
+        void handleExercisePrimaryAction();
+      }, 50);
+    });
+  document
+    .getElementById("sets-container")
+    .addEventListener("input", async (e) => {
+      const input = e.target.closest("[data-field]");
+      if (!input) return;
+      updateCurrentSetField(
+        parseInt(input.dataset.idx, 10),
+        input.dataset.field,
+        input.value,
+      );
+    });
   document.getElementById("sets-container").addEventListener("keydown", (e) => {
     const input = e.target.closest("[data-field]");
     if (!input || e.key !== "Enter") return;
@@ -3184,15 +3296,26 @@ function wireEvents() {
   document.getElementById("done-back-btn").addEventListener("click", goHome);
 
   // History screen
-  document.getElementById("history-back").addEventListener("click", () => {
-    AudioEngine.play("navigate-back");
-    showScreen("screen-day-picker");
-  });
-  document.getElementById("history-more-btn").addEventListener("click", () => {
-    AudioEngine.play("card-tap");
-    historyOffset += 30;
-    renderHistory();
-  });
+  document
+    .getElementById("history-back")
+    .addEventListener("click", async () => {
+      await AudioEngine.play("navigate-back");
+      showScreen("screen-day-picker");
+    });
+
+  document
+    .getElementById("history-more-btn")
+    .addEventListener("click", async () => {
+      try {
+        await AudioEngine.play("card-tap");
+      } catch (err) {
+        console.error("Failed to play card-tap sound:", err);
+      }
+
+      historyOffset += 30;
+      renderHistory();
+    });
+
   document.getElementById("history-list").addEventListener("click", (e) => {
     const deleteBtn = e.target.closest("[data-history-delete]");
     if (deleteBtn) {
