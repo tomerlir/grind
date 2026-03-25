@@ -20,6 +20,12 @@ export const AudioEngine = (() => {
   let unlockPromise = null;
   let spinningHandle = null;
   let userActivated = false;
+  let iosUnmutePromise = null;
+  let silenceUrl = null;
+
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
   function getHowler() {
     return typeof Howler !== "undefined" ? Howler : null;
@@ -28,6 +34,82 @@ export const AudioEngine = (() => {
   function getHowlerContext() {
     const howler = getHowler();
     return howler?.ctx ?? null;
+  }
+
+  function writeAscii(view, offset, text) {
+    for (let i = 0; i < text.length; i++) {
+      view.setUint8(offset + i, text.charCodeAt(i));
+    }
+  }
+
+  function buildSilenceUrl() {
+    if (silenceUrl) {
+      return silenceUrl;
+    }
+
+    const sampleRate = 8000;
+    const durationSeconds = 0.15;
+    const channelCount = 1;
+    const bytesPerSample = 2;
+    const sampleCount = Math.floor(sampleRate * durationSeconds);
+    const dataSize = sampleCount * channelCount * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    writeAscii(view, 0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeAscii(view, 8, "WAVE");
+    writeAscii(view, 12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channelCount, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(
+      28,
+      sampleRate * channelCount * bytesPerSample,
+      true,
+    );
+    view.setUint16(32, channelCount * bytesPerSample, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    writeAscii(view, 36, "data");
+    view.setUint32(40, dataSize, true);
+
+    silenceUrl = URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
+    return silenceUrl;
+  }
+
+  async function unmuteIOSIfNeeded() {
+    if (!isIOS) {
+      return;
+    }
+
+    if (iosUnmutePromise) {
+      return iosUnmutePromise;
+    }
+
+    iosUnmutePromise = (async () => {
+      const el = new Audio(buildSilenceUrl());
+      el.preload = "auto";
+      el.playsInline = true;
+
+      try {
+        await el.play();
+      } catch (err) {
+        console.warn("[AudioEngine] iOS HTMLAudio unmute failed:", err);
+        return;
+      }
+
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch (err) {
+        console.warn("[AudioEngine] iOS HTMLAudio reset failed:", err);
+      }
+    })().finally(() => {
+      iosUnmutePromise = null;
+    });
+
+    return iosUnmutePromise;
   }
 
   if (typeof Howler !== "undefined") {
@@ -126,6 +208,7 @@ export const AudioEngine = (() => {
     }
 
     try {
+      await unmuteIOSIfNeeded();
       await howler.ctx.resume();
     } catch (err) {
       console.warn(`[AudioEngine] resume failed during ${reason}:`, err);
@@ -141,6 +224,7 @@ export const AudioEngine = (() => {
 
     unlockPromise = (async () => {
       userActivated = true;
+      await unmuteIOSIfNeeded();
       await resumeContext(reason);
       void preload().catch((err) => {
         console.warn("[AudioEngine] preload failed:", err);
