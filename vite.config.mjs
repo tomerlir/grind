@@ -7,13 +7,6 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       injectRegister: false,
-      includeAssets: [
-        "icons/favicon.ico",
-        "icons/favicon.svg",
-        "icons/favicon-96x96.png",
-        "icons/apple-touch-icon.png",
-        "sounds/*.mp3",
-      ],
       manifest: {
         name: "Grind: Olympus Workout",
         short_name: "Grind",
@@ -41,6 +34,7 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
+        globPatterns: ["**/*.{js,css,html,mp3}"],
       },
       devOptions: {
         enabled: false,

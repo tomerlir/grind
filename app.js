@@ -3337,9 +3337,18 @@ function wireEvents() {
 function init() {
   ensureOnboardingState();
   wireEvents();
-  void AudioEngine.preload().catch((err) => {
-    console.error("Audio preload failed:", err);
-  });
+  const scheduleAudioPreload = () => {
+    void AudioEngine.preload().catch((err) => {
+      console.error("Audio preload failed:", err);
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(scheduleAudioPreload, { timeout: 1500 });
+  } else {
+    window.setTimeout(scheduleAudioPreload, 0);
+  }
+
   renderAppVersionBadge();
   renderDayPicker();
   queueOnboardingRefresh();
