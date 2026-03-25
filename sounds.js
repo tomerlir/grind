@@ -1,5 +1,7 @@
+import { Howl, Howler } from "howler";
+
 // sounds.js
-const AudioEngine = (() => {
+export const AudioEngine = (() => {
   const SOUNDS = [
     "pull-start",
     "spinning-loop",

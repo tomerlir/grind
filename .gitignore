@@ -2,3 +2,5 @@
 .gstack/
 .DS_Store
 CLAUDE.md
+node_modules/
+dist/

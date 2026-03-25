@@ -1,4 +1,7 @@
-"use strict";
+import { registerSW } from "virtual:pwa-register";
+import { AudioEngine } from "./sounds.js";
+
+("use strict");
 // ═══════════════════════════════════════════════════════════════════════════
 // GRIND — Workout Slot Machine  |  app.js  |  Phase 1
 // ═══════════════════════════════════════════════════════════════════════════
@@ -17,7 +20,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.3 beta",
+  versionLabel: "v2.0 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -2352,8 +2355,7 @@ function appendHistory(entry) {
 }
 
 let historyOffset = 30; // display cap — shows last 30, "Show more" adds 30
-let updateRegistration = null;
-let isApplyingAppUpdate = false;
+let applyAppUpdateFn = null;
 
 function rebuildPRStateFromHistory(historyEntries = loadHistory()) {
   const previousPR = storageGet("grind:pr", {});
@@ -2739,8 +2741,8 @@ function renderAppVersionBadge() {
   badge.textContent = String(DEFAULT_CONFIG.versionLabel).trim().toUpperCase();
 }
 
-function openUpdateAppModal(registration) {
-  updateRegistration = registration;
+function openUpdateAppModal(applyUpdateFn) {
+  applyAppUpdateFn = applyUpdateFn;
   const modal = document.getElementById("update-app-modal");
   if (!modal) return;
   modal.classList.add("show");
@@ -2749,6 +2751,7 @@ function openUpdateAppModal(registration) {
 }
 
 function closeUpdateAppModal() {
+  applyAppUpdateFn = null;
   const modal = document.getElementById("update-app-modal");
   if (!modal) return;
   modal.classList.remove("show");
@@ -2756,56 +2759,49 @@ function closeUpdateAppModal() {
   queueOnboardingRefresh();
 }
 
-function promptForWaitingServiceWorker(registration) {
-  if (!registration?.waiting) return;
-  openUpdateAppModal(registration);
-}
-
 function applyAppUpdate() {
-  const waiting = updateRegistration?.waiting;
-  if (!waiting) {
+  if (!applyAppUpdateFn) {
     closeUpdateAppModal();
     return;
   }
-  isApplyingAppUpdate = true;
-  waiting.postMessage({ type: "SKIP_WAITING" });
-}
 
-function watchServiceWorkerRegistration(registration) {
-  if (!registration) return;
-  promptForWaitingServiceWorker(registration);
-
-  registration.addEventListener("updatefound", () => {
-    const installing = registration.installing;
-    if (!installing) return;
-
-    installing.addEventListener("statechange", () => {
-      if (
-        installing.state === "installed" &&
-        navigator.serviceWorker.controller
-      ) {
-        promptForWaitingServiceWorker(registration);
-      }
+  void Promise.resolve(applyAppUpdateFn())
+    .catch((err) => {
+      console.warn("[GRIND] app update failed:", err);
+    })
+    .finally(() => {
+      closeUpdateAppModal();
     });
-  });
 }
 
-function registerServiceWorker() {
+function registerAppUpdatePrompt() {
   if (!("serviceWorker" in navigator)) return;
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("sw.js", { updateViaCache: "none" })
-      .then((reg) => {
-        console.log("[GRIND] SW registered, scope:", reg.scope);
-        watchServiceWorkerRegistration(reg);
-      })
-      .catch((err) => console.warn("[GRIND] SW registration failed:", err));
-  });
+  let updateSW = () => Promise.resolve();
 
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!isApplyingAppUpdate) return;
-    window.location.reload();
+  updateSW = registerSW({
+    onNeedRefresh() {
+      openUpdateAppModal(() => updateSW(true));
+    },
+    onOfflineReady() {
+      console.log("[GRIND] App ready to work offline.");
+    },
+    onRegisteredSW(swUrl, registration) {
+      console.log("[GRIND] SW registered:", swUrl);
+
+      if (!registration) return;
+
+      window.setInterval(
+        () => {
+          if (!navigator.onLine) return;
+          void registration.update();
+        },
+        60 * 60 * 1000,
+      );
+    },
+    onRegisterError(error) {
+      console.warn("[GRIND] SW registration failed:", error);
+    },
   });
 }
 
@@ -3397,7 +3393,7 @@ async function flushSyncQueue() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-registerServiceWorker();
+registerAppUpdatePrompt();
 
 // ── TESTS ──────────────────────────────────────────────────────────────────
 // Run via: open index.html?test in the browser, then check the console.

@@ -1,0 +1,28 @@
+{
+  "name": "grind",
+  "version": "1.0.0",
+  "description": "Minimalist fitness PWA for structured, slightly randomized hypertrophy training. Including gamified features like slot-machine randomizations, animations, and sounds for entertainment value.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomerlir/grind.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomerlir/grind/issues"
+  },
+  "homepage": "https://github.com/tomerlir/grind#readme",
+  "dependencies": {
+    "howler": "2.2.4"
+  },
+  "devDependencies": {
+    "vite": "7.3.1",
+    "vite-plugin-pwa": "1.2.0"
+  }
+}
