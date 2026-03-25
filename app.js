@@ -17,7 +17,7 @@
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  versionLabel: "v1.2.1 beta",
+  versionLabel: "v1.3 beta",
   webhookUrl: "YOUR_N8N_WEBHOOK_URL",
   dryRun: true,
 };
@@ -1398,7 +1398,7 @@ async function handlePullTriggerStart(e) {
   const trigger = document.getElementById("slot-pull-trigger");
   if (!trigger) return;
 
-  await AudioEngine.play("pull-start");
+  void AudioEngine.play("pull-start");
   advanceOnboardingStep(ONBOARDING_STEP_PULL, ONBOARDING_STEP_START);
 
   pullGesture.active = true;
@@ -1638,7 +1638,7 @@ async function onReelLanded(i, gen = spinGeneration) {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    await AudioEngine.play("reel-lock", { volume: 0.8 });
+    void AudioEngine.play("reel-lock", { volume: 0.8 });
     if (gen !== spinGeneration) return;
 
     setSlotTriggerStatus(`Reel ${i + 1} locked.`, "charged", 550);
@@ -1647,7 +1647,7 @@ async function onReelLanded(i, gen = spinGeneration) {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    await AudioEngine.play("final-lock");
+    void AudioEngine.play("final-lock");
     if (gen !== spinGeneration) return;
 
     setSlotTriggerStatus(
@@ -1909,7 +1909,7 @@ async function confirmCurrentSet(idx) {
   renderSets();
 
   try {
-    await AudioEngine.play("set-logged");
+    void AudioEngine.play("set-logged");
   } catch (err) {
     console.error("Failed to play set-logged sound:", err);
   }
@@ -2009,7 +2009,7 @@ async function completeExercise() {
   session.restEndsAt = null;
 
   try {
-    await AudioEngine.play("level-up");
+    void AudioEngine.play("level-up");
   } catch (err) {
     console.error("Failed to play level-up sound:", err);
   }
@@ -2158,7 +2158,7 @@ function skipRest() {
 
 async function onRestComplete() {
   try {
-    await AudioEngine.play("rest-timer-end");
+    void AudioEngine.play("rest-timer-end");
   } catch (err) {
     console.error("Failed to play rest-timer-end sound:", err);
   }
@@ -3161,19 +3161,26 @@ async function renderDoneScreen({
 }
 
 // SOUNDS WIRING
-const initAudioOnce = async () => {
+async function initAudioOnce() {
   try {
     await AudioEngine.preload();
   } catch (err) {
     console.error("Audio preload failed:", err);
   }
-};
+}
 
 // ── EVENT WIRING ────────────────────────────────────────────────────────────
 
 function wireEvents() {
-  document.addEventListener("pointerdown", initAudioOnce, { once: true });
-  document.addEventListener("touchstart", initAudioOnce, { once: true });
+  document.addEventListener("touchend", initAudioOnce, {
+    once: true,
+    capture: true,
+  });
+
+  document.addEventListener("click", initAudioOnce, {
+    once: true,
+    capture: true,
+  });
 
   // Day picker
   document
@@ -3181,7 +3188,7 @@ function wireEvents() {
     .addEventListener("click", resumeSession);
   document.getElementById("history-btn").addEventListener("click", async () => {
     renderHistory({ resetOffset: true });
-    await AudioEngine.play("card-tap");
+    void AudioEngine.play("card-tap");
     showScreen("screen-history");
   });
 
@@ -3195,7 +3202,7 @@ function wireEvents() {
       if (card.classList.contains("completed")) return;
       if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
 
-      await AudioEngine.play("card-tap");
+      void AudioEngine.play("card-tap");
       startSession(card.dataset.day);
       advanceOnboardingStep(ONBOARDING_STEP_HOME, ONBOARDING_STEP_PULL);
       renderSlotMachine();
@@ -3206,7 +3213,7 @@ function wireEvents() {
   document
     .getElementById("slot-machine-back")
     .addEventListener("click", async () => {
-      await AudioEngine.play("navigate-back");
+      void AudioEngine.play("navigate-back");
       discardSessionAndGoHome();
     });
 
@@ -3233,7 +3240,7 @@ function wireEvents() {
         .getElementById("exercise-back")
         .addEventListener("click", async (e) => {
           try {
-            await AudioEngine.play("navigate-back");
+            void AudioEngine.play("navigate-back");
           } catch (err) {
             console.error("Failed to play navigate-back sound:", err);
           }
@@ -3248,7 +3255,7 @@ function wireEvents() {
     .getElementById("exercise-back")
     .addEventListener("click", async (e) => {
       try {
-        await AudioEngine.play("navigate-back");
+        void AudioEngine.play("navigate-back");
       } catch (err) {
         console.error("Failed to play navigate-back sound:", err);
       }
@@ -3299,7 +3306,7 @@ function wireEvents() {
   document
     .getElementById("history-back")
     .addEventListener("click", async () => {
-      await AudioEngine.play("navigate-back");
+      void AudioEngine.play("navigate-back");
       showScreen("screen-day-picker");
     });
 
@@ -3307,7 +3314,7 @@ function wireEvents() {
     .getElementById("history-more-btn")
     .addEventListener("click", async () => {
       try {
-        await AudioEngine.play("card-tap");
+        void AudioEngine.play("card-tap");
       } catch (err) {
         console.error("Failed to play card-tap sound:", err);
       }
