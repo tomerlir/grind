@@ -3160,28 +3160,9 @@ async function renderDoneScreen({
   await audioPromise;
 }
 
-// SOUNDS WIRING
-async function initAudioOnce() {
-  try {
-    await AudioEngine.preload();
-  } catch (err) {
-    console.error("Audio preload failed:", err);
-  }
-}
-
 // ── EVENT WIRING ────────────────────────────────────────────────────────────
 
 function wireEvents() {
-  document.addEventListener("touchend", initAudioOnce, {
-    once: true,
-    capture: true,
-  });
-
-  document.addEventListener("click", initAudioOnce, {
-    once: true,
-    capture: true,
-  });
-
   // Day picker
   document
     .getElementById("resume-btn")
@@ -3231,24 +3212,6 @@ function wireEvents() {
     finishPullTrigger(e, { cancel: true }),
   );
   pullTrigger.addEventListener("keydown", handlePullTriggerKeydown);
-
-  // Exercise screen
-  document
-    .getElementById("exercise-back")
-    .addEventListener("click", async (e) => {
-      document
-        .getElementById("exercise-back")
-        .addEventListener("click", async (e) => {
-          try {
-            void AudioEngine.play("navigate-back");
-          } catch (err) {
-            console.error("Failed to play navigate-back sound:", err);
-          }
-
-          openExitSessionModal(e.currentTarget);
-        });
-      openExitSessionModal(e.currentTarget);
-    });
 
   // Exercise screen
   document
@@ -3378,6 +3341,9 @@ function wireEvents() {
 function init() {
   ensureOnboardingState();
   wireEvents();
+  void AudioEngine.preload().catch((err) => {
+    console.error("Audio preload failed:", err);
+  });
   renderAppVersionBadge();
   renderDayPicker();
   queueOnboardingRefresh();
