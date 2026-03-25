@@ -462,6 +462,9 @@ let onboardingRefreshFrame = 0;
 let onboardingShowTimer = null;
 let onboardingScheduledKey = "";
 let onboardingShownKey = "";
+let onboardingViewportTrackFrame = 0;
+let onboardingViewportTrackUntil = 0;
+const ONBOARDING_VIEWPORT_SETTLE_MS = 450;
 
 function createDefaultOnboardingState() {
   return {
@@ -539,6 +542,7 @@ function clearOnboardingTargets() {
 }
 
 function hideOnboardingOverlay() {
+  stopOnboardingViewportTracking();
   clearOnboardingTargets();
   const overlay = document.getElementById("coachmark-overlay");
   if (!overlay) return;
@@ -550,6 +554,31 @@ function clearOnboardingShowTimer() {
   if (onboardingShowTimer) clearTimeout(onboardingShowTimer);
   onboardingShowTimer = null;
   onboardingScheduledKey = "";
+}
+
+function stopOnboardingViewportTracking() {
+  onboardingViewportTrackUntil = 0;
+  if (!onboardingViewportTrackFrame) return;
+  cancelAnimationFrame(onboardingViewportTrackFrame);
+  onboardingViewportTrackFrame = 0;
+}
+
+function trackOnboardingViewport(duration = ONBOARDING_VIEWPORT_SETTLE_MS) {
+  onboardingViewportTrackUntil = Math.max(
+    onboardingViewportTrackUntil,
+    performance.now() + duration,
+  );
+  if (onboardingViewportTrackFrame) return;
+
+  const tick = () => {
+    onboardingViewportTrackFrame = 0;
+    queueOnboardingRefresh();
+    if (performance.now() < onboardingViewportTrackUntil) {
+      onboardingViewportTrackFrame = requestAnimationFrame(tick);
+    }
+  };
+
+  onboardingViewportTrackFrame = requestAnimationFrame(tick);
 }
 
 function finishOnboarding(status = "completed") {
@@ -604,6 +633,25 @@ function getOnboardingAnchorRect(targetRect) {
   const config = ONBOARDING_CONFIG[onboarding?.step];
   const anchor = config?.getTooltipAnchor?.();
   return isElementVisible(anchor) ? anchor.getBoundingClientRect() : targetRect;
+}
+
+function getViewportBounds() {
+  const viewport = window.visualViewport;
+  if (!viewport) {
+    return {
+      left: 0,
+      top: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  return {
+    left: viewport.offsetLeft,
+    top: viewport.offsetTop,
+    width: viewport.width,
+    height: viewport.height,
+  };
 }
 
 function syncExerciseOnboardingState() {
@@ -672,21 +720,28 @@ function scheduleOnboardingDisplay(displayKey) {
 }
 
 function positionOnboardingOverlay(rect) {
+  const overlay = document.getElementById("coachmark-overlay");
   const spotlight = document.getElementById("coachmark-spotlight");
   const tooltip = document.getElementById("coachmark-tooltip");
-  if (!spotlight || !tooltip) return;
+  if (!overlay || !spotlight || !tooltip) return;
   const config = ONBOARDING_CONFIG[onboarding?.step];
   const anchorRect = getOnboardingAnchorRect(rect);
+  const viewport = getViewportBounds();
 
   const padding = 10;
+  overlay.style.left = `${viewport.left}px`;
+  overlay.style.top = `${viewport.top}px`;
+  overlay.style.width = `${viewport.width}px`;
+  overlay.style.height = `${viewport.height}px`;
+
   const left = Math.max(8, rect.left - padding);
   const top = Math.max(8, rect.top - padding);
   const width = Math.min(
-    window.innerWidth - left - 8,
+    viewport.width - left - 8,
     rect.right - rect.left + padding * 2,
   );
   const height = Math.min(
-    window.innerHeight - top - 8,
+    viewport.height - top - 8,
     rect.bottom - rect.top + padding * 2,
   );
 
@@ -697,14 +752,14 @@ function positionOnboardingOverlay(rect) {
   spotlight.style.borderRadius =
     onboarding?.step === ONBOARDING_STEP_PULL ? "999px" : "20px";
 
-  const tooltipWidth = Math.min(280, window.innerWidth - 32);
+  const tooltipWidth = Math.min(280, viewport.width - 32);
   const tooltipHeight = tooltip.getBoundingClientRect().height;
   const targetCenter =
     anchorRect.left + (anchorRect.right - anchorRect.left) / 2;
   const tooltipLeft = clamp(
     targetCenter - tooltipWidth / 2,
     16,
-    window.innerWidth - tooltipWidth - 16,
+    viewport.width - tooltipWidth - 16,
   );
   const preferredBelow = anchorRect.bottom + 16;
   const preferredAbove = anchorRect.top - tooltipHeight - 12;
@@ -712,8 +767,8 @@ function positionOnboardingOverlay(rect) {
     config?.tooltipPlacement === "above"
       ? preferredAbove >= 16
         ? preferredAbove
-        : Math.min(preferredBelow, window.innerHeight - tooltipHeight - 16)
-      : preferredBelow + tooltipHeight <= window.innerHeight - 16
+        : Math.min(preferredBelow, viewport.height - tooltipHeight - 16)
+      : preferredBelow + tooltipHeight <= viewport.height - 16
         ? preferredBelow
         : Math.max(16, preferredAbove);
 
@@ -1871,7 +1926,11 @@ function renderSets() {
   const repsInput = document.getElementById(`reps-${activeIdx}`);
   [weightInput, repsInput].forEach((input) => {
     if (!input) return;
-    input.addEventListener("focus", () => scrollIntoViewCentered(input));
+    input.addEventListener("focus", () => {
+      scrollIntoViewCentered(input);
+      trackOnboardingViewport();
+    });
+    input.addEventListener("blur", () => trackOnboardingViewport());
   });
 
   queueOnboardingRefresh();
@@ -3382,6 +3441,22 @@ function wireEvents() {
     .addEventListener("click", () => finishOnboarding("dismissed"));
   window.addEventListener("resize", queueOnboardingRefresh);
   document.addEventListener("scroll", queueOnboardingRefresh, true);
+  document.addEventListener("focusin", (e) => {
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement
+    ) {
+      trackOnboardingViewport();
+    }
+  });
+  document.addEventListener("focusout", (e) => {
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement
+    ) {
+      trackOnboardingViewport();
+    }
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     const modal = document.getElementById("exit-session-modal");
@@ -3413,7 +3488,7 @@ function init() {
   queueOnboardingRefresh();
 
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", () => {
+    const handleViewportChange = () => {
       const active = document.activeElement;
       if (
         active &&
@@ -3421,8 +3496,12 @@ function init() {
       ) {
         active.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      trackOnboardingViewport();
       queueOnboardingRefresh();
-    });
+    };
+
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+    window.visualViewport.addEventListener("scroll", handleViewportChange);
   }
 
   // Flush any queued sync payloads from previous offline sessions
