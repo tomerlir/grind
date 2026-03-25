@@ -1537,6 +1537,64 @@ const BASE_MS = 2000; // reel 0 lands at 2000ms
 const STAGGER_MS = 350; // each subsequent reel 350ms later
 
 let spinGeneration = 0; // incremented each spinAllReels() call to invalidate stale listeners
+let landingCuePromise = Promise.resolve();
+let landingCueHandle = null;
+let lastLandingCueAt = 0;
+
+const SHOULD_SERIALIZE_LANDING_CUES =
+  typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function resetLandingCues() {
+  landingCuePromise = Promise.resolve();
+  lastLandingCueAt = 0;
+
+  if (landingCueHandle) {
+    landingCueHandle.stop();
+    landingCueHandle = null;
+  }
+}
+
+function queueLandingCue(name, options = {}, gen = spinGeneration) {
+  const runCue = async () => {
+    if (gen !== spinGeneration) return null;
+
+    if (SHOULD_SERIALIZE_LANDING_CUES && lastLandingCueAt > 0) {
+      const waitMs = Math.max(0, lastLandingCueAt + STAGGER_MS - performance.now());
+      if (waitMs > 0) {
+        await wait(waitMs);
+      }
+    }
+
+    if (gen !== spinGeneration) return null;
+
+    if (SHOULD_SERIALIZE_LANDING_CUES && landingCueHandle) {
+      landingCueHandle.stop();
+      landingCueHandle = null;
+    }
+
+    const handle = await AudioEngine.play(name, options);
+    if (gen !== spinGeneration) {
+      handle?.stop?.();
+      return null;
+    }
+
+    lastLandingCueAt = performance.now();
+    landingCueHandle = handle;
+    return handle;
+  };
+
+  landingCuePromise = landingCuePromise
+    .catch(() => null)
+    .then(runCue);
+
+  return landingCuePromise;
+}
 
 function getReelHeight() {
   // Custom properties return the raw `clamp(...)` string, so measure the reel.
@@ -1555,6 +1613,7 @@ function spinAllReels() {
 
   spinGeneration++;
   const gen = spinGeneration;
+  resetLandingCues();
 
   const N = session.slots.length;
   const reelHeight = getReelHeight();
@@ -1641,7 +1700,7 @@ async function onReelLanded(i, gen = spinGeneration) {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    void AudioEngine.play("reel-lock", { volume: 0.8 });
+    void queueLandingCue("reel-lock", { volume: 0.8 }, gen);
     if (gen !== spinGeneration) return;
 
     setSlotTriggerStatus(`Reel ${i + 1} locked.`, "charged", 550);
@@ -1650,7 +1709,7 @@ async function onReelLanded(i, gen = spinGeneration) {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    void AudioEngine.play("final-lock");
+    void queueLandingCue("final-lock", {}, gen);
     if (gen !== spinGeneration) return;
 
     setSlotTriggerStatus(
