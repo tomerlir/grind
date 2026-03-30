@@ -23,7 +23,6 @@ let runtime = {
   loadWeek: () => ({ completed: [], completedByTemplate: {} }),
   getOrCreateDayAssignment: () => [],
   formatWeekdayLabel: () => "",
-  normalizeSpinState: (state) => state,
   getSessionSpinState: () => SPIN_STATE_READY,
   getSession: () => null,
   renderSlotMachine: () => {},
@@ -165,7 +164,6 @@ export function discardSessionAndGoHome() {
 
 export function renderDayPicker() {
   renderDayPickerCards();
-  renderResumeBanner();
   runtime.queueOnboardingRefresh();
 }
 
@@ -197,7 +195,7 @@ function renderDayPickerCards() {
       if (isDone) {
         ctaLabel = `COMPLETED ON ${(completedWeekday || "THIS WEEK").toUpperCase()}`;
       } else if (isActiveSession) {
-        ctaLabel = "RESUME FROM BANNER ABOVE";
+        ctaLabel = "CLICK TO RESUME";
       } else if (isLocked) {
         ctaLabel = "FINISH OR DISCARD CURRENT SESSION";
       }
@@ -229,27 +227,6 @@ function renderDayPickerCards() {
     .join("");
 
   runtime.queueOnboardingRefresh();
-}
-
-function renderResumeBanner() {
-  const saved = runtime.loadSession();
-  const banner = document.getElementById("resume-banner");
-  if (!banner) return;
-  if (!saved || saved.status !== "in_progress") {
-    banner.style.display = "none";
-    return;
-  }
-
-  const day = DAYS[saved.templateId];
-  const spinState = runtime.normalizeSpinState(saved.spinState);
-  const slotLabel = day
-    ? spinState === SPIN_STATE_READY && !saved.currentExercise
-      ? "Awaiting spin"
-      : `Exercise ${saved.slotIndex + 1}/${saved.slots.length}`
-    : "";
-  document.getElementById("resume-text").textContent =
-    `SESSION IN PROGRESS · Day ${saved.templateId} · ${slotLabel}`;
-  banner.style.display = "flex";
 }
 
 export function resumeSession() {

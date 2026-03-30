@@ -685,31 +685,6 @@
                 background-size: 48px 20px;
             }
 
-            /* Resume banner */
-            .resume-banner {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: var(--space-sm);
-                flex-wrap: wrap;
-                margin-bottom: var(--space-lg);
-                animation: electricPulse 2.6s ease-in-out infinite;
-            }
-            .resume-text {
-                flex: 1;
-                font-family: var(--font-ui);
-                font-size: var(--type-label-md);
-                letter-spacing: var(--tracking-label-tight);
-                color: var(--text);
-                line-height: 1.35;
-                text-transform: uppercase;
-            }
-            .resume-btn {
-                width: auto;
-                min-width: 124px;
-                white-space: nowrap;
-            }
-
             /* Section labels — electric prefix */
             .section-label {
                 font-family: var(--font-mono);
@@ -1477,8 +1452,6 @@
             .exercise-graph-stage {
                 display: none;
                 flex: 1;
-                min-height: 180px;
-                margin-bottom: var(--space-md);
                 align-items: stretch;
                 justify-content: center;
             }
@@ -1488,8 +1461,6 @@
             .exercise-mini-graph {
                 display: block;
                 width: 100%;
-                height: 100%;
-                min-height: 180px;
                 max-height: 40vh;
                 padding: var(--space-sm) 0;
             }
@@ -2447,9 +2418,6 @@
                 .zeus-divider {
                     margin-bottom: var(--space-md);
                 }
-                .resume-banner {
-                    margin-bottom: var(--space-md);
-                }
                 .day-picker-footer {
                     padding-top: var(--space-md);
                 }
@@ -2493,23 +2461,7 @@
                     </div>
                 </div>-->
             </div>
-
-            <div
-                class="resume-banner card card--active"
-                id="resume-banner"
-                style="display: none"
-            >
-                <div
-                    class="resume-text"
-                    id="resume-text"
-                    aria-label="Session in progress"
-                ></div>
-                <button class="resume-btn button-primary" id="resume-btn">
-                    RESUME
-                </button>
-            </div>
             <div class="day-picker-cards" id="day-picker-cards"></div>
-
         </div>
 
         <!-- ═══ SLOT MACHINE ════════════════════════════════════════════════ -->

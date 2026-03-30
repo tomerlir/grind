@@ -29,16 +29,21 @@ export function wireEvents({
   trackOnboardingViewport,
   resumeSession,
 }) {
-  document.getElementById("resume-btn").addEventListener("click", resumeSession);
-
   document
     .getElementById("day-picker-cards")
     .addEventListener("click", async (e) => {
       const card = e.target.closest("[data-day]");
       if (!card) return;
-      if (getActiveHomeSession()) return;
+      const activeSession = getActiveHomeSession();
       if (card.classList.contains("completed")) return;
       if (getCompletedDays(getWeekKey()).includes(card.dataset.day)) return;
+
+      if (activeSession) {
+        if (activeSession.templateId !== card.dataset.day) return;
+        void audioEngine.play("card-tap");
+        resumeSession();
+        return;
+      }
 
       void audioEngine.play("card-tap");
       startSession(card.dataset.day);
