@@ -1,42 +1,67 @@
 # Architecture
 
 ## Technology Stack
-Language: Vanilla JS (ES2022) — no build step, no dependencies
-UI: Custom CSS — extending the existing design system with slot layer and semantic typography tokens 
-Persistence: localStorage — survives close/refresh/background |
-PWA: `manifest.json` + service worker — installable, offline, beta-labelled
-Sync: n8n webhook POST — once at session end only (TODO)
-Typography: Google Fonts: Caesar Dressing + Cormorant Garamond + Alegreya Sans SC
+
+- Language: Vanilla JS (ES2022 modules)
+- Tooling: Vite + `vite-plugin-pwa`
+- Audio: `howler`
+- UI: single-page HTML with inline custom CSS in `index.html`
+- Persistence: `localStorage`
+- Sync: n8n webhook POST at session completion, with offline queue
 
 ## File Structure
 
-```
+```text
 grind/
-  index.html          ← all screen markup + <style> block (all CSS)
-  app.js              ← all logic in named sections (see below)
-  manifest.json
-  sw.js               ← service worker (cache-first)
-  icons/
-    web-app-manifest-192x192.png
-    web-app-manifest-512x512.png
+  index.html              ← all screen markup + inline CSS
+  src/
+    main.js               ← app bootstrap + test harness
+    app/
+      runtime.js          ← main application flow and DOM-heavy logic
+    audio/
+      index.js            ← audio engine + sound asset imports
+    data/
+      workouts.js         ← exercise pools + workout templates
+    lib/
+      storage.js          ← guarded localStorage helpers
+    config.js             ← version/webhook/dry-run config
+  assets/
+  docs/
+  vite.config.mjs
 ```
 
-**Why 4 files instead of 17:** Vanilla JS without a bundler gets no benefit from file splitting — it creates `<script>` load-order fragility, a brittle SW asset list, and global namespace coordination issues. One `app.js` with clear section comments is both simpler and more explicit.
+## Architectural Direction
 
-`app.js` internal structure:
-```
-// ── DATA ──────────────── exercise DB, day definitions
-// ── STORAGE ───────────── localStorage helpers, try/catch guards
-// ── WEEK STORE ────────── getWeekKey(), weekly template choices, dedup
-// ── SESSION ───────────── state object, saveSession(), loadSession()
-// ── SPIN ──────────────── pickExercise(), spinToReveal()
-// ── TIMER ─────────────── startRest(), resumeRestIfNeeded()
-// ── PR TRACKING ───────── checkAndUpdatePR(), getOverloadNudge()
-// ── HISTORY ───────────── loadHistory(), renderHistory()
-// ── SYNC ──────────────── syncToSheets(), flushSyncQueue()
-// ── APP / ROUTER ──────── showScreen(), event wiring, init
-// ── TESTS ─────────────── runTests() — active on ?test param
-```
+- The codebase now uses Vite as the module boundary instead of relying on one root `app.js`.
+- This refactor is intentionally JS-first: HTML structure and inline CSS remain in place.
+- `src/app/runtime.js` still contains the DOM-heavy orchestration layer, but immutable data, configuration, storage, and audio setup are now separated into dedicated modules.
+- Existing `localStorage` keys and runtime behavior are preserved to avoid migration churn.
+
+## Current Module Boundaries
+
+- `src/main.js`
+  - DOMContentLoaded boot
+  - service worker update prompt registration
+  - browser-only `?test` execution
+- `src/config.js`
+  - static runtime configuration such as version label and webhook defaults
+- `src/data/workouts.js`
+  - `EXERCISES`
+  - `DAYS`
+- `src/lib/storage.js`
+  - `storageGet`
+  - `storageSet`
+  - `storageDel`
+- `src/audio/index.js`
+  - Howler configuration
+  - sound preloading and playback helpers
+- `src/app/runtime.js`
+  - onboarding
+  - week/session flow
+  - spin mechanics
+  - rest timer
+  - PR/history/sync logic
+  - screen rendering and event wiring
 
 ## Screen Flow
 

@@ -1,168 +1,77 @@
 # Grind — Olympus Workouts
 
-Minimalist fitness PWA for structured, slightly randomized hypertrophy training. Including gamified features like slot-machine randomizations, animations, and sounds for entertainment value.
-
----
-
-## Concept
-
-Grind solves a simple problem:
-
-> repeating the exact same workout and tracking it every week for months on end is boring.
-
-The app keeps structure (A/B/C full-body split) while introducing controlled variation through randomized exercise selection within predefined categories.
-
-Result:
-
-* consistent training
-* less boredom
-* no planning required
-* can focus on progressive overload
-* gamified features to keep workouts more fun 
-
----
-
-## Core Loop
-
-1. Open app
-2. Select available workout (A / B / C)
-3. Generate exercises (slot-machine style)
-4. Log sets (weight + reps)
-5. Complete session → saved locally
-
-Sessions are auto-saved and deletable. During session they are pausable, resumable or discardable.
-
----
-
-## Key Rules (Important)
-
-* 3 workouts per week (A/B/C)
-* Each workout can be completed once per week
-* Exercises are randomised dynamically at the beginning of the session
-* No custom exercises or templates (intentional constraint)
-
----
-
-## Features
-
-* Structured full-body training
-* Randomized exercise selection within categories
-* Session persistence (localStorage)
-* PR tracking:
-
-  * max weight
-  * session volume
-* Progressive overload nudges
-* Offline-first (PWA)
-
----
+Minimalist fitness PWA for structured, slightly randomized hypertrophy training. The app keeps the A/B/C full-body split fixed, then adds controlled exercise variation, session persistence, PR tracking, and audio-heavy slot-machine feedback.
 
 ## Tech Stack
 
-* Vanilla JavaScript (no framework, no build step)
-* HTML + custom CSS
-* localStorage (state)
-* Service Worker (offline)
-* PWA (installable)
-
----
-
-## Project Structure
-
-grind/
-index.html
-app.js
-manifest.json
-sw.js
-icons/
-
-All logic lives in `app.js`, grouped by sections:
-
-* data
-* storage
-* week state
-* session
-* logic (randomization, PRs)
-* UI / routing
-
----
+- Vanilla JavaScript with Vite as the dev server and bundler
+- HTML with inline custom CSS in `index.html`
+- `localStorage` for week state, active sessions, history, PRs, and sync queue
+- `vite-plugin-pwa` for installability and offline support
+- `howler` for audio playback
 
 ## Running Locally
 
-Serve the project:
+- `npm install`
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
 
-npx serve .
+## Project Structure
 
-or
+```text
+grind/
+  index.html
+  src/
+    main.js
+    app/
+      runtime.js
+    audio/
+      index.js
+    data/
+      workouts.js
+    lib/
+      storage.js
+    config.js
+  assets/
+  docs/
+  vite.config.mjs
+```
 
-python -m http.server
+### Module responsibilities
 
-Open:
+- `src/main.js`: browser entrypoint, app boot, service worker update prompt, `?test` harness
+- `src/app/runtime.js`: session flow, onboarding, spin logic, exercise logging, history UI, sync UI, event wiring
+- `src/audio/index.js`: Howler-backed audio engine and sound asset imports
+- `src/data/workouts.js`: workout templates and exercise pools
+- `src/lib/storage.js`: guarded `localStorage` helpers
+- `src/config.js`: app-level runtime configuration
 
-http://localhost:3000
+## Architectural Notes
 
----
+- The project remains framework-free.
+- This refactor intentionally modularizes JavaScript first.
+- HTML and CSS still live in `index.html` for now.
+- Storage keys and existing session/history behavior are preserved for backward compatibility.
 
-## Data Model (Overview)
+## Data Model
 
-State is stored in localStorage:
+State is stored in `localStorage` under the `grind:` namespace:
 
-* week state (progress, used exercises)
-* active session
-* history (completed sessions)
-* PR tracking
-* sync queue (offline fallback)
+- weekly completion and used-exercise tracking
+- active in-progress session
+- completed session history
+- PR records and overload nudge history
+- offline sync queue
 
-See `/docs/ARCHITECTURE.md` for full schema.
+See `docs/ARCHITECTURE.md` for the detailed schema and screen flow.
 
----
+## Development Guidance
 
-## Sync (TODO)
-
-* One POST request per completed session
-* If offline → queued and retried on next open
-
----
-
-## Design Notes
-
-Theme: Zeus / Olympus / slot-machine hybrid
-
-* structured randomness
-* ritualized interaction
-* minimal UI, strong feedback moments
-
-Theme is secondary to clarity.
-
----
-
-## Status
-
-Beta — built for personal use, currently being tested for broader adoption.
-
----
-
-## Notes for Developers / Agents
-
-This project is intentionally:
-
-* single-file logic (`app.js`)
-* no build system
-* no dependencies
-
-When modifying:
-
-* preserve simplicity
-* avoid introducing frameworks
-* prefer explicit over abstract
-
-Key areas:
-
-* exercise selection logic (`pickExercise`)
-* session persistence
-* PR tracking + overload logic
-
----
+- Preserve the vanilla JS approach; do not introduce a framework casually.
+- Prefer adding new code under `src/` rather than rebuilding root-level entry files.
+- Keep behavior changes separate from structural refactors when possible.
+- Maintain storage compatibility unless a migration is explicitly planned.
 
 ## License
 
