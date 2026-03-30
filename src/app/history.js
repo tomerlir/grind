@@ -35,6 +35,64 @@ export function appendHistory(entry) {
   saveHistory(history);
 }
 
+export function getLatestCompletedExerciseEntry(
+  exerciseName,
+  historyEntries = loadHistory(),
+) {
+  for (
+    let historyIndex = historyEntries.length - 1;
+    historyIndex >= 0;
+    historyIndex -= 1
+  ) {
+    const sessionEntry = historyEntries[historyIndex];
+    const entries = sessionEntry?.entries || [];
+
+    for (let entryIndex = entries.length - 1; entryIndex >= 0; entryIndex -= 1) {
+      const exerciseEntry = entries[entryIndex];
+      if (exerciseEntry?.exerciseName !== exerciseName) continue;
+      return {
+        ...exerciseEntry,
+        sets: (exerciseEntry.sets || []).map((set) => ({ ...set })),
+      };
+    }
+  }
+
+  return null;
+}
+
+export function getExerciseProgressSeries(
+  exerciseName,
+  isBodyweight = false,
+  historyEntries = loadHistory(),
+) {
+  return historyEntries
+    .flatMap((sessionEntry) =>
+      (sessionEntry?.entries || [])
+        .filter((exerciseEntry) => exerciseEntry?.exerciseName === exerciseName)
+        .map((exerciseEntry) => {
+          const value = isBodyweight
+            ? (exerciseEntry.sets || []).reduce(
+                (sum, set) => sum + (parseInt(set.reps, 10) || 0),
+                0,
+              )
+            : Math.max(
+                ...((exerciseEntry.sets || [])
+                  .map((set) => parseWeight(set.weight))
+                  .filter((weight) => weight !== null)),
+              );
+
+          return Number.isFinite(value)
+            ? {
+                value,
+                date: sessionEntry.date,
+                timestamp: sessionEntry.timestamp ?? null,
+              }
+            : null;
+        }),
+    )
+    .filter(Boolean);
+}
+
 let historyOffset = 30;
 
 export function rebuildPRStateFromHistory(historyEntries = loadHistory()) {

@@ -8,6 +8,8 @@ let runtime = {
   checkAndUpdatePR: () => ({}),
   getOverloadNudge: () => null,
   getLastWeight: () => null,
+  getLatestCompletedExerciseEntry: () => null,
+  getExerciseProgressSeries: () => [],
   markDayComplete: () => {},
   appendHistory: () => {},
   buildSyncPayload: () => ({}),
@@ -167,6 +169,29 @@ export function getInitialWeightValue(exercise, lastWeight) {
   return exercise?.bodyweight ? "BW" : "";
 }
 
+export function buildInitialCurrentSets(
+  exercise,
+  previousSets = [],
+  lastWeight = null,
+) {
+  const initialWeight = getInitialWeightValue(exercise, lastWeight);
+
+  return Array.from({ length: exercise.sets }, (_, index) => {
+    const previousSet = previousSets[index];
+    const weight = getAutofillValue(previousSet?.weight) || initialWeight;
+    const reps = getAutofillValue(previousSet?.reps);
+
+    return {
+      setNum: index + 1,
+      weight,
+      reps,
+      done: false,
+      prefilledWeight: Boolean(weight),
+      prefilledReps: Boolean(reps),
+    };
+  });
+}
+
 function prefillNextSetFromCurrent(idx) {
   const session = runtime.getSession();
   const currentSet = session?.currentSets?.[idx];
@@ -272,6 +297,146 @@ function scrollIntoViewCentered(el) {
   }, 300);
 }
 
+function formatGraphValue(value) {
+  return value % 1 === 0 ? String(value) : value.toFixed(1);
+}
+
+function formatGraphDateLabel(point) {
+  const timestampDate = point?.timestamp ? new Date(point.timestamp) : null;
+  if (timestampDate && !Number.isNaN(timestampDate.getTime())) {
+    return timestampDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  }
+
+  const match = String(point?.date || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return "";
+
+  const [, day, month, year] = match;
+  const fallbackDate = new Date(`${year}-${month}-${day}T00:00:00`);
+  if (Number.isNaN(fallbackDate.getTime())) return "";
+
+  return fallbackDate.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function buildMiniGraphMarkup(points) {
+  if (points.length < 2) return "";
+
+  const width = 100;
+  const height = 100;
+  const padLeft = 13;
+  const padRight = 3;
+  const padTop = 8;
+  const padBottom = 20;
+  const chartLeft = padLeft;
+  const chartRight = width - padRight;
+  const chartTop = padTop;
+  const chartBottom = height - padBottom;
+  const drawableWidth = chartRight - chartLeft;
+  const drawableHeight = chartBottom - chartTop;
+  const values = points.map((point) => point.value);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = maxValue - minValue;
+  const midValue = minValue + range / 2;
+  const yTicks = [
+    { value: maxValue, y: chartTop },
+    { value: midValue, y: chartTop + drawableHeight / 2 },
+    { value: minValue, y: chartBottom },
+  ];
+
+  const coords = points.map((point, index) => {
+    const x =
+      points.length === 1
+        ? width / 2
+        : chartLeft + (drawableWidth * index) / (points.length - 1);
+    const y =
+      range === 0
+        ? chartTop + drawableHeight / 2
+        : chartTop + ((maxValue - point.value) / range) * drawableHeight;
+
+    return {
+      ...point,
+      x: Number(x.toFixed(2)),
+      y: Number(y.toFixed(2)),
+    };
+  });
+
+  const linePath = coords
+    .map((point, index) =>
+      `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`,
+    )
+    .join(" ");
+  const areaPath = `${linePath} L ${coords.at(-1).x} ${chartBottom} L ${coords[0].x} ${chartBottom} Z`;
+  const gridLines = yTicks
+    .map(
+      (tick) => `
+        <line x1="${chartLeft}" y1="${tick.y}" x2="${chartRight}" y2="${tick.y}" stroke="var(--border)" stroke-width="1"></line>`,
+    )
+    .join("");
+  const yLabels = yTicks
+    .map(
+      (tick) => `
+        <text x="${padLeft - 1.5}" y="${tick.y}" fill="var(--silver2)" font-size="4.5" text-anchor="end" dominant-baseline="middle">${formatGraphValue(tick.value)}</text>`,
+    )
+    .join("");
+  const xLabels = coords
+    .map(
+      (point) => `
+        <text x="${point.x}" y="${height - 6}" fill="var(--silver2)" font-size="4.2" text-anchor="middle">${formatGraphDateLabel(point)}</text>`,
+    )
+    .join("");
+  const unitLabel = points[0]?.unit === "reps" ? "total reps" : "top weight";
+
+  return `
+    <svg
+      class="exercise-mini-graph-svg"
+      viewBox="0 0 ${width} ${height}"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Exercise progress chart showing ${points.length} past sessions by ${unitLabel}."
+    >
+      ${gridLines}
+      ${yLabels}
+      ${xLabels}
+      <path d="${areaPath}" fill="var(--electric)" opacity="0.2"></path>
+      <path
+        d="${linePath}"
+        fill="none"
+        stroke="var(--electric)"
+        stroke-width="0.625"
+        stroke-linecap="butt"
+        stroke-linejoin="miter"
+      ></path>
+    </svg>`;
+}
+
+function renderExerciseMiniGraph(exercise) {
+  const graphEl = document.getElementById("exercise-mini-graph");
+  const graphStageEl = document.getElementById("exercise-graph-stage");
+  if (!graphEl || !graphStageEl || !exercise) return;
+
+  const series = runtime
+    .getExerciseProgressSeries(exercise.name, Boolean(exercise.bodyweight))
+    .map((point) => ({
+      ...point,
+      unit: exercise.bodyweight ? "reps" : "weight",
+    }));
+
+  if (series.length < 2) {
+    graphEl.innerHTML = "";
+    graphStageEl.classList.remove("is-visible");
+    return;
+  }
+
+  graphEl.innerHTML = buildMiniGraphMarkup(series);
+  graphStageEl.classList.add("is-visible");
+}
+
 export function syncExercisePrimaryAction() {
   const session = runtime.getSession();
   const btn = document.getElementById("complete-ex-btn");
@@ -330,6 +495,7 @@ function populateExerciseScreen(exercise, slot) {
   document.getElementById("ex-meta").textContent =
     `${exercise.sets} sets  ·  ${exercise.repsRange}  ·  ${restMin}:${restSec} rest`;
   document.getElementById("ex-tip").textContent = exercise.tip;
+  renderExerciseMiniGraph(exercise);
 
   document.getElementById("pr-overlay").classList.remove("show");
   renderExerciseProgress();
@@ -352,19 +518,14 @@ export function launchExercise() {
     return;
   }
 
-  const lastWeight = runtime.getLastWeight(exercise.name);
-  const initialWeight = getInitialWeightValue(exercise, lastWeight);
+  const previousEntry = runtime.getLatestCompletedExerciseEntry(exercise.name);
+  const previousSets = previousEntry?.sets || [];
+  const lastWeight =
+    previousSets.length > 0 ? null : runtime.getLastWeight(exercise.name);
 
   session.currentExercise = exercise;
   session.currentSlot = slot;
-  session.currentSets = Array.from({ length: exercise.sets }, (_, index) => ({
-    setNum: index + 1,
-    weight: initialWeight,
-    reps: "",
-    done: false,
-    prefilledWeight: Boolean(initialWeight),
-    prefilledReps: false,
-  }));
+  session.currentSets = buildInitialCurrentSets(exercise, previousSets, lastWeight);
   runtime.saveSession();
   runtime.stopRest();
   populateExerciseScreen(exercise, slot);

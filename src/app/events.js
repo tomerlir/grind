@@ -30,11 +30,6 @@ export function wireEvents({
   resumeSession,
 }) {
   document.getElementById("resume-btn").addEventListener("click", resumeSession);
-  document.getElementById("history-btn").addEventListener("click", async () => {
-    renderHistory({ resetOffset: true });
-    void audioEngine.play("card-tap");
-    showScreen("screen-history");
-  });
 
   document
     .getElementById("day-picker-cards")

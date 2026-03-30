@@ -39,7 +39,8 @@ export function buildSyncPayload(duration, totalSets) {
         )
         .join(" | "),
       session_volume_kg: entry.sets.reduce(
-        (sum, set) => sum + (parseWeight(set.weight) ?? 0) * (parseInt(set.reps) || 0),
+        (sum, set) =>
+          sum + (parseWeight(set.weight) ?? 0) * (parseInt(set.reps) || 0),
         0,
       ),
       pr_weight: !!entry.prs?.weight,

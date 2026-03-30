@@ -33,31 +33,31 @@ export const EXERCISES = {
     },
     {
       name: "Single-Leg Romanian Deadlift",
-      sets: 3,
+      sets: 4,
       repsRange: "8–10 each",
       restSeconds: 90,
       tip: "Keep both hips level — don't let the free side rotate open as you hinge.",
     },
-    {
-      name: "Dumbbell Good Morning",
-      sets: 3,
-      repsRange: "12–15",
-      restSeconds: 90,
-      tip: "Hinge until you feel tension in your hamstrings, then stand by pushing your hips forward.",
-    },
+    // {
+    //   name: "Dumbbell Good Morning",
+    //   sets: 4,
+    //   repsRange: "12–15",
+    //   restSeconds: 90,
+    //   tip: "Hinge until you feel tension in your hamstrings, then stand by pushing your hips forward.",
+    // },
   ],
 
   "lower-glute": [
     {
       name: "Dumbbell Hip Thrust",
-      sets: 3,
+      sets: 4,
       repsRange: "12–15",
       restSeconds: 90,
       tip: "Squeeze your glutes hard at the top and hold for a second before lowering.",
     },
     {
       name: "Single-Leg Hip Thrust",
-      sets: 3,
+      sets: 4,
       repsRange: "10–12 each",
       restSeconds: 90,
       tip: "Drive through the heel of your planted foot and squeeze at the top of each rep.",
@@ -82,7 +82,7 @@ export const EXERCISES = {
     },
     {
       name: "Dumbbell Floor Fly",
-      sets: 3,
+      sets: 4,
       repsRange: "12–15",
       restSeconds: 90,
       tip: "Focus on feeling the stretch across your chest at the bottom of each rep.",
@@ -90,7 +90,7 @@ export const EXERCISES = {
     {
       name: "Archer Push-Up",
       bodyweight: true,
-      sets: 3,
+      sets: 4,
       repsRange: "8–12 each",
       restSeconds: 90,
       tip: "Shift your weight onto one arm as you lower, keeping the other arm straight out to the side.",
@@ -139,13 +139,13 @@ export const EXERCISES = {
       restSeconds: 90,
       tip: "Think about driving your elbows down and back, and squeeze at the top.",
     },
-    {
-      name: "Dumbbell Pullover",
-      sets: 3,
-      repsRange: "12–15",
-      restSeconds: 90,
-      tip: "Keep your arms straight and focus on feeling the stretch in your sides as the weight goes back.",
-    },
+    // {
+    //   name: "Dumbbell Pullover",
+    //   sets: 3,
+    //   repsRange: "12–15",
+    //   restSeconds: 90,
+    //   tip: "Keep your arms straight and focus on feeling the stretch in your sides as the weight goes back.",
+    // },
   ],
 
   "pull-horizontal": [
@@ -306,7 +306,7 @@ export const DAYS = {
     name: "Workout B",
     slots: [
       { key: "lower-hinge", label: "LOWER · HINGE" },
-      { key: "pull-vertical", label: "PULL · VERTICAL" }, // slot 1
+      { key: "pull-vertical", label: "PULL · VERTICAL" },
       { key: "push-vertical", label: "PUSH · VERTICAL" },
       { key: "lower-glute", label: "LOWER · GLUTE" },
       { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
@@ -321,7 +321,7 @@ export const DAYS = {
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
-      { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
+      // { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
       { key: "lower-glute", label: "LOWER · GLUTE" },
       { key: "pull-vertical", label: "PULL · VERTICAL" },
       { key: "arms-bicep", label: "ARMS · BICEP" },

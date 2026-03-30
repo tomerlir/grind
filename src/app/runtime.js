@@ -1,17 +1,118 @@
 import { AudioEngine } from "../audio/index.js";
 import { DAYS, EXERCISES } from "../data/workouts.js";
 import { storageDel, storageGet, storageSet } from "../lib/storage.js";
-import { initAppShell, renderAppVersionBadge, renderDayPicker, goHome, discardSessionAndGoHome, showPROverlay, showScreen, renderDoneScreen, fireConfetti, resumeSession, applyAppUpdate, closeUpdateAppModal, registerAppUpdatePrompt } from "./app-shell.js";
+import {
+  initAppShell,
+  renderAppVersionBadge,
+  renderDayPicker,
+  goHome,
+  discardSessionAndGoHome,
+  showPROverlay,
+  showScreen,
+  renderDoneScreen,
+  fireConfetti,
+  resumeSession,
+  applyAppUpdate,
+  closeUpdateAppModal,
+  registerAppUpdatePrompt,
+} from "./app-shell.js";
 import { wireEvents } from "./events.js";
-import { initExerciseFlow, dismissKeyboard, getInitialWeightValue, handleExercisePrimaryAction, isSetReady, launchExercise, normalizeWeightValue, renderExerciseProgress, renderSets, resumeCurrentExercise, syncExercisePrimaryAction, updateCurrentSetField } from "./exercise-flow.js";
-import { appendHistory, deleteHistoryEntry, initHistory, loadHistory, renderHistory, saveHistory, showMoreHistory } from "./history.js";
-import { advanceOnboardingStep, ensureOnboardingState, finishOnboarding, initOnboarding, isOnboardingActive, ONBOARDING_STEP_HOME, queueOnboardingRefresh, trackOnboardingViewport } from "./onboarding.js";
-import { checkAndUpdatePR, getLastWeight, getOverloadNudge, loadPR, markNudgeShown, parseWeight, saveLastWeight } from "./prs.js";
-import { flushSyncQueue, initSync, buildSyncPayload, showSyncBar, syncToSheets } from "./sync.js";
-import { getRemainingRestSeconds, initRestTimer, resumeRestIfNeeded, skipRest, startRest, stopRest } from "./rest-timer.js";
-import { clearSession, closeExitSessionModal, getSession, initSessionStore, loadSession, openExitSessionModal, saveSession, setSession, startSession } from "./session-store.js";
-import { cancelPullGesture, finishPullTrigger, getSessionSpinState, handlePullTriggerKeydown, handlePullTriggerMove, handlePullTriggerStart, initSpin, normalizeSpinState, pickAllExercises, pickExercise, renderSlotMachine } from "./spin.js";
-import { createEmptyWeek, formatWeekdayLabel, getCompletedDays, getOrCreateDayAssignment, getTodayWeekday, getUsedExercises, getWeekKey, loadWeek, markDayComplete, markExerciseUsed } from "./week-store.js";
+import {
+  buildInitialCurrentSets,
+  initExerciseFlow,
+  dismissKeyboard,
+  getInitialWeightValue,
+  handleExercisePrimaryAction,
+  isSetReady,
+  launchExercise,
+  normalizeWeightValue,
+  renderExerciseProgress,
+  renderSets,
+  resumeCurrentExercise,
+  syncExercisePrimaryAction,
+  updateCurrentSetField,
+} from "./exercise-flow.js";
+import {
+  appendHistory,
+  deleteHistoryEntry,
+  getExerciseProgressSeries,
+  getLatestCompletedExerciseEntry,
+  initHistory,
+  loadHistory,
+  renderHistory,
+  saveHistory,
+  showMoreHistory,
+} from "./history.js";
+import {
+  advanceOnboardingStep,
+  ensureOnboardingState,
+  finishOnboarding,
+  initOnboarding,
+  isOnboardingActive,
+  ONBOARDING_STEP_HOME,
+  queueOnboardingRefresh,
+  trackOnboardingViewport,
+} from "./onboarding.js";
+import {
+  checkAndUpdatePR,
+  getLastWeight,
+  getOverloadNudge,
+  loadPR,
+  markNudgeShown,
+  parseWeight,
+  saveLastWeight,
+} from "./prs.js";
+import {
+  flushSyncQueue,
+  initSync,
+  buildSyncPayload,
+  showSyncBar,
+  syncToSheets,
+} from "./sync.js";
+import {
+  getRemainingRestSeconds,
+  initRestTimer,
+  resumeRestIfNeeded,
+  skipRest,
+  startRest,
+  stopRest,
+} from "./rest-timer.js";
+import {
+  clearSession,
+  closeExitSessionModal,
+  getSession,
+  initSessionStore,
+  loadSession,
+  openExitSessionModal,
+  saveSession,
+  setSession,
+  startSession,
+} from "./session-store.js";
+import {
+  cancelPullGesture,
+  finishPullTrigger,
+  getSessionSpinState,
+  handlePullTriggerKeydown,
+  handlePullTriggerMove,
+  handlePullTriggerStart,
+  initSpin,
+  normalizeSpinState,
+  pickAllExercises,
+  pickExercise,
+  renderSlotMachine,
+} from "./spin.js";
+import {
+  createEmptyWeek,
+  formatWeekdayLabel,
+  getCompletedDays,
+  getOrCreateDayAssignment,
+  getTodayWeekday,
+  getUsedExercises,
+  getWeekKey,
+  loadWeek,
+  markDayComplete,
+  markExerciseUsed,
+} from "./week-store.js";
 
 let modulesInitialized = false;
 let appInitialized = false;
@@ -79,6 +180,8 @@ function initializeModules() {
     checkAndUpdatePR,
     getOverloadNudge,
     getLastWeight,
+    getExerciseProgressSeries,
+    getLatestCompletedExerciseEntry,
     markDayComplete,
     appendHistory,
     buildSyncPayload,
@@ -173,7 +276,10 @@ export function init() {
   if (window.visualViewport) {
     const handleViewportChange = () => {
       const active = document.activeElement;
-      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+      if (
+        active &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+      ) {
         active.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       trackOnboardingViewport();
@@ -209,9 +315,15 @@ export function runTests() {
 
   {
     const key = getWeekKey();
-    assert(/^\d{4}-\d{2}-\d{2}$/.test(key), `Week key is YYYY-MM-DD format (got "${key}")`);
+    assert(
+      /^\d{4}-\d{2}-\d{2}$/.test(key),
+      `Week key is YYYY-MM-DD format (got "${key}")`,
+    );
     const date = new Date(key + "T00:00:00");
-    assert(date.getDay() === 1, `Week key resolves to a Monday (getDay()=${date.getDay()})`);
+    assert(
+      date.getDay() === 1,
+      `Week key resolves to a Monday (getDay()=${date.getDay()})`,
+    );
   }
 
   {
@@ -225,11 +337,93 @@ export function runTests() {
   }
 
   {
-    assert(normalizeWeightValue("bw") === "BW", 'normalizeWeightValue("bw") → "BW"');
+    assert(
+      normalizeWeightValue("bw") === "BW",
+      'normalizeWeightValue("bw") → "BW"',
+    );
     assert(
       getInitialWeightValue({ bodyweight: true }, null) === "BW",
       "Bodyweight exercise defaults weight to BW",
     );
+
+    const prefillsFromHistory = buildInitialCurrentSets(
+      { sets: 3, bodyweight: false },
+      [
+        { weight: "40", reps: "8" },
+        { weight: "42.5", reps: "7" },
+      ],
+      null,
+    );
+    assert(
+      prefillsFromHistory[0].weight === "40" && prefillsFromHistory[0].reps === "8",
+      "Initial set state uses the latest session's first set values",
+    );
+    assert(
+      prefillsFromHistory[1].weight === "42.5" &&
+        prefillsFromHistory[1].reps === "7",
+      "Initial set state uses the latest session's second set values",
+    );
+    assert(
+      prefillsFromHistory[2].weight === "" && prefillsFromHistory[2].reps === "",
+      "Initial set state leaves unmatched later sets empty",
+    );
+  }
+
+  {
+    saveHistory([
+      {
+        date: "28/01/2099",
+        templateId: "A",
+        weekKey: "2099-01-26",
+        durationMinutes: 40,
+        totalSets: 6,
+        entries: [
+          {
+            exerciseName: "Bench Press",
+            categoryLabel: "Push",
+            sets: [{ weight: "60", reps: "8" }],
+          },
+        ],
+        timestamp: "2099-01-28T12:00:00.000Z",
+      },
+      {
+        date: "30/01/2099",
+        templateId: "B",
+        weekKey: "2099-01-26",
+        durationMinutes: 42,
+        totalSets: 9,
+        entries: [
+          {
+            exerciseName: "Bench Press",
+            categoryLabel: "Push",
+            sets: [
+              { weight: "62.5", reps: "8" },
+              { weight: "62.5", reps: "7" },
+            ],
+          },
+          {
+            exerciseName: "Row",
+            categoryLabel: "Pull",
+            sets: [{ weight: "50", reps: "10" }],
+          },
+        ],
+        timestamp: "2099-01-30T12:00:00.000Z",
+      },
+    ]);
+    const latestBench = getLatestCompletedExerciseEntry("Bench Press");
+    assert(
+      latestBench?.sets?.[0]?.weight === "62.5" &&
+        latestBench?.sets?.[1]?.reps === "7",
+      "Latest completed exercise lookup returns the newest matching workout entry",
+    );
+    const benchSeries = getExerciseProgressSeries("Bench Press");
+    assert(
+      benchSeries.length === 2 &&
+        benchSeries[0].value === 60 &&
+        benchSeries[1].value === 62.5,
+      "Weighted exercise progress series tracks session top weight values",
+    );
+    saveHistory([]);
   }
 
   {
@@ -242,7 +436,10 @@ export function runTests() {
     setSession(fakeSession);
 
     const exercise = pickExercise("lower-quad", 0);
-    assert(exercise !== null, "pickExercise returns an exercise for lower-quad");
+    assert(
+      exercise !== null,
+      "pickExercise returns an exercise for lower-quad",
+    );
     assert(typeof exercise?.name === "string", "Returned exercise has a name");
     assert(
       fakeSession.reservations["lower-quad:0"] === exercise?.name,
@@ -263,7 +460,10 @@ export function runTests() {
 
     const ex1 = pickExercise("pull-vertical", 1);
     const ex2 = pickExercise("pull-vertical", 4);
-    assert(ex1 !== null && ex2 !== null, "Both pull-vertical picks return exercises");
+    assert(
+      ex1 !== null && ex2 !== null,
+      "Both pull-vertical picks return exercises",
+    );
     if (ex1 && ex2) {
       assert(
         ex1.name !== ex2.name,
@@ -288,7 +488,10 @@ export function runTests() {
       { weight: "—", reps: "8" },
       { weight: "—", reps: "7" },
     ]);
-    assert(Object.keys(prs).length === 0, "checkAndUpdatePR returns {} for BW exercise");
+    assert(
+      Object.keys(prs).length === 0,
+      "checkAndUpdatePR returns {} for BW exercise",
+    );
     assert(
       loadPR("Pull-Up").lastWeight === undefined,
       "BW exercise does not write lastWeight",
@@ -310,11 +513,20 @@ export function runTests() {
       prs.volume?.new === 380,
       `Volume PR = 20×10 + 22.5×8 = 380 (got ${prs.volume?.new})`,
     );
-    assert(loadPR("Test Curl").lastWeight === "22.5", "lastWeight written as string");
-    assert(loadPR("Test Curl").sessions?.length === 1, "Session appended to history");
+    assert(
+      loadPR("Test Curl").lastWeight === "22.5",
+      "lastWeight written as string",
+    );
+    assert(
+      loadPR("Test Curl").sessions?.length === 1,
+      "Session appended to history",
+    );
 
     const prs2 = checkAndUpdatePR("Test Curl", sets);
-    assert(Object.keys(prs2).length === 0, "Same weights second session = no PR");
+    assert(
+      Object.keys(prs2).length === 0,
+      "Same weights second session = no PR",
+    );
 
     const prs3 = checkAndUpdatePR("Test Curl", [{ weight: "25", reps: "8" }]);
     assert(prs3.weight?.new === 25, "Heavier weight triggers weight PR");
@@ -338,7 +550,10 @@ export function runTests() {
 
     const nudge = getOverloadNudge("Test Squat");
     assert(nudge !== null, "Nudge fires after 3 sessions at same weight");
-    assert(nudge?.currentWeight === 40, `currentWeight is 40 (got ${nudge?.currentWeight})`);
+    assert(
+      nudge?.currentWeight === 40,
+      `currentWeight is 40 (got ${nudge?.currentWeight})`,
+    );
     assert(
       nudge?.suggestedWeight === 42.5,
       `suggestedWeight is 42.5 (got ${nudge?.suggestedWeight})`,
@@ -363,14 +578,20 @@ export function runTests() {
     ];
     saveLastWeight("Bulgarian Split Squat", testSets);
     const saved = getLastWeight("Bulgarian Split Squat");
-    assert(saved === "42.5", `saveLastWeight stores heaviest set (got "${saved}")`);
+    assert(
+      saved === "42.5",
+      `saveLastWeight stores heaviest set (got "${saved}")`,
+    );
 
     const preBW = getLastWeight("Pull-Up");
     saveLastWeight("Pull-Up", [
       { weight: "—", reps: "8" },
       { weight: "—", reps: "7" },
     ]);
-    assert(getLastWeight("Pull-Up") === preBW, "saveLastWeight skips BW exercise");
+    assert(
+      getLastWeight("Pull-Up") === preBW,
+      "saveLastWeight skips BW exercise",
+    );
 
     const pr = storageGet("grind:pr", {});
     delete pr["Bulgarian Split Squat"];
@@ -482,6 +703,7 @@ export function runTests() {
   }
 
   console.groupEnd();
-  const status = fail === 0 ? "✅ All tests passed" : `⚠️  ${fail} test(s) failed`;
+  const status =
+    fail === 0 ? "✅ All tests passed" : `⚠️  ${fail} test(s) failed`;
   console.log(`\n${status} (${pass} passed, ${fail} failed)`);
 }
