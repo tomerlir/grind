@@ -615,13 +615,6 @@
                 min-width: 0;
                 flex: 1;
             }
-            .exercise-topbar-day {
-                font-family: var(--font-display);
-                font-size: var(--type-display-md);
-                letter-spacing: var(--tracking-display);
-                color: var(--gold);
-                line-height: var(--lh-display);
-            }
 
             /* ── DAY PICKER ──────────────────────────────────────────────── */
             .day-picker-header {
@@ -813,19 +806,44 @@
                 margin-bottom: var(--space-sm);
             }
             .slot-machine-header > div {
+                flex: 1;
                 min-width: 0;
             }
-            .slot-day-title {
-                font-family: var(--font-display);
-                font-size: var(--type-display-lg);
-                color: var(--gold);
-                letter-spacing: var(--tracking-display);
-                text-shadow:
-                    0 0 12px rgba(245, 200, 66, 0.5),
-                    0 0 30px rgba(0, 200, 255, 0.2);
+            .slot-stage-copy {
+                justify-content: center;
+                min-height: clamp(58px, 10vw, 72px);
             }
-            .slot-day-sub {
-                color: var(--silver2);
+            .slot-stage-title {
+                font-family: var(--font-display);
+                font-size: clamp(28px, 6.8vw, 34px);
+                color: var(--text);
+                letter-spacing: var(--tracking-display-tight);
+                line-height: var(--lh-title);
+                text-shadow:
+                    0 0 10px rgba(245, 200, 66, 0.24),
+                    0 0 30px rgba(0, 200, 255, 0.2);
+                transition:
+                    color 0.22s ease,
+                    text-shadow 0.22s ease,
+                    opacity 0.22s ease;
+            }
+            .slot-stage-title[data-tone="charged"] {
+                color: var(--gold);
+                text-shadow:
+                    0 0 14px rgba(245, 200, 66, 0.36),
+                    0 0 28px rgba(245, 200, 66, 0.18);
+            }
+            .slot-stage-title[data-tone="spinning"] {
+                color: var(--electric2);
+                text-shadow:
+                    0 0 14px rgba(0, 200, 255, 0.26),
+                    0 0 28px rgba(0, 200, 255, 0.14);
+            }
+            .slot-stage-title[data-tone="landed"] {
+                color: #f3fbff;
+                text-shadow:
+                    0 0 14px rgba(0, 200, 255, 0.3),
+                    0 0 30px rgba(0, 200, 255, 0.16);
             }
 
             .slot-machine-stage {
@@ -1305,17 +1323,37 @@
                 color: var(--silver2);
                 width: calc(100% - 4px);
                 cursor: default;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(10px);
                 transition:
                     border-color 0.18s ease,
                     box-shadow 0.18s ease,
                     background 0.18s ease,
                     color 0.18s ease,
                     text-shadow 0.18s ease,
-                    opacity 0.18s ease,
-                    transform 0.18s ease;
+                    opacity 0.28s ease,
+                    transform 0.28s ease,
+                    visibility 0s linear 0.28s;
             }
             .slot-trigger-status:disabled {
+                cursor: default;
+            }
+            .slot-trigger-status.is-visible {
                 opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0);
+                transition:
+                    border-color 0.18s ease,
+                    box-shadow 0.18s ease,
+                    background 0.18s ease,
+                    color 0.18s ease,
+                    text-shadow 0.18s ease,
+                    opacity 0.28s ease,
+                    transform 0.28s ease,
+                    visibility 0s linear 0s;
             }
             .slot-trigger-status[data-tone="charged"] {
                 color: var(--gold);
@@ -1360,9 +1398,7 @@
                 transform: translateY(1px) scale(0.985);
             }
             .slot-trigger-status.appearing {
-                animation:
-                    fadeUp 0.28s ease forwards,
-                    boltPulse 1.5s ease-in-out 0.28s infinite;
+                animation: boltPulse 1.5s ease-in-out 0.28s infinite;
             }
 
             /* ── EXERCISE SCREEN ─────────────────────────────────────────── */
@@ -1415,7 +1451,7 @@
             }
             .exercise-tip {
                 font-size: var(--type-body-md);
-                color: var(--silver2);
+                color: var(--silver1);
                 line-height: var(--lh-body);
             }
 
@@ -1438,32 +1474,13 @@
                 min-height: 0;
                 margin-bottom: var(--space-md);
             }
-            .set-history {
-                display: flex;
-                flex-direction: column;
-                gap: var(--space-sm);
-            }
-            .set-history-label {
-                color: var(--silver2);
-            }
-            .set-history-chips {
-                display: flex;
-                flex-wrap: wrap;
-                gap: var(--space-8);
-            }
-            .set-history-chip {
-                color: var(--silver);
-            }
             .set-row {
                 display: flex;
                 flex-direction: column;
                 gap: var(--space-sm);
             }
-            .set-row.pending-set {
-                opacity: 0.82;
-            }
             .set-row.focused-set {
-                padding: var(--space-lg);
+                padding: var(--space-md);
             }
             .all-done-set {
                 opacity: 1;
@@ -1480,63 +1497,84 @@
                 font-size: var(--type-title-lg);
                 color: var(--text);
             }
-            .set-fields {
+            .set-line {
                 display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: var(--space-sm);
-                align-items: end;
+                grid-template-columns:
+                    minmax(70px, 0.8fr)
+                    minmax(0, 1.05fr)
+                    minmax(0, 0.9fr)
+                    minmax(78px, 0.92fr);
+                gap: var(--space-8);
+                align-items: stretch;
             }
-            .input-group {
+            .set-cell {
                 display: flex;
                 flex-direction: column;
                 gap: var(--space-8);
+                min-width: 0;
+                padding: 10px 12px;
+                border-radius: 14px;
+                border: 1px solid rgba(0, 200, 255, 0.18);
+                background: linear-gradient(
+                    180deg,
+                    rgba(8, 18, 40, 0.96) 0%,
+                    rgba(4, 10, 24, 0.98) 100%
+                );
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
             }
-            .input-label {
-                color: var(--silver2);
+            .set-cell-label {
+                color: var(--text);
+                white-space: nowrap;
             }
-            .set-row.active-set .input-label {
-                color: var(--text2);
+            .set-cell-value {
+                font-family: var(--font-display);
+                font-size: clamp(1rem, 4.8vw, 1.4rem);
+                letter-spacing: var(--tracking-display-tight);
+                color: var(--text);
+                line-height: 1;
+            }
+            .set-cell--count .set-cell-value {
+                color: rgba(184, 212, 240, 0.55);
             }
             .set-input {
-                background: rgba(5, 13, 29, 0.85);
-                border: 1px solid rgba(26, 48, 80, 0.95);
-                border-radius: 12px;
+                background: transparent;
+                border: none;
+                border-radius: 0;
                 color: var(--text);
                 font-family: var(--font-ui);
                 font-size: var(--type-title-md);
                 font-weight: 700;
                 line-height: 1.2;
-                min-height: 52px;
-                padding: 10px 12px;
+                min-height: auto;
+                padding: 0;
                 width: 100%;
                 text-align: left;
                 transition:
                     border-color 0.15s,
-                    box-shadow 0.15s;
+                    box-shadow 0.15s,
+                    color 0.15s;
                 -webkit-appearance: none;
                 appearance: none;
             }
             .set-row.active-set .set-input {
-                min-height: 60px;
-                font-size: clamp(1.1rem, 5.2vw, 1.35rem);
+                min-height: auto;
+                font-size: clamp(1.05rem, 4.9vw, 1.3rem);
                 color: var(--text);
-                background: rgba(3, 9, 22, 0.92);
-                border-color: rgba(0, 200, 255, 0.28);
-                box-shadow: inset 0 0 0 1px rgba(0, 200, 255, 0.08);
+                background: transparent;
+                border-color: transparent;
+                box-shadow: none;
             }
             .set-input:focus {
                 outline: none;
-                border-color: var(--electric2);
-                box-shadow: 0 0 0 2px rgba(0, 200, 255, 0.12);
+                color: var(--text);
             }
             .set-row.active-set .set-input:focus {
-                border-color: var(--electric);
-                box-shadow:
-                    0 0 0 2px rgba(0, 200, 255, 0.16),
-                    0 0 14px rgba(0, 200, 255, 0.12);
+                color: var(--text);
+                border-color: transparent;
+                box-shadow: none;
             }
             .set-input:disabled {
-                opacity: 0.42;
+                opacity: 1;
             }
             .set-input::placeholder {
                 color: rgba(122, 152, 184, 0.55);
@@ -1558,11 +1596,32 @@
                 color: var(--silver2);
                 line-height: var(--lh-body);
             }
+            .set-inline-meta {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            .set-inline-hint {
+                font-size: var(--type-label-sm);
+                letter-spacing: var(--tracking-label);
+                text-transform: uppercase;
+                color: var(--silver2);
+            }
 
             .complete-ex-btn {
-                margin-top: auto;
-                min-height: clamp(58px, 15vw, 72px);
-                font-size: var(--type-button-lg);
+                min-height: 100%;
+                height: 100%;
+                padding: 10px 12px;
+                font-size: var(--type-button-md);
+            }
+            .complete-ex-btn.inline {
+                margin-top: 0;
+                min-width: 0;
+                border-radius: 14px;
+                letter-spacing: var(--tracking-label);
+                box-shadow:
+                    0 10px 26px rgba(0, 0, 0, 0.28),
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
             }
             .complete-ex-btn.ready {
                 color: var(--electric);
@@ -1582,6 +1641,27 @@
             .complete-ex-btn.advance {
                 color: var(--gold);
                 border-color: var(--gold2);
+            }
+            @media (max-width: 420px) {
+                .set-row.focused-set {
+                    padding: 12px;
+                }
+                .set-line {
+                    grid-template-columns:
+                        minmax(62px, 0.72fr)
+                        minmax(0, 1fr)
+                        minmax(0, 0.84fr)
+                        minmax(72px, 0.84fr);
+                    gap: 6px;
+                }
+                .set-cell,
+                .complete-ex-btn.inline {
+                    padding: 10px;
+                }
+                .set-cell-value,
+                .set-row.active-set .set-input {
+                    font-size: 1rem;
+                }
             }
             .exercise-header .title-block {
                 gap: 6px;
@@ -1695,14 +1775,14 @@
             .coachmark-backdrop {
                 position: absolute;
                 inset: 0;
-                background: rgba(2, 6, 18, 0.76);
-                backdrop-filter: blur(3px);
+                display: none;
             }
             .coachmark-spotlight {
                 position: absolute;
                 border-radius: var(--radius-card);
                 border: 1px solid rgba(245, 200, 66, 0.88);
                 box-shadow:
+                    0 0 0 9999px rgba(2, 6, 18, 0.76),
                     0 0 0 1px rgba(255, 244, 204, 0.2),
                     0 0 24px rgba(245, 200, 66, 0.3),
                     0 0 52px rgba(0, 200, 255, 0.18);
@@ -2411,12 +2491,13 @@
         <div class="screen" id="screen-slot-machine">
             <div class="slot-machine-header">
                 <button class="back-btn" id="slot-machine-back">←</button>
-                <div class="title-block">
+                <div class="title-block slot-stage-copy" aria-live="polite">
                     <div
-                        class="slot-day-title title-block__eyebrow"
-                        id="slot-day-title"
+                        class="slot-stage-title"
+                        id="slot-stage-title"
+                        data-tone="idle"
                     >
-                        Workout A
+                        Pull the handle
                     </div>
                 </div>
             </div>
@@ -2435,7 +2516,7 @@
                         aria-disabled="false"
                         aria-label="Pull to spin the workout reels"
                         aria-controls="reels-container"
-                        aria-describedby="slot-trigger-status"
+                        aria-describedby="slot-stage-title"
                     >
                         <div class="pull-trigger-track">
                             <div
@@ -2467,11 +2548,10 @@
                 class="slot-trigger-status button-primary"
                 id="slot-trigger-status"
                 type="button"
-                aria-live="polite"
                 data-tone="idle"
                 disabled
             >
-                Pull the gold handle down and release.
+                Start workout
             </button>
         </div>
 
@@ -2493,10 +2573,10 @@
 
             <div class="exercise-topbar">
                 <button class="back-btn" id="exercise-back">←</button>
-                <div class="exercise-topbar-copy">
+                <div class="exercise-topbar-copy title-block slot-stage-copy">
                     <div
-                        class="exercise-topbar-day"
-                        id="exercise-topbar-day"
+                        class="slot-stage-title"
+                        id="exercise-topbar-title"
                     ></div>
                 </div>
             </div>
@@ -2510,9 +2590,6 @@
                 <div class="title-block">
                     <div class="exercise-tag title-block__eyebrow" id="ex-tag">
                         LOWER · QUAD
-                    </div>
-                    <div class="exercise-name title-block__title" id="ex-name">
-                        BULGARIAN SPLIT SQUAT
                     </div>
                     <div class="exercise-meta title-block__meta" id="ex-meta">
                         4 sets · 6–10 · 2 min rest
@@ -2528,14 +2605,6 @@
 
             <div class="exercise-flow-target" id="exercise-flow-target">
                 <div class="sets-container" id="sets-container"></div>
-
-                <button
-                    class="complete-ex-btn button-primary"
-                    id="complete-ex-btn"
-                    disabled
-                >
-                    ENTER REPS TO PROCEED
-                </button>
             </div>
         </div>
 
