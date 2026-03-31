@@ -79,24 +79,52 @@
     --space-xl: var(--space-32);
     --space-2xl: clamp(30px, 8.5vw, 40px);
     --touch-target: clamp(36px, 10.5vw, 44px);
-    --type-display-hero: clamp(3.25rem, 15vw, 4.5rem);
-    --type-display-xl: clamp(2.75rem, 12vw, 3.5rem);
-    --type-display-lg: clamp(2rem, 8vw, 2.5rem);
-    --type-display-md: clamp(1.4rem, 6vw, 1.7rem);
-    --type-display-sm: clamp(1.15rem, 5vw, 1.35rem);
-    --type-title-lg: clamp(1.15rem, 5.2vw, 1.4rem);
-    --type-title-md: clamp(1rem, 4.6vw, 1.2rem);
-    --type-body-lg: clamp(1rem, 4.2vw, 1.15rem);
-    --type-body-md: clamp(0.95rem, 3.8vw, 1rem);
-    --type-body-sm: clamp(0.86rem, 3.3vw, 0.92rem);
-    --type-label-lg: clamp(0.78rem, 3.2vw, 0.9rem);
-    --type-label-md: clamp(0.68rem, 2.9vw, 0.8rem);
-    --type-label-sm: clamp(0.58rem, 2.5vw, 0.7rem);
-    --type-label-xs: clamp(0.52rem, 2.2vw, 0.625rem);
+    /* Typography scale — fluid, phone-first t-shirt tokens */
+    --font-size-xs: clamp(0.52rem, 2.2vw, 0.625rem);
+    --font-size-sm: clamp(0.68rem, 2.9vw, 0.8rem);
+    --font-size-md: clamp(0.78rem, 3.2vw, 0.9rem);
+    --font-size-lg: clamp(0.9rem, 3.6vw, 0.98rem);
+    --font-size-xl: clamp(0.98rem, 4vw, 1.06rem);
+    --font-size-2xl: clamp(1.04rem, 4.2vw, 1.14rem);
+    --font-size-3xl: clamp(1.1rem, 4.6vw, 1.26rem);
+    --font-size-4xl: clamp(1.2rem, 5vw, 1.4rem);
+    --font-size-5xl: clamp(1.4rem, 6vw, 1.8rem);
+    --font-size-6xl: clamp(1.75rem, 6.8vw, 2.125rem);
+    --font-size-7xl: clamp(2rem, 8vw, 2.5rem);
+    --font-size-8xl: clamp(2.75rem, 12vw, 3.5rem);
+    --font-size-9xl: clamp(3.25rem, 15vw, 4.5rem);
+
+    /* Semantic typography tokens */
+    --type-display-hero: var(--font-size-9xl);
+    --type-display-xl: var(--font-size-8xl);
+    --type-display-lg: var(--font-size-7xl);
+    --type-display-md: var(--font-size-5xl);
+    --type-display-sm: var(--font-size-4xl);
+    --type-title-xl: var(--font-size-6xl);
+    --type-title-lg: var(--font-size-4xl);
+    --type-title-md: var(--font-size-3xl);
+    --type-title-sm: var(--font-size-2xl);
+    --type-body-xl: var(--font-size-3xl);
+    --type-body-lg: var(--font-size-2xl);
+    --type-body-md: var(--font-size-xl);
+    --type-body-sm: var(--font-size-lg);
+    --type-body-xs: var(--font-size-md);
+    --type-label-xl: var(--font-size-lg);
+    --type-label-lg: var(--font-size-md);
+    --type-label-md: var(--font-size-sm);
+    --type-label-sm: var(--font-size-sm);
+    --type-label-xs: var(--font-size-xs);
     --type-button-lg: clamp(1.35rem, 5.8vw, 1.55rem);
     --type-button-md: clamp(1.08rem, 4.8vw, 1.2rem);
+    --type-control-md: clamp(1rem, 4.8vw, 1.125rem);
     --type-metric-lg: clamp(3rem, 15vw, 3.5rem);
     --type-metric-md: clamp(1.75rem, 9vw, 2.25rem);
+    --type-metric-sm: clamp(1rem, 4.8vw, 1.4rem);
+    --type-metric-xs: clamp(1.05rem, 4.9vw, 1.3rem);
+    --type-icon-sm: clamp(0.6875rem, 3vw, 0.8125rem);
+    --type-icon-md: clamp(2rem, 10vw, 2.5rem);
+    --type-icon-lg: clamp(2.5rem, 11vw, 3rem);
+    --type-icon-xl: clamp(2.75rem, 14vw, 3.75rem);
     --tracking-display: clamp(2px, 1vw, 4px);
     --tracking-display-tight: 1px;
     --tracking-label: clamp(2px, 1vw, 3px);
@@ -361,7 +389,7 @@ body::before {
     width: var(--touch-target);
     height: var(--touch-target);
     border-radius: 8px;
-    font-size: clamp(16px, 4.8vw, 18px);
+    font-size: var(--type-control-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -613,12 +641,12 @@ body::before {
     line-height: var(--lh-body);
 }
 .logo-sub div:first-child {
-    font-size: 16px;
+    font-size: var(--type-body-md);
     /*color: white;*/
 }
 
 .logo-sub div:last-child {
-    font-size: 14px;
+    font-size: var(--type-body-xs);
     /*color: rgba(255, 255, 255, 0.7);*/
     margin-top: 2px;
 }
@@ -762,7 +790,7 @@ body::before {
 }
 .slot-stage-title {
     font-family: var(--font-display);
-    font-size: clamp(28px, 6.8vw, 34px);
+    font-size: var(--type-title-xl);
     color: var(--text);
     letter-spacing: var(--tracking-display-tight);
     line-height: var(--lh-title);
@@ -864,7 +892,7 @@ body::before {
     /*content: "⚡";*/
     position: absolute;
     color: var(--gold2);
-    font-size: clamp(11px, 3vw, 13px);
+    font-size: var(--type-icon-sm);
     top: clamp(6px, 2vw, 8px);
     opacity: 0.7;
     text-shadow: 0 0 8px var(--gold-glow);
@@ -1384,11 +1412,24 @@ body::before {
     gap: var(--space-sm);
     margin-bottom: var(--space-md);
 }
+.exercise-header .title-block {
+    gap: 8px;
+}
+.exercise-header .title-block__eyebrow {
+    font-size: var(--type-label-xl);
+    letter-spacing: clamp(1.4px, 0.5vw, 2px);
+}
+.exercise-header .title-block__meta {
+    font-size: var(--type-body-xl);
+    letter-spacing: 0.8px;
+    line-height: 1.25;
+    color: var(--text2);
+}
 .exercise-tag {
     color: var(--electric);
 }
 .exercise-name {
-    font-size: clamp(1.35rem, 6vw, 1.8rem);
+    font-size: var(--type-display-md);
     letter-spacing: var(--tracking-display-tight);
     margin: 0;
     color: var(--text);
@@ -1403,14 +1444,20 @@ body::before {
     overflow: visible;
 }
 .exercise-tip {
-    font-size: var(--type-body-md);
-    color: var(--silver1);
-    line-height: var(--lh-body);
+    font-size: var(--type-body-lg);
+    color: var(--silver);
+    line-height: 1.35;
 }
 
 .overload-nudge {
     color: var(--electric);
     align-self: flex-start;
+}
+.exercise-header .overload-nudge {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: var(--type-label-xl);
+    letter-spacing: 1.2px;
 }
 
 .exercise-flow-target {
@@ -1498,7 +1545,7 @@ body::before {
 }
 .set-cell-value {
     font-family: var(--font-display);
-    font-size: clamp(1rem, 4.8vw, 1.4rem);
+    font-size: var(--type-metric-sm);
     letter-spacing: var(--tracking-display-tight);
     color: var(--text);
     line-height: 1;
@@ -1528,7 +1575,7 @@ body::before {
 }
 .set-row.active-set .set-input {
     min-height: auto;
-    font-size: clamp(1.05rem, 4.9vw, 1.3rem);
+    font-size: var(--type-metric-xs);
     color: var(--text);
     background: transparent;
     border-color: transparent;
@@ -1630,13 +1677,9 @@ body::before {
     }
     .set-cell-value,
     .set-row.active-set .set-input {
-        font-size: 1rem;
+        font-size: var(--type-body-md);
     }
 }
-.exercise-header .title-block {
-    gap: 6px;
-}
-
 /* PR Overlay — Zeus lightning moment */
 .pr-overlay {
     position: fixed;
@@ -1683,7 +1726,7 @@ body::before {
     text-shadow: 0 0 12px var(--electric-glow);
 }
 .pr-overlay-bolt {
-    font-size: clamp(40px, 11vw, 48px);
+    font-size: var(--type-icon-lg);
     line-height: 1;
     text-shadow:
         0 0 20px rgba(0, 200, 255, 0.8),
@@ -1821,7 +1864,7 @@ body::before {
     padding: var(--space-xl) 0;
 }
 .done-icon {
-    font-size: clamp(44px, 14vw, 60px);
+    font-size: var(--type-icon-xl);
     margin-bottom: var(--space-sm);
     filter: drop-shadow(0 0 12px rgba(0, 200, 255, 0.6));
 }
@@ -2276,7 +2319,7 @@ body::before {
     text-align: center;
 }
 .history-empty-icon {
-    font-size: clamp(32px, 10vw, 40px);
+    font-size: var(--type-icon-md);
     filter: drop-shadow(0 0 8px rgba(0, 200, 255, 0.4));
 }
 .history-empty-title {
