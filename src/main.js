@@ -1,3 +1,4 @@
+import "./styles/app.css";
 import { init, registerAppUpdatePrompt, runTests } from "./app/runtime.js";
 
 document.addEventListener("DOMContentLoaded", init);
