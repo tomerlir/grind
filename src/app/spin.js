@@ -14,7 +14,9 @@ const REPEATS = 10;
 const REP_TARGET = 7;
 const BASE_MS = 2000;
 const STAGGER_MS = 350;
-const SHOULD_SERIALIZE_LANDING_CUES =
+const MOBILE_LANDING_GAP_MS = 520;
+const MOBILE_REEL_LOCK_CUE_NAMES = ["reel-lock", "reel-lock-b"];
+const IS_TOUCH_DEVICE =
   typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
 
 let runtime = {
@@ -42,7 +44,7 @@ const pullGesture = {
 let spinGeneration = 0;
 let landingCuePromise = Promise.resolve();
 let landingCueHandle = null;
-let lastLandingCueAt = 0;
+let reelLockCueIndex = 0;
 
 export function initSpin(deps = {}) {
   runtime = {
@@ -430,15 +432,26 @@ export function handlePullTriggerKeydown(e) {
   triggerSlotSpin();
 }
 
-function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+function getLandingGapMs() {
+  return IS_TOUCH_DEVICE ? MOBILE_LANDING_GAP_MS : STAGGER_MS;
+}
+
+function getNextReelLockCueName() {
+  if (!IS_TOUCH_DEVICE) {
+    return "reel-lock";
+  }
+
+  const cueName =
+    MOBILE_REEL_LOCK_CUE_NAMES[
+      reelLockCueIndex % MOBILE_REEL_LOCK_CUE_NAMES.length
+    ];
+  reelLockCueIndex += 1;
+  return cueName;
 }
 
 function resetLandingCues() {
   landingCuePromise = Promise.resolve();
-  lastLandingCueAt = 0;
+  reelLockCueIndex = 0;
 
   if (landingCueHandle) {
     landingCueHandle.stop();
@@ -450,28 +463,12 @@ function queueLandingCue(name, options = {}, gen = spinGeneration) {
   const runCue = async () => {
     if (gen !== spinGeneration) return null;
 
-    if (SHOULD_SERIALIZE_LANDING_CUES && lastLandingCueAt > 0) {
-      const waitMs = Math.max(
-        0,
-        lastLandingCueAt + STAGGER_MS - performance.now(),
-      );
-      if (waitMs > 0) await wait(waitMs);
-    }
-
-    if (gen !== spinGeneration) return null;
-
-    if (SHOULD_SERIALIZE_LANDING_CUES && landingCueHandle) {
-      landingCueHandle.stop();
-      landingCueHandle = null;
-    }
-
     const handle = await AudioEngine.play(name, options);
     if (gen !== spinGeneration) {
       handle?.stop?.();
       return null;
     }
 
-    lastLandingCueAt = performance.now();
     landingCueHandle = handle;
     return handle;
   };
@@ -501,7 +498,8 @@ function spinAllReels() {
 
   const reelCount = session.slots.length;
   const reelHeight = getReelHeight();
-  const maxTime = BASE_MS + (reelCount - 1) * STAGGER_MS;
+  const landingGapMs = getLandingGapMs();
+  const maxTime = BASE_MS + (reelCount - 1) * landingGapMs;
 
   const fallbackTimer = setTimeout(() => {
     if (gen !== spinGeneration) return;
@@ -523,7 +521,7 @@ function spinAllReels() {
     const safeIdx = pickedIdx < 0 ? 0 : pickedIdx;
     const targetIdx = REP_TARGET * pool.length + safeIdx;
     const translateY = -(targetIdx * reelHeight);
-    const duration = BASE_MS + index * STAGGER_MS;
+    const duration = BASE_MS + index * landingGapMs;
 
     const drum = document.getElementById(`reel-drum-${index}`);
     const wrap = document.getElementById(`reel-wrap-${index}`);
@@ -585,7 +583,7 @@ async function onReelLanded(index, gen = spinGeneration) {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    void queueLandingCue("reel-lock", { volume: 0.8 }, gen);
+    void queueLandingCue(getNextReelLockCueName(), { volume: 0.8 }, gen);
     if (gen !== spinGeneration) return;
 
     setSlotStageStatus(`Reel ${index + 1} locked.`, "charged", 550);

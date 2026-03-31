@@ -15,6 +15,7 @@ const SOUND_URLS = {
   "pull-start": pullStartUrl,
   "spinning-loop": spinningLoopUrl,
   "reel-lock": reelLockUrl,
+  "reel-lock-b": reelLockUrl,
   "final-lock": finalLockUrl,
   "set-logged": setLoggedUrl,
   "level-up": levelUpUrl,
