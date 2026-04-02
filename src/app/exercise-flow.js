@@ -192,21 +192,25 @@ export function buildInitialCurrentSets(
   });
 }
 
-function prefillNextSetFromCurrent(idx) {
-  const session = runtime.getSession();
-  const currentSet = session?.currentSets?.[idx];
-  const nextSet = session?.currentSets?.[idx + 1];
+export function carryForwardSetPrefill(currentSet, nextSet) {
   if (!currentSet || !nextSet || nextSet.done) return;
 
-  if (!nextSet.weight?.trim()) {
+  if (nextSet.prefilledWeight || !nextSet.weight?.trim()) {
     nextSet.weight = getAutofillValue(currentSet.weight);
     nextSet.prefilledWeight = Boolean(nextSet.weight?.trim());
   }
 
-  if (!nextSet.reps?.trim()) {
+  if (nextSet.prefilledReps || !nextSet.reps?.trim()) {
     nextSet.reps = getAutofillValue(currentSet.reps);
     nextSet.prefilledReps = Boolean(nextSet.reps?.trim());
   }
+}
+
+function prefillNextSetFromCurrent(idx) {
+  const session = runtime.getSession();
+  const currentSet = session?.currentSets?.[idx];
+  const nextSet = session?.currentSets?.[idx + 1];
+  carryForwardSetPrefill(currentSet, nextSet);
 }
 
 export function updateCurrentSetField(idx, field, value) {

@@ -19,6 +19,7 @@ import {
 import { wireEvents } from "./events.js";
 import {
   buildInitialCurrentSets,
+  carryForwardSetPrefill,
   initExerciseFlow,
   dismissKeyboard,
   getInitialWeightValue,
@@ -364,6 +365,37 @@ export function runTests() {
     assert(
       prefillsFromHistory[2].weight === "" && prefillsFromHistory[2].reps === "",
       "Initial set state leaves unmatched later sets empty",
+    );
+
+    const carryForwardSets = buildInitialCurrentSets(
+      { sets: 3, bodyweight: false },
+      [
+        { weight: "40", reps: "8" },
+        { weight: "40", reps: "8" },
+      ],
+      null,
+    );
+    carryForwardSets[0].weight = "42.5";
+    carryForwardSets[0].reps = "7";
+    carryForwardSets[0].prefilledWeight = false;
+    carryForwardSets[0].prefilledReps = false;
+    carryForwardSetPrefill(carryForwardSets[0], carryForwardSets[1]);
+    assert(
+      carryForwardSets[1].weight === "42.5" && carryForwardSets[1].reps === "7",
+      "Next set carry-forward replaces historical prefills with the current set values",
+    );
+
+    const manualNextSet = {
+      weight: "45",
+      reps: "6",
+      done: false,
+      prefilledWeight: false,
+      prefilledReps: false,
+    };
+    carryForwardSetPrefill(carryForwardSets[0], manualNextSet);
+    assert(
+      manualNextSet.weight === "45" && manualNextSet.reps === "6",
+      "Next set carry-forward preserves fields the user already edited manually",
     );
   }
 
