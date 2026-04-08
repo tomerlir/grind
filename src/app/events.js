@@ -9,11 +9,8 @@ export function wireEvents({
   advanceOnboardingStep,
   renderSlotMachine,
   discardSessionAndGoHome,
+  startSpinReveal,
   launchExercise,
-  handlePullTriggerStart,
-  handlePullTriggerMove,
-  finishPullTrigger,
-  handlePullTriggerKeydown,
   openExitSessionModal,
   dismissKeyboard,
   handleExercisePrimaryAction,
@@ -60,20 +57,15 @@ export function wireEvents({
     });
 
   document
-    .getElementById("slot-trigger-status")
-    .addEventListener("click", launchExercise);
+    .getElementById("slot-spin-button")
+    .addEventListener("click", startSpinReveal);
 
-  const pullTrigger = document.getElementById("slot-pull-trigger");
-  pullTrigger.addEventListener("pointerdown", handlePullTriggerStart);
-  pullTrigger.addEventListener("pointermove", handlePullTriggerMove);
-  pullTrigger.addEventListener("pointerup", (e) => finishPullTrigger(e));
-  pullTrigger.addEventListener("pointercancel", (e) =>
-    finishPullTrigger(e, { cancel: true }),
-  );
-  pullTrigger.addEventListener("lostpointercapture", (e) =>
-    finishPullTrigger(e, { cancel: true }),
-  );
-  pullTrigger.addEventListener("keydown", handlePullTriggerKeydown);
+  document
+    .getElementById("slot-trigger-status")
+    .addEventListener("click", () => {
+      void audioEngine.play("final-lock");
+      launchExercise();
+    });
 
   document
     .getElementById("exercise-back")

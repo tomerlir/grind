@@ -55,18 +55,10 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
     --screen-pad-inline: clamp(14px, 4.5vw, 24px);
-    --screen-pad-left: calc(
-        var(--screen-pad-inline) + var(--safe-left)
-    );
-    --screen-pad-right: calc(
-        var(--screen-pad-inline) + var(--safe-right)
-    );
-    --screen-pad-top: calc(
-        clamp(14px, 4vw, 24px) + var(--safe-top)
-    );
-    --screen-pad-bottom: calc(
-        clamp(26px, 8vw, 56px) + var(--safe-bottom)
-    );
+    --screen-pad-left: calc(var(--screen-pad-inline) + var(--safe-left));
+    --screen-pad-right: calc(var(--screen-pad-inline) + var(--safe-right));
+    --screen-pad-top: calc(clamp(14px, 4vw, 24px) + var(--safe-top));
+    --screen-pad-bottom: calc(clamp(26px, 8vw, 56px) + var(--safe-bottom));
     --space-8: 8px;
     --space-12: 12px;
     --space-16: 16px;
@@ -358,14 +350,13 @@ body::before {
 /* ── SCREENS ─────────────────────────────────────────────────── */
 .screen {
     display: none;
-    min-height: 100vh;
-    min-height: 100svh;
     min-height: 100dvh;
     width: min(100%, var(--app-max-width));
     padding: var(--screen-pad-top) var(--screen-pad-right)
         calc(120px + var(--safe-bottom)) var(--screen-pad-left);
     margin: 0 auto;
     flex-direction: column;
+    justify-content: space-evenly;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -379,6 +370,19 @@ body::before {
     min-height: 100svh;
     min-height: 100dvh;
     padding-bottom: var(--screen-pad-bottom);
+}
+#screen-slot-machine {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    padding-top: calc(8px + var(--safe-top));
+    padding-right: calc(10px + var(--safe-right));
+    padding-bottom: calc(12px + var(--safe-bottom));
+    padding-left: calc(10px + var(--safe-left));
+    justify-content: flex-start;
+    gap: 6px;
+    overflow: hidden;
+    --reel-h: clamp(28px, 4.1vh, 36px);
 }
 
 /* ── SHARED — BACK BUTTON ────────────────────────────────────── */
@@ -777,12 +781,16 @@ body::before {
 .slot-machine-header {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
-    margin-bottom: var(--space-sm);
+    gap: 8px;
+    margin-bottom: 0;
 }
 .slot-machine-header > div {
     flex: 1;
     min-width: 0;
+}
+#screen-slot-machine .back-btn {
+    width: 34px;
+    height: 34px;
 }
 .slot-stage-copy {
     justify-content: center;
@@ -825,10 +833,9 @@ body::before {
     --pull-energy: 0;
     display: flex;
     align-items: stretch;
-    gap: clamp(10px, 3vw, 14px);
-    flex: 1;
-    min-height: 0;
-    margin-bottom: var(--space-sm);
+    flex: 0 0 auto;
+    min-height: auto;
+    margin-bottom: 0;
 }
 .slot-machine-side {
     width: clamp(60px, 17vw, 76px);
@@ -841,25 +848,23 @@ body::before {
 
 /* Zeus slot machine frame — Greek double-rule border + electric inner glow */
 .slot-machine-frame {
+    --land-progress: 0;
     background: linear-gradient(180deg, #08112a 0%, #040a1a 100%);
-    /* Outer gold line, gap, inner gold line = Greek double-rule */
-    border: 2px solid var(--gold);
+    border: 1px solid rgba(245, 200, 66, 0.24);
     box-shadow:
-        0 0 0 1px var(--bg2),
-        0 0 0 3px var(--gold3),
-        /* electric blue inner energy */ inset 0 0 40px
-            rgba(0, 100, 200, 0.15),
-        inset 0 0 80px rgba(0, 0, 0, 0.6),
-        /* outer electric glow */ 0 0 30px rgba(0, 200, 255, 0.15),
-        0 0 60px rgba(0, 200, 255, 0.06);
-    border-radius: clamp(16px, 4.5vw, 18px);
-    padding: var(--space-xs);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 0 42px rgba(0, 36, 74, 0.18),
+        inset 0 -32px 48px rgba(0, 0, 0, 0.45),
+        0 24px 40px rgba(0, 0, 0, 0.28),
+        0 0 24px rgba(0, 200, 255, 0.08);
+    border-radius: clamp(14px, 4vw, 18px);
+    padding: 6px 8px;
     position: relative;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
-    min-height: 0;
+    min-height: auto;
     transition:
         transform 0.18s ease,
         box-shadow 0.22s ease,
@@ -868,23 +873,21 @@ body::before {
 .slot-machine-stage.is-pulling .slot-machine-frame {
     transform: translateY(calc(2px + (var(--pull-energy) * 4px)));
     box-shadow:
-        0 0 0 1px var(--bg2),
-        0 0 0 3px var(--gold3),
-        inset 0 0 40px rgba(0, 100, 200, 0.15),
-        inset 0 0 80px rgba(0, 0, 0, 0.6),
-        0 0 26px rgba(245, 200, 66, 0.1),
-        0 0 42px rgba(0, 200, 255, 0.1);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 0 42px rgba(0, 36, 74, 0.22),
+        inset 0 -32px 48px rgba(0, 0, 0, 0.45),
+        0 24px 40px rgba(0, 0, 0, 0.28),
+        0 0 24px rgba(245, 200, 66, 0.08);
 }
 .slot-machine-stage.is-charged .slot-machine-frame {
     border-color: var(--gold);
     box-shadow:
-        0 0 0 1px var(--bg2),
-        0 0 0 3px var(--gold3),
-        inset 0 0 40px rgba(0, 100, 200, 0.18),
-        inset 0 0 80px rgba(0, 0, 0, 0.6),
-        0 0 26px rgba(245, 200, 66, 0.18),
-        0 0 52px rgba(245, 200, 66, 0.1),
-        0 0 58px rgba(0, 200, 255, 0.1);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        inset 0 0 48px rgba(0, 48, 88, 0.24),
+        inset 0 -32px 48px rgba(0, 0, 0, 0.45),
+        0 24px 40px rgba(0, 0, 0, 0.28),
+        0 0 28px rgba(245, 200, 66, 0.12),
+        0 0 32px rgba(0, 200, 255, 0.08);
 }
 /* Corner lightning ornaments */
 .slot-machine-frame::before,
@@ -919,15 +922,49 @@ body::before {
 .reels-container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
-    flex: 1;
-    min-height: 0;
+    justify-content: flex-start;
+    gap: 2px;
+    flex: 0 0 auto;
+    min-height: auto;
 }
 .reel-wrap {
     width: 100%;
+    display: grid;
+    grid-template-columns: minmax(70px, 28%) minmax(0, 1fr);
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-color: rgba(84, 114, 150, 0.26);
+    background: linear-gradient(
+        180deg,
+        rgba(9, 18, 38, 0.92) 0%,
+        rgba(4, 9, 26, 0.98) 100%
+    );
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 0 28px rgba(0, 0, 0, 0.34),
+        0 12px 18px rgba(0, 0, 0, 0.18);
+}
+.reel-slot-label {
     display: flex;
-    flex-direction: column;
-    padding: 0;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(0.48rem, 1.9vw, 0.62rem);
+    letter-spacing: var(--tracking-label);
+    color: rgba(200, 223, 240, 0.76);
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+.reel-slot-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: rgba(0, 200, 255, 0.82);
+    box-shadow: 0 0 12px rgba(0, 200, 255, 0.24);
 }
 
 .slot-pull-trigger {
@@ -1178,20 +1215,16 @@ body::before {
     transform: translateY(-4px);
 }
 
-.slot-pull-trigger:not(.is-dragging):not(.is-charged):not(
-        .is-firing
-    ):not([data-spin-state="spinning"]):not(
-        [data-spin-state="landed"]
-    )
+.slot-pull-trigger:not(.is-dragging):not(.is-charged):not(.is-firing):not(
+        [data-spin-state="spinning"]
+    ):not([data-spin-state="landed"])
     .pull-trigger-handle {
     animation: handle-idle-pulse 2.4s ease-in-out infinite;
 }
 
-.slot-pull-trigger:not(.is-dragging):not(.is-charged):not(
-        .is-firing
-    ):not([data-spin-state="spinning"]):not(
-        [data-spin-state="landed"]
-    )
+.slot-pull-trigger:not(.is-dragging):not(.is-charged):not(.is-firing):not(
+        [data-spin-state="spinning"]
+    ):not([data-spin-state="landed"])
     .pull-trigger-track {
     animation: track-idle-pulse 2.4s ease-in-out infinite;
 }
@@ -1200,11 +1233,18 @@ body::before {
     width: 100%;
     height: var(--reel-h);
     overflow: hidden;
-    background: transparent;
-    border: none;
-    border-radius: inherit;
+    background: linear-gradient(
+        180deg,
+        rgba(11, 22, 48, 0.98) 0%,
+        rgba(7, 14, 34, 1) 100%
+    );
+    border: 1px solid rgba(0, 200, 255, 0.14);
+    border-radius: 10px;
     position: relative;
     transition: filter 0.25s;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+        inset 0 0 24px rgba(0, 0, 0, 0.42);
 }
 /* Electric blue gradient masks — top and bottom fade */
 .reel-window::before,
@@ -1219,19 +1259,11 @@ body::before {
 }
 .reel-window::before {
     top: 0;
-    background: linear-gradient(
-        to bottom,
-        rgba(7, 14, 34, 0.98),
-        transparent
-    );
+    background: linear-gradient(to bottom, rgba(7, 14, 34, 0.98), transparent);
 }
 .reel-window::after {
     bottom: 0;
-    background: linear-gradient(
-        to top,
-        rgba(7, 14, 34, 0.98),
-        transparent
-    );
+    background: linear-gradient(to top, rgba(7, 14, 34, 0.98), transparent);
 }
 
 .reel-drum {
@@ -1242,39 +1274,36 @@ body::before {
     height: var(--reel-h);
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 clamp(8px, 2.5vw, 10px);
-    font-family: var(--font-display);
-    font-size: var(--type-title-sm);
-    font-weight: 400;
-    letter-spacing: var(--tracking-display-tight);
-    color: var(--text2);
-    text-align: center;
-    line-height: var(--lh-title);
-    text-transform: uppercase;
+    justify-content: flex-start;
+    padding: 0 10px;
+    font-family: var(--font-ui);
+    font-size: clamp(0.86rem, 3.1vw, 1.02rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: rgba(243, 251, 255, 0.78);
+    text-align: left;
+    line-height: 1.05;
+    text-transform: none;
 }
 
 /* Spinning — motion blur */
 .reel-wrap.spinning .reel-window {
-    filter: blur(1.5px);
+    filter: blur(1px) saturate(0.92);
 }
 
 /* Landed — electric lightning reveal */
 .reel-wrap.landed {
-    border-color: rgba(0, 200, 255, 0.48);
+    border-color: rgba(0, 200, 255, 0.4);
     box-shadow:
-        inset 0 0 0 1px rgba(0, 64, 106, 0.92),
-        inset 0 0 30px rgba(0, 100, 180, 0.16),
-        0 0 18px rgba(0, 200, 255, 0.16);
+        inset 0 0 0 1px rgba(0, 64, 106, 0.88),
+        inset 0 0 34px rgba(0, 100, 180, 0.14),
+        0 0 18px rgba(0, 200, 255, 0.14);
 }
 .reel-wrap.landed::before {
     background: linear-gradient(
-        90deg,
-        transparent 5%,
-        rgba(0, 64, 106, 0.95) 20%,
-        rgba(0, 144, 212, 0.95) 50%,
-        rgba(0, 64, 106, 0.95) 80%,
-        transparent 95%
+        180deg,
+        rgba(0, 200, 255, 0.35) 0%,
+        rgba(0, 200, 255, 0) 100%
     );
 }
 .reel-wrap.landed .reel-window {
@@ -1286,12 +1315,73 @@ body::before {
 }
 .reel-wrap.landed .reel-item {
     color: var(--text);
-    text-shadow: none;
+    text-shadow: 0 0 14px rgba(0, 200, 255, 0.12);
+}
+.reel-wrap.landed .reel-slot-label {
+    color: rgba(243, 251, 255, 0.9);
+}
+.reel-wrap.landed .reel-slot-label::before {
+    background: var(--gold);
+    box-shadow: 0 0 12px rgba(245, 200, 66, 0.24);
+}
+
+.slot-machine-actions {
+    display: grid;
+    gap: 6px;
+}
+.slot-spin-button {
+    position: relative;
+    overflow: hidden;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: clamp(0.92rem, 3.5vw, 1.02rem);
+    border-color: rgba(245, 200, 66, 0.28);
+    background: linear-gradient(
+        135deg,
+        rgba(12, 24, 53, 0.98) 0%,
+        rgba(6, 18, 42, 1) 100%
+    );
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        inset 0 0 24px rgba(0, 68, 118, 0.14),
+        0 18px 28px rgba(0, 0, 0, 0.28),
+        0 0 26px rgba(0, 200, 255, 0.1);
+}
+.slot-spin-button[data-tone="ready"]:not(:disabled) {
+    animation: boltPulse 1.8s ease-in-out infinite;
+}
+.slot-spin-button:hover:not(:disabled) {
+    border-color: rgba(245, 200, 66, 0.42);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 0 30px rgba(0, 68, 118, 0.18),
+        0 20px 30px rgba(0, 0, 0, 0.3),
+        0 0 32px rgba(0, 200, 255, 0.14);
+}
+.slot-spin-button[data-tone="spinning"] {
+    border-color: rgba(0, 200, 255, 0.24);
+    color: var(--text2);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 0 28px rgba(0, 68, 118, 0.18),
+        0 18px 28px rgba(0, 0, 0, 0.28),
+        0 0 18px rgba(0, 200, 255, 0.08);
+}
+.slot-spin-button:disabled {
+    opacity: 1;
+    cursor: default;
+}
+.slot-machine-actions .slot-trigger-status {
+    margin: 0;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: clamp(0.92rem, 3.5vw, 1.02rem);
 }
 
 .slot-trigger-status {
     margin: 0 2px var(--space-md);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -1316,6 +1406,7 @@ body::before {
     cursor: default;
 }
 .slot-trigger-status.is-visible {
+    display: flex;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -1374,6 +1465,222 @@ body::before {
 }
 .slot-trigger-status.appearing {
     animation: boltPulse 1.5s ease-in-out 0.28s infinite;
+}
+
+/* Slot screen reset: plain layout, no viewport math */
+#screen-slot-machine {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
+        calc(16px + var(--safe-bottom)) calc(12px + var(--safe-left));
+    justify-content: flex-start;
+    gap: 10px;
+    overflow: hidden;
+}
+
+#screen-slot-machine .slot-machine-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+}
+
+#screen-slot-machine .back-btn {
+    width: 40px;
+    height: 40px;
+}
+
+#screen-slot-machine .slot-machine-stage {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+#screen-slot-machine .slot-machine-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 200, 255, 0.16);
+    background: linear-gradient(
+        180deg,
+        rgba(8, 17, 42, 0.96) 0%,
+        rgba(4, 10, 26, 0.98) 100%
+    );
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+#screen-slot-machine .reels-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#screen-slot-machine .reel-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#screen-slot-machine .reel-wrap::before,
+#screen-slot-machine .reel-wrap::after,
+#screen-slot-machine .reel-wrap.landed::before {
+    content: none;
+    display: none;
+}
+
+#screen-slot-machine .reel-slot-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding: 0 6px;
+    flex: 0 0 auto;
+    font-family: var(--font-ui);
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(200, 223, 240, 0.72);
+    line-height: 0.92;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+#screen-slot-machine .reel-slot-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: rgba(0, 200, 255, 0.82);
+}
+
+#screen-slot-machine .reel-window {
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: rgba(6, 15, 34, 0.92);
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: none;
+    background-clip: padding-box;
+}
+
+#screen-slot-machine .reel-window::before,
+#screen-slot-machine .reel-window::after {
+    display: none;
+}
+
+#screen-slot-machine .reel-drum {
+    height: 100%;
+    width: 100%;
+}
+
+#screen-slot-machine .reel-item {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    font-family: var(--font-ui);
+    font-size: clamp(1.08rem, 4.6vw, 1.26rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: rgba(243, 251, 255, 0.86);
+    text-align: center;
+    line-height: 1;
+    text-transform: none;
+}
+
+#screen-slot-machine .reel-wrap.spinning .reel-window {
+    filter: blur(1px);
+}
+
+#screen-slot-machine .reel-wrap.landed .reel-window {
+    border-color: rgba(0, 200, 255, 0.34);
+    box-shadow: 0 0 0 1px rgba(0, 200, 255, 0.08);
+}
+
+#screen-slot-machine .reel-wrap.landed .reel-item {
+    color: var(--text);
+}
+
+#screen-slot-machine .reel-wrap.landed .reel-slot-label {
+    color: rgba(243, 251, 255, 0.92);
+}
+
+#screen-slot-machine .reel-wrap.landed .reel-slot-label::before {
+    background: var(--gold);
+}
+
+#screen-slot-machine .slot-machine-actions {
+    display: grid;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+#screen-slot-machine .slot-spin-button,
+#screen-slot-machine .slot-machine-actions .slot-trigger-status {
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: clamp(0.96rem, 3.8vw, 1.08rem);
+}
+
+#screen-slot-machine .slot-machine-actions .slot-trigger-status {
+    margin: 0;
+    width: 100%;
+}
+
+@media (max-height: 760px) {
+    #screen-slot-machine {
+        gap: 6px;
+        padding-top: calc(10px + var(--safe-top));
+        padding-bottom: calc(12px + var(--safe-bottom));
+    }
+
+    #screen-slot-machine .slot-machine-frame {
+        padding: 8px;
+    }
+
+    #screen-slot-machine .reels-container {
+        gap: 4px;
+    }
+
+    #screen-slot-machine .reel-wrap {
+        gap: 1px;
+    }
+
+    #screen-slot-machine .reel-slot-label {
+        padding: 0 6px;
+        font-size: 1rem;
+    }
+
+    #screen-slot-machine .slot-spin-button,
+    #screen-slot-machine .slot-machine-actions .slot-trigger-status {
+        min-height: 42px;
+        padding: 10px 12px;
+        font-size: clamp(0.88rem, 3.4vw, 0.98rem);
+    }
 }
 
 /* ── EXERCISE SCREEN ─────────────────────────────────────────── */
@@ -1745,11 +2052,7 @@ body::before {
     margin-bottom: var(--space-xl);
 }
 .pr-overlay-continue {
-    background: linear-gradient(
-        135deg,
-        var(--electric),
-        var(--electric2)
-    );
+    background: linear-gradient(135deg, var(--electric), var(--electric2));
     color: #000;
     border: none;
     border-radius: var(--radius);
@@ -1966,11 +2269,7 @@ body::before {
 .done-back-btn {
     width: 100%;
     padding: clamp(16px, 5vw, 18px);
-    background: linear-gradient(
-        135deg,
-        var(--gold) 0%,
-        var(--gold2) 100%
-    );
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
     color: #000;
     border: none;
     border-radius: var(--radius);
@@ -2064,11 +2363,7 @@ body::before {
     transform: scale(0.985);
 }
 .modal-btn-primary {
-    background: linear-gradient(
-        135deg,
-        var(--electric),
-        var(--electric2)
-    );
+    background: linear-gradient(135deg, var(--electric), var(--electric2));
     border-color: var(--electric2);
     color: #000;
 }
@@ -2375,8 +2670,7 @@ body::before {
     left: 0;
     right: 0;
     padding: var(--space-sm) var(--screen-pad-right)
-        calc(var(--space-sm) + var(--safe-bottom))
-        var(--screen-pad-left);
+        calc(var(--space-sm) + var(--safe-bottom)) var(--screen-pad-left);
     background: var(--surface);
     border-top: 1px solid var(--border);
     font-family: var(--font-mono);
@@ -2435,7 +2729,6 @@ body::before {
     .day-picker-footer {
         padding-top: var(--space-md);
     }
-    .slot-machine-header,
     .history-header {
         margin-bottom: var(--space-sm);
     }

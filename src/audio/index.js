@@ -4,7 +4,6 @@ import cardTapUrl from "../../assets/sounds/card-tap.mp3";
 import finalLockUrl from "../../assets/sounds/final-lock.mp3";
 import levelUpUrl from "../../assets/sounds/level-up.mp3";
 import navigateBackUrl from "../../assets/sounds/navigate-back.mp3";
-import pullStartUrl from "../../assets/sounds/pull-start.mp3";
 import reelLockUrl from "../../assets/sounds/reel-lock.mp3";
 import restTimerEndUrl from "../../assets/sounds/rest-timer-end.mp3";
 import setLoggedUrl from "../../assets/sounds/set-logged.mp3";
@@ -12,7 +11,6 @@ import spinningLoopUrl from "../../assets/sounds/spinning-loop.mp3";
 import workoutCompleteUrl from "../../assets/sounds/workout-complete.mp3";
 
 const SOUND_URLS = {
-  "pull-start": pullStartUrl,
   "spinning-loop": spinningLoopUrl,
   "reel-lock": reelLockUrl,
   "reel-lock-b": reelLockUrl,

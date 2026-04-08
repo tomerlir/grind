@@ -37,7 +37,6 @@ const pullGesture = {
   velocity: 0,
   thresholdBuzzed: false,
   landedCount: 0,
-  statusTimer: null,
   recoilTimer: null,
 };
 
@@ -121,24 +120,6 @@ function vibrate(pattern) {
   }
 }
 
-function setSlotStageStatus(text, tone = "idle", transientMs = 0) {
-  const title = document.getElementById("slot-stage-title");
-  if (!title) return;
-
-  clearTimeout(pullGesture.statusTimer);
-  pullGesture.statusTimer = null;
-
-  title.textContent = text;
-  title.dataset.tone = tone;
-
-  if (transientMs > 0) {
-    pullGesture.statusTimer = setTimeout(() => {
-      pullGesture.statusTimer = null;
-      syncSlotTriggerState();
-    }, transientMs);
-  }
-}
-
 function setPullProgress(pullPx) {
   const stage = document.getElementById("slot-machine-stage");
   const trigger = document.getElementById("slot-pull-trigger");
@@ -155,12 +136,9 @@ function setPullProgress(pullPx) {
 }
 
 function setReelLandProgress(progress) {
-  const trigger = document.getElementById("slot-pull-trigger");
-  if (!trigger) return;
-  trigger.style.setProperty(
-    "--land-progress",
-    clamp(progress, 0, 1).toFixed(3),
-  );
+  const frame = document.getElementById("slot-machine-frame");
+  if (!frame) return;
+  frame.style.setProperty("--land-progress", clamp(progress, 0, 1).toFixed(3));
 }
 
 function setPullGestureClasses({ dragging = false, charged = false } = {}) {
@@ -175,23 +153,30 @@ function setPullGestureClasses({ dragging = false, charged = false } = {}) {
 }
 
 function syncSlotTriggerState({ preservePull = false } = {}) {
-  const trigger = document.getElementById("slot-pull-trigger");
+  const spinBtn = document.getElementById("slot-spin-button");
   const statusBtn = document.getElementById("slot-trigger-status");
-  if (!trigger || !statusBtn) return;
+  if (!spinBtn && !statusBtn) return;
 
   const spinState = getSessionSpinState();
   const isReady = spinState === SPIN_STATE_READY;
+  const isSpinning = spinState === SPIN_STATE_SPINNING;
   const canLaunch = spinState === SPIN_STATE_LANDED;
 
-  trigger.dataset.spinState = spinState;
-  trigger.setAttribute("aria-disabled", isReady ? "false" : "true");
-  trigger.tabIndex = isReady ? 0 : -1;
+  if (spinBtn) {
+    spinBtn.hidden = canLaunch;
+    spinBtn.disabled = !isReady;
+    spinBtn.dataset.tone = isReady ? "ready" : isSpinning ? "spinning" : "idle";
+    spinBtn.textContent = isSpinning ? "Revealing workout" : "Click to spin";
+    spinBtn.setAttribute("aria-disabled", spinBtn.disabled ? "true" : "false");
+  }
 
-  statusBtn.disabled = !canLaunch;
-  statusBtn.tabIndex = canLaunch ? 0 : -1;
-  statusBtn.dataset.tone = canLaunch ? "landed" : "idle";
-  statusBtn.classList.toggle("is-visible", canLaunch);
-  if (!canLaunch) statusBtn.classList.remove("appearing");
+  if (statusBtn) {
+    statusBtn.disabled = !canLaunch;
+    statusBtn.tabIndex = canLaunch ? 0 : -1;
+    statusBtn.dataset.tone = canLaunch ? "landed" : "idle";
+    statusBtn.classList.toggle("is-visible", canLaunch);
+    if (!canLaunch) statusBtn.classList.remove("appearing");
+  }
 
   if (!pullGesture.active) {
     setPullGestureClasses({ dragging: false, charged: false });
@@ -200,19 +185,16 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
 
   if (spinState === SPIN_STATE_READY) {
     setReelLandProgress(0);
-    setSlotStageStatus("Pull the handle", "idle");
     runtime.queueOnboardingRefresh();
     return;
   }
 
   if (spinState === SPIN_STATE_SPINNING) {
-    setSlotStageStatus("The fates are turning.", "spinning");
     runtime.queueOnboardingRefresh();
     return;
   }
 
   setReelLandProgress(1);
-  setSlotStageStatus("Your workout is set.", "landed");
   runtime.queueOnboardingRefresh();
 }
 
@@ -268,8 +250,7 @@ async function triggerSlotSpin() {
   if (!runtime.getSession() || getSessionSpinState() !== SPIN_STATE_READY)
     return;
 
-  const trigger = document.getElementById("slot-pull-trigger");
-  const pullMetrics = getPullMetrics();
+  const spinBtn = document.getElementById("slot-spin-button");
 
   document.getElementById("slot-trigger-status")?.classList.remove("appearing");
 
@@ -277,20 +258,14 @@ async function triggerSlotSpin() {
   pullGesture.recoilTimer = null;
   pullGesture.landedCount = 0;
 
-  setPullProgress(pullMetrics.maxPull);
   setReelLandProgress(0);
 
   setSessionSpinState(SPIN_STATE_SPINNING);
-  syncSlotTriggerState({ preservePull: true });
+  syncSlotTriggerState();
   runtime.advanceOnboardingStep("pull_handle", "start_button");
 
-  trigger?.classList.add("is-firing");
+  spinBtn?.blur();
   vibrate([18, 34, 26]);
-
-  pullGesture.recoilTimer = setTimeout(() => {
-    trigger?.classList.remove("is-firing");
-    setPullProgress(0);
-  }, 180);
 
   try {
     await AudioEngine.startSpinning();
@@ -305,6 +280,14 @@ async function triggerSlotSpin() {
   spinAllReels();
 }
 
+export function startSpinReveal() {
+  if (!runtime.getSession() || getSessionSpinState() !== SPIN_STATE_READY) {
+    return;
+  }
+
+  void triggerSlotSpin();
+}
+
 export async function handlePullTriggerStart(e) {
   if (getSessionSpinState() !== SPIN_STATE_READY) return;
   if (typeof e.button === "number" && e.button !== 0) return;
@@ -312,7 +295,6 @@ export async function handlePullTriggerStart(e) {
   const trigger = document.getElementById("slot-pull-trigger");
   if (!trigger) return;
 
-  void AudioEngine.play("pull-start");
   runtime.advanceOnboardingStep("pull_handle", "start_button");
 
   pullGesture.active = true;
@@ -327,7 +309,6 @@ export async function handlePullTriggerStart(e) {
   trigger.setPointerCapture?.(e.pointerId);
   setPullGestureClasses({ dragging: true, charged: false });
   setPullProgress(0);
-  setSlotStageStatus("Draw it down.", "idle");
 
   e.preventDefault();
 }
@@ -356,14 +337,12 @@ export function handlePullTriggerMove(e) {
   if (charged && !pullGesture.thresholdBuzzed) {
     pullGesture.thresholdBuzzed = true;
     vibrate(12);
-    setSlotStageStatus("Release the handle", "charged");
   } else if (
     !charged &&
     pullGesture.thresholdBuzzed &&
     nextPull < pullMetrics.triggerPull - 12
   ) {
     pullGesture.thresholdBuzzed = false;
-    setSlotStageStatus("Keep pulling.", "idle");
   }
 
   setPullGestureClasses({ dragging: true, charged });
@@ -396,8 +375,6 @@ export function finishPullTrigger(e, { cancel = false } = {}) {
     pullGesture.currentPull >= pullMetrics.momentumMinPull &&
     effectivePull >= pullMetrics.triggerPull;
 
-  const releasedPull = pullGesture.currentPull;
-
   pullGesture.active = false;
   pullGesture.pointerId = null;
   pullGesture.lastPull = 0;
@@ -411,11 +388,7 @@ export function finishPullTrigger(e, { cancel = false } = {}) {
     triggerSlotSpin();
   } else {
     setPullProgress(0);
-    if (!cancel && releasedPull >= 28) {
-      setSlotStageStatus("Not enough force. Pull harder.", "idle", 900);
-    } else {
-      syncSlotTriggerState();
-    }
+    syncSlotTriggerState();
   }
 
   if (e) e.preventDefault();
@@ -459,11 +432,11 @@ function resetLandingCues() {
   }
 }
 
-function queueLandingCue(name, options = {}, gen = spinGeneration) {
+function queueLandingCue(name, playOptions = {}, gen = spinGeneration) {
   const runCue = async () => {
     if (gen !== spinGeneration) return null;
 
-    const handle = await AudioEngine.play(name, options);
+    const handle = await AudioEngine.play(name, playOptions);
     if (gen !== spinGeneration) {
       handle?.stop?.();
       return null;
@@ -478,11 +451,11 @@ function queueLandingCue(name, options = {}, gen = spinGeneration) {
 }
 
 function getReelHeight() {
-  const reelWindow = document.querySelector(".reel-window");
   const reelItem = document.querySelector(".reel-item");
+  const reelWindow = document.querySelector(".reel-window");
   const measuredHeight =
-    reelWindow?.getBoundingClientRect().height ||
     reelItem?.getBoundingClientRect().height ||
+    reelWindow?.getBoundingClientRect().height ||
     0;
 
   return measuredHeight > 0 ? measuredHeight : DEFAULT_REEL_H;
@@ -586,16 +559,14 @@ async function onReelLanded(index, gen = spinGeneration) {
     void queueLandingCue(getNextReelLockCueName(), { volume: 0.8 }, gen);
     if (gen !== spinGeneration) return;
 
-    setSlotStageStatus(`Reel ${index + 1} locked.`, "charged", 550);
     vibrate(12);
   } else {
     await AudioEngine.stopSpinning();
     if (gen !== spinGeneration) return;
 
-    void queueLandingCue("final-lock", {}, gen);
+    void queueLandingCue(getNextReelLockCueName(), { volume: 0.8 }, gen);
     if (gen !== spinGeneration) return;
 
-    setSlotStageStatus("Your workout is set.", "landed");
     vibrate([16, 26, 34]);
   }
 }
@@ -626,7 +597,6 @@ export function renderSlotMachine(skipSpin = false) {
 
   const container = document.getElementById("reels-container");
   const statusBtn = document.getElementById("slot-trigger-status");
-  const trigger = document.getElementById("slot-pull-trigger");
 
   container.innerHTML = session.slots
     .map((slot, index) => {
@@ -635,11 +605,12 @@ export function renderSlotMachine(skipSpin = false) {
         pool.map((exercise) => exercise.name),
       ).flat();
       const drums = items
-        .map((name) => `<div class="reel-item">${name.toUpperCase()}</div>`)
+        .map((name) => `<div class="reel-item">${name}</div>`)
         .join("");
       return `
       <div class="reel-wrap card card--muted" id="reel-wrap-${index}">
-        <div class="reel-window">
+        <div class="reel-slot-label">${slot.label}</div>
+        <div class="reel-window" aria-label="${slot.label}">
           <div class="reel-drum" id="reel-drum-${index}" style="transform:translateY(0)">
             ${drums}
           </div>
@@ -650,8 +621,6 @@ export function renderSlotMachine(skipSpin = false) {
 
   clearTimeout(pullGesture.recoilTimer);
   pullGesture.recoilTimer = null;
-  clearTimeout(pullGesture.statusTimer);
-  pullGesture.statusTimer = null;
   pullGesture.active = false;
   pullGesture.pointerId = null;
   pullGesture.currentPull = 0;
@@ -660,7 +629,6 @@ export function renderSlotMachine(skipSpin = false) {
   pullGesture.velocity = 0;
   pullGesture.thresholdBuzzed = false;
   pullGesture.landedCount = 0;
-  trigger?.classList.remove("is-firing");
 
   if (skipSpin) {
     setSessionSpinState(SPIN_STATE_LANDED);
@@ -692,6 +660,4 @@ export function renderSlotMachine(skipSpin = false) {
 
 export function cancelPullGesture() {
   finishPullTrigger(null, { cancel: true });
-  clearTimeout(pullGesture.statusTimer);
-  pullGesture.statusTimer = null;
 }

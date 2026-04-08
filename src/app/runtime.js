@@ -91,15 +91,12 @@ import {
 } from "./session-store.js";
 import {
   cancelPullGesture,
-  finishPullTrigger,
   getSessionSpinState,
-  handlePullTriggerKeydown,
-  handlePullTriggerMove,
-  handlePullTriggerStart,
   initSpin,
   pickAllExercises,
   pickExercise,
   renderSlotMachine,
+  startSpinReveal,
 } from "./spin.js";
 import {
   createEmptyWeek,
@@ -235,11 +232,8 @@ export function init() {
     advanceOnboardingStep,
     renderSlotMachine,
     discardSessionAndGoHome,
+    startSpinReveal,
     launchExercise,
-    handlePullTriggerStart,
-    handlePullTriggerMove,
-    finishPullTrigger,
-    handlePullTriggerKeydown,
     openExitSessionModal,
     dismissKeyboard,
     handleExercisePrimaryAction,

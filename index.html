@@ -74,68 +74,34 @@
         <div class="screen" id="screen-slot-machine">
             <div class="slot-machine-header">
                 <button class="back-btn" id="slot-machine-back">←</button>
-                <div class="title-block slot-stage-copy" aria-live="polite">
-                    <div
-                        class="slot-stage-title"
-                        id="slot-stage-title"
-                        data-tone="idle"
-                    >
-                        Pull the handle
-                    </div>
-                </div>
             </div>
 
             <div class="slot-machine-stage" id="slot-machine-stage">
                 <div class="slot-machine-frame" id="slot-machine-frame">
                     <div class="reels-container" id="reels-container"></div>
                 </div>
-
-                <div class="slot-machine-side">
-                    <div
-                        class="slot-pull-trigger"
-                        id="slot-pull-trigger"
-                        role="button"
-                        tabindex="0"
-                        aria-disabled="false"
-                        aria-label="Pull to spin the workout reels"
-                        aria-controls="reels-container"
-                        aria-describedby="slot-stage-title"
-                    >
-                        <div class="pull-trigger-track">
-                            <div
-                                class="pull-trigger-band pull-trigger-band-top"
-                            ></div>
-                            <div
-                                class="pull-trigger-band pull-trigger-band-bottom"
-                            ></div>
-                            <div class="pull-trigger-energy"></div>
-                            <div class="pull-trigger-chain"></div>
-                            <div
-                                class="pull-trigger-handle"
-                                id="pull-trigger-handle"
-                            >
-                                <div class="pull-trigger-core"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--<div class="slot-trigger-action">
-                        <div class="pull-trigger-copy">
-                            <span class="pull-trigger-copy-main">Pull</span>
-                            <span class="pull-trigger-copy-sub">To Spin</span>
-                        </div>
-                    </div>-->
-                </div>
             </div>
 
-            <button
-                class="slot-trigger-status button-primary"
-                id="slot-trigger-status"
-                type="button"
-                data-tone="idle"
-                disabled
-            >
-                Start workout
-            </button>
+            <div class="slot-machine-actions">
+                <button
+                    class="slot-spin-button button-primary"
+                    id="slot-spin-button"
+                    type="button"
+                    data-tone="ready"
+                    aria-controls="reels-container"
+                >
+                    Reveal workout
+                </button>
+                <button
+                    class="slot-trigger-status button-primary"
+                    id="slot-trigger-status"
+                    type="button"
+                    data-tone="idle"
+                    disabled
+                >
+                    Start workout
+                </button>
+            </div>
         </div>
 
         <!-- ═══ EXERCISE ════════════════════════════════════════════════════ -->

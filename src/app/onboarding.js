@@ -58,12 +58,15 @@ const ONBOARDING_CONFIG = {
       document.querySelector('[data-onboarding-target="home-card"]'),
   },
   [ONBOARDING_STEP_PULL]: {
-    label: "Pull Screen",
-    copy: "Pull down to randomize your exercises",
-    getTargets: () => document.getElementById("pull-trigger-handle"),
+    label: "Reveal",
+    copy: "Tap to reveal your exercises",
+    getTargets: () => {
+      const button = document.getElementById("slot-spin-button");
+      return button && !button.disabled ? button : null;
+    },
   },
   [ONBOARDING_STEP_START]: {
-    label: "Pull Screen",
+    label: "Reveal",
     copy: "Your workout is set — start when ready",
     getTargets: () => {
       const button = document.getElementById("slot-trigger-status");
