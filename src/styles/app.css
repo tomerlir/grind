@@ -144,6 +144,7 @@ html {
     min-height: 100dvh;
     background: var(--bg);
     -webkit-text-size-adjust: 100%;
+    overflow: hidden;
 }
 body {
     background:
@@ -162,9 +163,11 @@ body {
     font-family: var(--font-ui);
     font-size: var(--type-body-md);
     line-height: var(--lh-body);
+    height: 100%;
     min-height: 100svh;
     min-height: 100dvh;
     background-color: var(--bg);
+    overflow: hidden;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
 }
@@ -350,6 +353,9 @@ body::before {
 /* ── SCREENS ─────────────────────────────────────────────────── */
 .screen {
     display: none;
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
     min-height: 100dvh;
     width: min(100%, var(--app-max-width));
     margin: 0 auto;
@@ -358,6 +364,7 @@ body::before {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
 }
 .screen.active {
     display: flex;
@@ -370,6 +377,7 @@ body::before {
 }
 #screen-exercise {
     position: relative;
+    justify-content: flex-start;
     min-height: 100vh;
     min-height: 100svh;
     min-height: 100dvh;
@@ -1893,6 +1901,7 @@ body::before {
         color 0.15s;
     -webkit-appearance: none;
     appearance: none;
+    scroll-margin-block: 24px;
 }
 .set-row.active-set .set-input {
     min-height: auto;

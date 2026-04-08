@@ -29,6 +29,9 @@ let runtime = {
   resumeRestIfNeeded: () => {},
 };
 
+let focusScrollTimer = null;
+let blurSnapTimer = null;
+
 export function initExerciseFlow(deps = {}) {
   runtime = {
     ...runtime,
@@ -120,10 +123,13 @@ export function renderSets() {
   [weightInput, repsInput].forEach((input) => {
     if (!input) return;
     input.addEventListener("focus", () => {
-      scrollIntoViewCentered(input);
+      scheduleInputVisibility(input);
       runtime.trackOnboardingViewport?.();
     });
-    input.addEventListener("blur", () => runtime.trackOnboardingViewport?.());
+    input.addEventListener("blur", () => {
+      scheduleExerciseScreenSnap();
+      runtime.trackOnboardingViewport?.();
+    });
   });
 
   runtime.queueOnboardingRefresh();
@@ -293,12 +299,45 @@ export function dismissKeyboard() {
 
 function scrollIntoViewCentered(el) {
   if (!el) return;
-  setTimeout(() => {
+  window.clearTimeout(focusScrollTimer);
+  focusScrollTimer = window.setTimeout(() => {
+    if (document.activeElement !== el) return;
     el.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
+      block: "nearest",
+      inline: "nearest",
     });
-  }, 300);
+  }, window.visualViewport ? 180 : 0);
+}
+
+function scheduleInputVisibility(el) {
+  scrollIntoViewCentered(el);
+}
+
+function scheduleExerciseScreenSnap() {
+  window.clearTimeout(blurSnapTimer);
+  blurSnapTimer = window.setTimeout(() => {
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLInputElement ||
+      active instanceof HTMLTextAreaElement
+    ) {
+      return;
+    }
+
+    const screen = document.getElementById("screen-exercise");
+    if (screen && screen.scrollTop <= 96) {
+      screen.scrollTop = 0;
+    }
+
+    const scrollingRoot = document.scrollingElement;
+    if (scrollingRoot && scrollingRoot.scrollTop <= 96) {
+      scrollingRoot.scrollTop = 0;
+    }
+
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, 180);
 }
 
 function formatGraphValue(value) {

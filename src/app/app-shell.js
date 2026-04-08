@@ -39,12 +39,30 @@ export function initAppShell(deps = {}) {
   };
 }
 
+function resetScreenScrollPosition(screen) {
+  if (screen instanceof HTMLElement) {
+    screen.scrollTop = 0;
+    screen.scrollLeft = 0;
+  }
+
+  const scrollingRoot = document.scrollingElement;
+  if (scrollingRoot) {
+    scrollingRoot.scrollTop = 0;
+    scrollingRoot.scrollLeft = 0;
+  }
+
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
 export function showScreen(id) {
   document
     .querySelectorAll(".screen")
     .forEach((screen) => screen.classList.remove("active"));
-  document.getElementById(id)?.classList.add("active");
-  window.scrollTo(0, 0);
+  const nextScreen = document.getElementById(id);
+  nextScreen?.classList.add("active");
+  resetScreenScrollPosition(nextScreen);
   runtime.queueOnboardingRefresh();
 }
 

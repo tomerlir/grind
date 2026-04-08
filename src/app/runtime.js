@@ -269,13 +269,6 @@ export function init() {
 
   if (window.visualViewport) {
     const handleViewportChange = () => {
-      const active = document.activeElement;
-      if (
-        active &&
-        (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
-      ) {
-        active.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
       trackOnboardingViewport();
       queueOnboardingRefresh();
     };
