@@ -629,7 +629,7 @@ body::before {
 /* ── DAY PICKER ──────────────────────────────────────────────── */
 .day-picker-header {
     text-align: center;
-    padding: var(--screen-pad-top) 0;
+    padding: var(--screen-pad-top) 0 var(--screen-pad-bottom);
     flex-shrink: 0;
 }
 .logo {
@@ -715,11 +715,12 @@ body::before {
 .day-picker-cards {
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: flex-start;
+    gap: clamp(18px, 3.4vh, 30px);
     flex: 1 1 auto;
     min-height: 0;
-    padding: var(--screen-pad-top) var(--screen-pad-right)
-        var(--screen-pad-bottom) var(--screen-pad-left);
+    padding: 0 var(--screen-pad-right) var(--screen-pad-bottom)
+        var(--screen-pad-left);
 }
 .day-picker-card {
     display: flex;
