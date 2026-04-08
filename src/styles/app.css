@@ -1388,7 +1388,7 @@ body::before {
 .slot-machine-actions .slot-trigger-status {
     margin: 0;
     width: 100%;
-    min-height: 42px;
+    min-height: 56px;
     padding: 10px 14px;
     font-size: clamp(0.92rem, 3.5vw, 1.02rem);
 }
