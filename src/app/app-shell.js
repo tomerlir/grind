@@ -7,7 +7,7 @@ import {
   ONBOARDING_STEP_START,
 } from "./onboarding.js";
 import { fmtKg, markNudgeShown } from "./prs.js";
-import { loadHistory } from "./history.js";
+import { getLatestCompletedTemplateEntry, loadHistory } from "./history.js";
 import { SPIN_STATE_READY } from "./spin.js";
 
 let runtime = {
@@ -30,6 +30,7 @@ let runtime = {
 };
 
 let applyAppUpdateFn = null;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export function initAppShell(deps = {}) {
   runtime = {
@@ -101,10 +102,13 @@ export function registerAppUpdatePrompt() {
       console.log("[GRIND] SW registered:", swUrl);
       if (!registration) return;
 
-      window.setInterval(() => {
-        if (!navigator.onLine) return;
-        void registration.update();
-      }, 60 * 60 * 1000);
+      window.setInterval(
+        () => {
+          if (!navigator.onLine) return;
+          void registration.update();
+        },
+        60 * 60 * 1000,
+      );
     },
     onRegisterError(error) {
       console.warn("[GRIND] SW registration failed:", error);
@@ -114,7 +118,8 @@ export function registerAppUpdatePrompt() {
 
 export function showPROverlay(prs, onDone) {
   const parts = [];
-  if (prs.weight) parts.push(`+${fmtKg(prs.weight.new - prs.weight.prev)}KG MAX`);
+  if (prs.weight)
+    parts.push(`+${fmtKg(prs.weight.new - prs.weight.prev)}KG MAX`);
   if (prs.volume) parts.push("VOLUME PR");
   if (parts.length === 0) {
     onDone();
@@ -167,6 +172,51 @@ export function renderDayPicker() {
   runtime.queueOnboardingRefresh();
 }
 
+function getHistoryEntryDate(entry) {
+  if (entry?.timestamp) {
+    const timestampDate = new Date(entry.timestamp);
+    if (!Number.isNaN(timestampDate.getTime())) return timestampDate;
+  }
+
+  if (typeof entry?.date === "string") {
+    const match = entry.date.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (match) {
+      const [, dd, mm, yyyy] = match;
+      const parsedDate = new Date(`${yyyy}-${mm}-${dd}T12:00:00`);
+      if (!Number.isNaN(parsedDate.getTime())) return parsedDate;
+    }
+  }
+
+  return null;
+}
+
+function formatDaysAgoLabel(entry) {
+  const completedAt = getHistoryEntryDate(entry);
+  if (!completedAt) return "-";
+
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const startOfCompletedDay = new Date(
+    completedAt.getFullYear(),
+    completedAt.getMonth(),
+    completedAt.getDate(),
+  );
+  const dayDiff = Math.max(
+    0,
+    Math.floor(
+      (startOfToday.getTime() - startOfCompletedDay.getTime()) / DAY_IN_MS,
+    ),
+  );
+
+  if (dayDiff === 0) return "today";
+  if (dayDiff === 1) return "yesterday";
+  return `${dayDiff}d ago`;
+}
+
 function getActiveHomeSession() {
   const saved = runtime.loadSession();
   return saved?.status === "in_progress" ? saved : null;
@@ -176,6 +226,7 @@ function renderDayPickerCards() {
   const weekKey = runtime.getWeekKey();
   const week = runtime.loadWeek(weekKey);
   const templateChoices = runtime.getOrCreateDayAssignment(weekKey);
+  const historyEntries = loadHistory();
   const completed = week.completed;
   const activeSession = getActiveHomeSession();
   const container = document.getElementById("day-picker-cards");
@@ -190,6 +241,11 @@ function renderDayPickerCards() {
       const completedWeekday = runtime.formatWeekdayLabel(
         week.completedByTemplate?.[templateId],
       );
+      const latestCompletedEntry = getLatestCompletedTemplateEntry(
+        templateId,
+        historyEntries,
+      );
+      const lastWorkoutLabel = formatDaysAgoLabel(latestCompletedEntry);
       let ctaLabel = "START SESSION ▸";
 
       if (isDone) {
@@ -212,6 +268,7 @@ function renderDayPickerCards() {
           ? ' data-onboarding-target="home-card"'
           : "";
       if (onboardingTarget) markedOnboardingTarget = true;
+      const lastWorkoutMarkup = `<div class="title-block__meta day-card-last-done">${lastWorkoutLabel}</div>`;
 
       return `
       <div class="day-picker-card card fadein ${stateClass}"
@@ -220,6 +277,7 @@ function renderDayPickerCards() {
           <div class="day-card-letter">Full-body ${templateId}</div>
         </div>
         <div class="title-block">
+          ${lastWorkoutMarkup}
           <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
         </div>
       </div>`;
@@ -256,9 +314,11 @@ export async function renderDoneScreen({
   document.getElementById("done-sub").textContent =
     `${day?.name ?? `Day ${templateId}`} complete`;
 
-  const audioPromise = runtime.audioEngine?.play("workout-complete").catch((error) => {
-    console.error("Failed to play workout-complete sound:", error);
-  });
+  const audioPromise = runtime.audioEngine
+    ?.play("workout-complete")
+    .catch((error) => {
+      console.error("Failed to play workout-complete sound:", error);
+    });
 
   const entries = loadHistory().slice(-1)[0]?.entries ?? [];
   document.getElementById("done-stats").innerHTML = `

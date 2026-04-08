@@ -60,6 +60,22 @@ export function getLatestCompletedExerciseEntry(
   return null;
 }
 
+export function getLatestCompletedTemplateEntry(
+  templateId,
+  historyEntries = loadHistory(),
+) {
+  for (
+    let historyIndex = historyEntries.length - 1;
+    historyIndex >= 0;
+    historyIndex -= 1
+  ) {
+    const sessionEntry = historyEntries[historyIndex];
+    if (sessionEntry?.templateId === templateId) return sessionEntry;
+  }
+
+  return null;
+}
+
 export function getExerciseProgressSeries(
   exerciseName,
   isBodyweight = false,

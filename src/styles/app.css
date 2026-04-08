@@ -352,8 +352,6 @@ body::before {
     display: none;
     min-height: 100dvh;
     width: min(100%, var(--app-max-width));
-    padding: var(--screen-pad-top) var(--screen-pad-right)
-        calc(120px + var(--safe-bottom)) var(--screen-pad-left);
     margin: 0 auto;
     flex-direction: column;
     justify-content: space-evenly;
@@ -370,6 +368,8 @@ body::before {
     min-height: 100svh;
     min-height: 100dvh;
     padding-bottom: var(--screen-pad-bottom);
+    padding: var(--screen-pad-top) var(--screen-pad-right)
+        var(--screen-pad-bottom) var(--screen-pad-left);
 }
 #screen-slot-machine {
     min-height: 100vh;
@@ -710,6 +710,8 @@ body::before {
     flex-direction: column;
     gap: var(--space-sm);
     min-height: 0;
+    padding: var(--screen-pad-top) var(--screen-pad-right)
+        calc(120px + var(--safe-bottom)) var(--screen-pad-left);
 }
 .day-picker-card {
     display: flex;
@@ -754,6 +756,9 @@ body::before {
 .day-card-cta {
     color: var(--text2);
     margin-top: auto;
+}
+.day-card-last-done {
+    text-transform: none;
 }
 .day-picker-card.locked .day-card-cta {
     color: var(--silver2);
@@ -1472,8 +1477,8 @@ body::before {
     min-height: 100vh;
     min-height: 100svh;
     min-height: 100dvh;
-    padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
-        calc(16px + var(--safe-bottom)) calc(12px + var(--safe-left));
+    padding: var(--screen-pad-top) calc(12px + var(--safe-right))
+        var(--screen-pad-bottom) calc(12px + var(--safe-left));
     justify-content: flex-start;
     gap: 10px;
     overflow: hidden;

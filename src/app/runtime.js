@@ -38,6 +38,7 @@ import {
   deleteHistoryEntry,
   getExerciseProgressSeries,
   getLatestCompletedExerciseEntry,
+  getLatestCompletedTemplateEntry,
   initHistory,
   loadHistory,
   renderHistory,
@@ -439,6 +440,11 @@ export function runTests() {
       latestBench?.sets?.[0]?.weight === "62.5" &&
         latestBench?.sets?.[1]?.reps === "7",
       "Latest completed exercise lookup returns the newest matching workout entry",
+    );
+    const latestDayA = getLatestCompletedTemplateEntry("A");
+    assert(
+      latestDayA?.timestamp === "2099-01-28T12:00:00.000Z",
+      "Latest completed template lookup returns the newest matching day entry",
     );
     const benchSeries = getExerciseProgressSeries("Bench Press");
     assert(
