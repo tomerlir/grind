@@ -2,7 +2,7 @@ export const EXERCISES = {
   "lower-quad": [
     {
       name: "Bulgarian Split Squat",
-      sets: 4,
+      sets: 3,
       repsRange: "6–10",
       restSeconds: 90,
       tip: "Keep your front foot flat and drive through your heel as you stand up.",
@@ -40,7 +40,7 @@ export const EXERCISES = {
     },
     // {
     //   name: "Dumbbell Good Morning",
-    //   sets: 4,
+    //   sets: 3,
     //   repsRange: "12–15",
     //   restSeconds: 90,
     //   tip: "Hinge until you feel tension in your hamstrings, then stand by pushing your hips forward.",
@@ -50,14 +50,14 @@ export const EXERCISES = {
   "lower-glute": [
     {
       name: "Dumbbell Hip Thrust",
-      sets: 4,
+      sets: 3,
       repsRange: "12–15",
       restSeconds: 90,
       tip: "Squeeze your glutes hard at the top and hold for a second before lowering.",
     },
     {
       name: "Single-Leg Hip Thrust",
-      sets: 4,
+      sets: 3,
       repsRange: "10–12 each",
       restSeconds: 90,
       tip: "Drive through the heel of your planted foot and squeeze at the top of each rep.",
@@ -126,7 +126,7 @@ export const EXERCISES = {
     {
       name: "Pull-Up",
       bodyweight: true,
-      sets: 4,
+      sets: 3,
       repsRange: "6–10",
       restSeconds: 90,
       tip: "Think about pulling your elbows down to your sides rather than pulling your chin to the bar.",
@@ -134,7 +134,7 @@ export const EXERCISES = {
     {
       name: "Chin-Up",
       bodyweight: true,
-      sets: 4,
+      sets: 3,
       repsRange: "6–10",
       restSeconds: 90,
       tip: "Think about driving your elbows down and back, and squeeze at the top.",
@@ -294,39 +294,35 @@ export const DAYS = {
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
       { key: "pull-vertical", label: "PULL · VERTICAL" },
       { key: "lower-hinge", label: "LOWER · HINGE" },
-      { key: "push-vertical", label: "PUSH · VERTICAL" },
       { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
-      { key: "arms-tricep", label: "ARMS · TRICEP" },
-      { key: "arms-bicep", label: "ARMS · BICEP" },
       { key: "core", label: "CORE" },
       { key: "calves", label: "CALVES" },
     ],
   },
+
   B: {
     name: "Workout B",
     slots: [
-      { key: "lower-hinge", label: "LOWER · HINGE" },
-      { key: "pull-vertical", label: "PULL · VERTICAL" },
+      { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-vertical", label: "PUSH · VERTICAL" },
-      { key: "lower-glute", label: "LOWER · GLUTE" },
       { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
+      { key: "lower-hinge", label: "LOWER · HINGE" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
       { key: "accessory", label: "ACCESSORY" },
-      { key: "core", label: "CORE" },
-      { key: "calves", label: "CALVES" },
+      { key: "arms-bicep", label: "ARMS · BICEP" },
+      { key: "lower-glute", label: "LOWER · GLUTE" },
     ],
   },
+
   C: {
     name: "Workout C",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
-      { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
-      // { key: "pull-horizontal", label: "PULL · HORIZONTAL" },
       { key: "lower-glute", label: "LOWER · GLUTE" },
       { key: "pull-vertical", label: "PULL · VERTICAL" },
-      { key: "arms-bicep", label: "ARMS · BICEP" },
+      { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
+      { key: "push-vertical", label: "PUSH · VERTICAL" },
       { key: "arms-tricep", label: "ARMS · TRICEP" },
-      { key: "accessory", label: "ACCESSORY" },
       { key: "core", label: "CORE" },
       { key: "calves", label: "CALVES" },
     ],
