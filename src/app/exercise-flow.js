@@ -302,10 +302,34 @@ function scrollIntoViewCentered(el) {
   window.clearTimeout(focusScrollTimer);
   focusScrollTimer = window.setTimeout(() => {
     if (document.activeElement !== el) return;
-    el.scrollIntoView({
-      block: "nearest",
-      inline: "nearest",
-    });
+    const screen = document.getElementById("screen-exercise");
+    if (!(screen instanceof HTMLElement)) {
+      el.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+      return;
+    }
+
+    const screenRect = screen.getBoundingClientRect();
+    const inputRect = el.getBoundingClientRect();
+    const viewportTop = window.visualViewport?.offsetTop ?? 0;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const viewportBottom = viewportTop + viewportHeight;
+    const topPadding = 16;
+    const bottomPadding = 24;
+    const visibleTop = Math.max(screenRect.top, viewportTop) + topPadding;
+    const visibleBottom =
+      Math.min(screenRect.bottom, viewportBottom) - bottomPadding;
+
+    if (inputRect.bottom > visibleBottom) {
+      screen.scrollTop += inputRect.bottom - visibleBottom;
+      return;
+    }
+
+    if (inputRect.top < visibleTop) {
+      screen.scrollTop -= visibleTop - inputRect.top;
+    }
   }, window.visualViewport ? 180 : 0);
 }
 
@@ -333,10 +357,6 @@ function scheduleExerciseScreenSnap() {
     if (scrollingRoot && scrollingRoot.scrollTop <= 96) {
       scrollingRoot.scrollTop = 0;
     }
-
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    window.scrollTo(0, 0);
   }, 180);
 }
 

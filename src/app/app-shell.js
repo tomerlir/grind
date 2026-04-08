@@ -50,10 +50,6 @@ function resetScreenScrollPosition(screen) {
     scrollingRoot.scrollTop = 0;
     scrollingRoot.scrollLeft = 0;
   }
-
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  window.scrollTo(0, 0);
 }
 
 export function showScreen(id) {
