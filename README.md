@@ -1,11 +1,11 @@
-# Grind — Olympus Workouts
+# Grind — Structured Strength
 
-Minimalist fitness PWA for structured, slightly randomized hypertrophy training. The app keeps the A/B/C full-body split fixed, then adds controlled exercise variation, session persistence, PR tracking, and audio-heavy slot-machine feedback.
+Minimalist fitness PWA for structured, slightly randomized hypertrophy training. The app keeps the A/B/C full-body split fixed, then adds controlled exercise variation, session persistence, PR tracking, and a session-builder reveal flow.
 
 ## Tech Stack
 
 - Vanilla JavaScript with Vite as the dev server and bundler
-- HTML with inline custom CSS in `index.html`
+- HTML plus custom CSS in `src/styles/app.css`
 - `localStorage` for week state, active sessions, history, PRs, and sync queue
 - `vite-plugin-pwa` for installability and offline support
 - `howler` for audio playback
@@ -51,7 +51,7 @@ grind/
 
 - The project remains framework-free.
 - This refactor intentionally modularizes JavaScript first.
-- HTML and CSS still live in `index.html` for now.
+- The UI remains framework-free and CSS-first.
 - Storage keys and existing session/history behavior are preserved for backward compatibility.
 
 ## Data Model

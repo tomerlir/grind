@@ -1,29 +1,30 @@
-# Design System — Zeus Ancient Greek Slot Machine Aesthetic
+# Design System — Premium Performance UI
 
-The visual direction is no longer generic casino UI. The current style is a hybrid of:
-- Zeus slot-machine energy: electric blue glows, gold trim, celebratory lightning flashes.
-- Ancient temple materials: marble-like grain, carved serif typography, inscription-like headings.
-- Compact PWA ergonomics: one-column cards, large tap targets, bold status labels, minimal clutter.
+The current visual direction aims for a premium, high-focus fitness product rather than a themed mythic interface. The style combines:
+- high-contrast graphite surfaces with restrained glow and depth
+- warm neutral highlights for completion, trust, and hierarchy
+- a clean mint performance accent for active states and motion feedback
+- compact PWA ergonomics with strong hierarchy, large tap targets, and minimal visual clutter
 
 ## Color Palette
 
-- Background: deep midnight navy with radial electric glow.
-- Surfaces: layered blue-black stone panels with gold borders.
-- Accent 1: treasury gold for headings, cards, and completion states.
-- Accent 2: electric cyan for active states, progress, and motion feedback.
-- Text: marble white and desaturated silver-blue.
+- Background: deep charcoal with soft performance-light gradients.
+- Surfaces: layered graphite panels with translucent depth and subtle borders.
+- Accent 1: warm sand for highlights, metrics, and completion states.
+- Accent 2: mint for active states, progress, and feedback.
+- Text: high-contrast white with cooler secondary neutrals.
 
 ## Typography
 
-- Display: `Caesar Dressing`
-  Used for logos, workout letters (`A/B/C`), screen titles, and big CTA moments.
-  Goal: theatrical classical inscription with a more mythic, ornamental silhouette.
-- Body: `Cormorant Garamond`
-  Used for descriptive copy and supporting text.
-  Goal: classical, refined, less app-like than modern sans-serif UI.
-- Labels / utility: `Alegreya Sans SC`
-  Used for status text, metadata, chip labels, and interface chrome.
-  Goal: carved small-caps feel without losing legibility on mobile.
+- Display: `Space Grotesk`
+  Used for logos, screen titles, and high-emphasis metrics.
+  Goal: compact, modern, performance-oriented confidence.
+- Body / UI: `Plus Jakarta Sans`
+  Used for descriptive copy, metadata, CTAs, and app chrome.
+  Goal: crisp mobile readability without feeling generic.
+- Labels / utility: `IBM Plex Mono`
+  Used for status text, chips, timing metadata, and system-style labels.
+  Goal: give structure and rhythm to compact data without looking playful.
 - Semantic scale:
   `--type-display-hero`, `--type-display-xl`, `--type-display-lg`, `--type-display-md`
   for branded hero moments, workout titles, and primary ritual states.
@@ -42,8 +43,8 @@ The visual direction is no longer generic casino UI. The current style is a hybr
 
 ## Surface Language
 
-- Borders use Greek-inspired double-rule treatments and metallic gold framing.
-- Backgrounds lean on marble grain plus atmospheric lightning glows instead of flat fills.
-- Cards should feel like illuminated stone plaques, not default mobile list items.
-- Motion should feel ceremonial and dramatic, especially around reel landing, PR overlays, and completion.
+- Borders should stay subtle and crisp, relying on contrast more than ornament.
+- Backgrounds should feel layered and atmospheric, with noise and lighting used sparingly.
+- Cards should feel premium and dense, like performance dashboards rather than themed plaques.
+- Motion should feel deliberate and confident, especially around session generation, PB overlays, and completion.
 - A small footer badge should always expose the current beta version label for testers.

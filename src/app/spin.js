@@ -1,5 +1,6 @@
+import refreshRerollIconSvgRaw from "lucide-static/icons/refresh-ccw-dot.svg?raw";
 import { AudioEngine } from "../audio/index.js";
-import { EXERCISES } from "../data/workouts.js";
+import { DAYS, EXERCISES } from "../data/workouts.js";
 
 export const SPIN_STATE_READY = "ready";
 export const SPIN_STATE_SPINNING = "spinning";
@@ -10,6 +11,7 @@ const PULL_BOTTOM_CLEARANCE_PX = 12;
 const PULL_MOMENTUM_BOOST = 110;
 const PULL_MOMENTUM_MIN_RATIO = 0.82;
 const DEFAULT_REEL_H = 64;
+const WORKOUT_PLAN_SHUFFLE_MS = 220;
 const REPEATS = 10;
 const REP_TARGET = 7;
 const BASE_MS = 2000;
@@ -18,6 +20,26 @@ const MOBILE_LANDING_GAP_MS = 520;
 const MOBILE_REEL_LOCK_CUE_NAMES = ["reel-lock", "reel-lock-b"];
 const IS_TOUCH_DEVICE =
   typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+const SLOT_DISPLAY_LABELS = {
+  "lower-quad": "Lower (Quad)",
+  "push-horizontal": "Chest",
+  "pull-vertical": "Back (Vertical)",
+  "lower-hinge": "Lower (Hinge)",
+  "push-vertical": "Shoulders",
+  "pull-horizontal": "Back (Horizontal)",
+  accessory: "Accessory",
+  "lower-glute": "Lower (Glute)",
+  "arms-tricep": "Triceps",
+  "arms-bicep": "Biceps",
+  core: "Core",
+  calves: "Calves",
+};
+const refreshRerollIconSvg = refreshRerollIconSvgRaw
+  .replace(/<!--[\s\S]*?-->\s*/, "")
+  .replace(
+    'class="lucide lucide-refresh-ccw-dot"',
+    'class="workout-plan-swap-icon" aria-hidden="true" focusable="false"',
+  );
 
 let runtime = {
   getSession: () => null,
@@ -50,6 +72,28 @@ export function initSpin(deps = {}) {
     ...runtime,
     ...deps,
   };
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getTemplateDisplayName(templateId) {
+  return DAYS[templateId]?.name ?? `Full Body ${templateId}`;
+}
+
+function formatPlanSlotLabel(slot) {
+  if (!slot) return "";
+  return SLOT_DISPLAY_LABELS[slot.key] ?? slot.label;
+}
+
+function getSwapIconMarkup() {
+  return refreshRerollIconSvg;
 }
 
 function clamp(n, min, max) {
@@ -158,15 +202,14 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
   if (!spinBtn && !statusBtn) return;
 
   const spinState = getSessionSpinState();
-  const isReady = spinState === SPIN_STATE_READY;
   const isSpinning = spinState === SPIN_STATE_SPINNING;
-  const canLaunch = spinState === SPIN_STATE_LANDED;
+  const canLaunch = spinState !== SPIN_STATE_SPINNING;
 
   if (spinBtn) {
-    spinBtn.hidden = canLaunch;
-    spinBtn.disabled = !isReady;
-    spinBtn.dataset.tone = isReady ? "ready" : isSpinning ? "spinning" : "idle";
-    spinBtn.textContent = isSpinning ? "Revealing workout" : "Click to spin";
+    spinBtn.hidden = false;
+    spinBtn.disabled = isSpinning;
+    spinBtn.dataset.tone = isSpinning ? "spinning" : "ready";
+    spinBtn.textContent = isSpinning ? "Shuffling..." : "Shuffle All";
     spinBtn.setAttribute("aria-disabled", spinBtn.disabled ? "true" : "false");
   }
 
@@ -174,8 +217,9 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
     statusBtn.disabled = !canLaunch;
     statusBtn.tabIndex = canLaunch ? 0 : -1;
     statusBtn.dataset.tone = canLaunch ? "landed" : "idle";
-    statusBtn.classList.toggle("is-visible", canLaunch);
-    if (!canLaunch) statusBtn.classList.remove("appearing");
+    statusBtn.classList.add("is-visible");
+    statusBtn.textContent = "Start Workout";
+    statusBtn.classList.remove("appearing");
   }
 
   if (!pullGesture.active) {
@@ -183,40 +227,52 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
     if (!preservePull) setPullProgress(0);
   }
 
-  if (spinState === SPIN_STATE_READY) {
-    setReelLandProgress(0);
-    runtime.queueOnboardingRefresh();
-    return;
-  }
-
-  if (spinState === SPIN_STATE_SPINNING) {
-    runtime.queueOnboardingRefresh();
-    return;
-  }
-
-  setReelLandProgress(1);
+  setReelLandProgress(spinState === SPIN_STATE_SPINNING ? 0.5 : 1);
   runtime.queueOnboardingRefresh();
 }
 
-function getSessionReserved(categoryKey) {
+function getSessionReserved(categoryKey, { excludeSlotIndex = null } = {}) {
   const session = runtime.getSession();
-  return Object.entries(session.reservations || {})
-    .filter(([key]) => key.startsWith(categoryKey + ":"))
+  return Object.entries(session?.reservations || {})
+    .filter(([key]) => {
+      if (!key.startsWith(`${categoryKey}:`)) return false;
+      if (excludeSlotIndex === null) return true;
+      return key !== `${categoryKey}:${excludeSlotIndex}`;
+    })
     .map(([, value]) => value);
 }
 
-export function pickExercise(categoryKey, slotPosition) {
+function pickExerciseFromPool(
+  categoryKey,
+  { excludeSlotIndex = null, excludeNames = [] } = {},
+) {
   const session = runtime.getSession();
   const pool = EXERCISES[categoryKey] ?? [];
   if (pool.length === 0) return null;
 
   const weekUsed = runtime.getUsedExercises(categoryKey, session.weekKey);
-  const sessionUsed = getSessionReserved(categoryKey);
+  const sessionUsed = getSessionReserved(categoryKey, { excludeSlotIndex });
+  const excludedNameSet = new Set([
+    ...sessionUsed,
+    ...excludeNames.filter(Boolean),
+  ]);
 
   let available = pool.filter(
     (exercise) =>
-      !weekUsed.includes(exercise.name) && !sessionUsed.includes(exercise.name),
+      !weekUsed.includes(exercise.name) && !excludedNameSet.has(exercise.name),
   );
+
+  if (available.length === 0) {
+    available = pool.filter((exercise) => !excludedNameSet.has(exercise.name));
+  }
+
+  if (available.length === 0) {
+    available = pool.filter(
+      (exercise) =>
+        !weekUsed.includes(exercise.name) &&
+        !sessionUsed.includes(exercise.name),
+    );
+  }
 
   if (available.length === 0) {
     available = pool.filter((exercise) => !sessionUsed.includes(exercise.name));
@@ -226,24 +282,139 @@ export function pickExercise(categoryKey, slotPosition) {
     available = pool;
   }
 
-  const chosen = available[Math.floor(Math.random() * available.length)];
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+export function pickExercise(categoryKey, slotPosition, options = {}) {
+  const session = runtime.getSession();
+  if (!session) return null;
+
+  session.reservations ||= {};
+  const chosen = pickExerciseFromPool(categoryKey, {
+    excludeSlotIndex: options.excludeSlotIndex ?? slotPosition,
+    excludeNames: options.excludeNames ?? [],
+  });
+  if (!chosen) return null;
+
   session.reservations[`${categoryKey}:${slotPosition}`] = chosen.name;
-  runtime.saveSession();
+  if (options.save !== false) runtime.saveSession();
   return chosen;
 }
 
-export function pickAllExercises() {
+export function pickAllExercises(options = {}) {
   const session = runtime.getSession();
+  if (!session?.slots?.length) return [];
+
+  session.reservations ||= {};
+  const previousNames = Array.isArray(session.pickedExercises)
+    ? session.pickedExercises.map((exercise) => exercise?.name ?? "")
+    : [];
+
+  if (options.forceNew) {
+    session.reservations = {};
+  }
+
   session.pickedExercises = session.slots.map((slot, index) => {
-    const existingName = session.reservations[`${slot.key}:${index}`];
-    if (existingName) {
+    const existingName = options.forceNew
+      ? null
+      : session.reservations[`${slot.key}:${index}`];
+    if (existingName && !options.excludeCurrent) {
       const pool = EXERCISES[slot.key] ?? [];
       const found = pool.find((exercise) => exercise.name === existingName);
-      return found ?? pickExercise(slot.key, index);
+      return (
+        found ??
+        pickExercise(slot.key, index, {
+          save: false,
+          excludeNames: previousNames[index] ? [previousNames[index]] : [],
+        })
+      );
     }
-    return pickExercise(slot.key, index);
+
+    return pickExercise(slot.key, index, {
+      save: false,
+      excludeNames:
+        options.excludeCurrent && previousNames[index]
+          ? [previousNames[index]]
+          : [],
+    });
   });
+  setSessionSpinState(SPIN_STATE_LANDED);
   runtime.saveSession();
+  return session.pickedExercises;
+}
+
+function rerollExerciseAtSlot(slotIndex) {
+  const session = runtime.getSession();
+  const slot = session?.slots?.[slotIndex];
+  if (!session || !slot) return null;
+
+  session.reservations ||= {};
+  const reservationKey = `${slot.key}:${slotIndex}`;
+  const currentName =
+    session.pickedExercises?.[slotIndex]?.name ??
+    session.reservations[reservationKey];
+
+  delete session.reservations[reservationKey];
+
+  const nextExercise = pickExercise(slot.key, slotIndex, {
+    save: false,
+    excludeNames: currentName ? [currentName] : [],
+  });
+
+  if (!nextExercise) return null;
+
+  session.pickedExercises ||= [];
+  session.pickedExercises[slotIndex] = nextExercise;
+  setSessionSpinState(SPIN_STATE_LANDED);
+  runtime.saveSession();
+  return nextExercise;
+}
+
+function rerollAllExercises() {
+  return pickAllExercises({ forceNew: true, excludeCurrent: true });
+}
+
+function renderWorkoutPlanRow(slot, exercise, index) {
+  const spinState = getSessionSpinState();
+  const isBusy = spinState === SPIN_STATE_SPINNING;
+  const slotLabel = escapeHtml(formatPlanSlotLabel(slot));
+  const exerciseName = escapeHtml(exercise?.name ?? "Exercise unavailable");
+
+  return `
+    <div class="workout-plan-row" data-slot-index="${index}">
+      <div class="workout-plan-row-copy">
+        <div class="workout-plan-row-label">${slotLabel}</div>
+        <div class="workout-plan-row-name">${exerciseName}</div>
+      </div>
+      <button
+        class="workout-plan-swap"
+        type="button"
+        data-workout-swap="${index}"
+        aria-label="Swap ${slotLabel}"
+        ${isBusy ? "disabled" : ""}
+      >
+        ${getSwapIconMarkup()}
+      </button>
+    </div>`;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function animateWorkoutPlan(slotIndices) {
+  const rows = slotIndices
+    .map((slotIndex) =>
+      document.querySelector(
+        `.workout-plan-row[data-slot-index="${slotIndex}"]`,
+      ),
+    )
+    .filter(Boolean);
+
+  rows.forEach((row) => row.classList.add("is-shuffling"));
+  await wait(WORKOUT_PLAN_SHUFFLE_MS);
 }
 
 async function triggerSlotSpin() {
@@ -280,12 +451,46 @@ async function triggerSlotSpin() {
   spinAllReels();
 }
 
-export function startSpinReveal() {
-  if (!runtime.getSession() || getSessionSpinState() !== SPIN_STATE_READY) {
-    return;
-  }
+async function regenerateWorkoutPlan() {
+  const session = runtime.getSession();
+  if (!session || getSessionSpinState() === SPIN_STATE_SPINNING) return;
 
-  void triggerSlotSpin();
+  setSessionSpinState(SPIN_STATE_SPINNING);
+  syncSlotTriggerState();
+  runtime.advanceOnboardingStep("pull_handle", "start_button");
+  vibrate([10, 18, 10]);
+
+  await animateWorkoutPlan(session.slots.map((_, index) => index));
+
+  if (!runtime.getSession()) return;
+
+  rerollAllExercises();
+  setSessionSpinState(SPIN_STATE_LANDED);
+  renderSlotMachine(true);
+}
+
+export function startSpinReveal() {
+  void regenerateWorkoutPlan();
+}
+
+export async function swapWorkoutExercise(slotIndex) {
+  const session = runtime.getSession();
+  if (!session || getSessionSpinState() === SPIN_STATE_SPINNING) return null;
+  if (!session.slots?.[slotIndex]) return null;
+
+  setSessionSpinState(SPIN_STATE_SPINNING);
+  syncSlotTriggerState();
+  runtime.advanceOnboardingStep("pull_handle", "start_button");
+  vibrate(10);
+
+  await animateWorkoutPlan([slotIndex]);
+
+  if (!runtime.getSession()) return null;
+
+  const nextExercise = rerollExerciseAtSlot(slotIndex);
+  setSessionSpinState(SPIN_STATE_LANDED);
+  renderSlotMachine(true);
+  return nextExercise;
 }
 
 export async function handlePullTriggerStart(e) {
@@ -592,31 +797,30 @@ function showStartWorkoutButton() {
   });
 }
 
-export function renderSlotMachine(skipSpin = false) {
+export function renderSlotMachine(_skipSpin = false) {
   const session = runtime.getSession();
+  if (!session) return;
 
   const container = document.getElementById("reels-container");
-  const statusBtn = document.getElementById("slot-trigger-status");
+  const title = document.getElementById("slot-screen-title");
+  if (!container) return;
+
+  if (!session.pickedExercises?.length) {
+    pickAllExercises();
+  }
+
+  if (getSessionSpinState() !== SPIN_STATE_SPINNING) {
+    setSessionSpinState(SPIN_STATE_LANDED);
+  }
+
+  if (title) {
+    title.textContent = `Optimized for ${getTemplateDisplayName(session.templateId)}`;
+  }
 
   container.innerHTML = session.slots
-    .map((slot, index) => {
-      const pool = EXERCISES[slot.key] ?? [];
-      const items = Array.from({ length: REPEATS }, () =>
-        pool.map((exercise) => exercise.name),
-      ).flat();
-      const drums = items
-        .map((name) => `<div class="reel-item">${name}</div>`)
-        .join("");
-      return `
-      <div class="reel-wrap card card--muted" id="reel-wrap-${index}">
-        <div class="reel-slot-label">${slot.label}</div>
-        <div class="reel-window" aria-label="${slot.label}">
-          <div class="reel-drum" id="reel-drum-${index}" style="transform:translateY(0)">
-            ${drums}
-          </div>
-        </div>
-      </div>`;
-    })
+    .map((slot, index) =>
+      renderWorkoutPlanRow(slot, session.pickedExercises?.[index], index),
+    )
     .join("");
 
   clearTimeout(pullGesture.recoilTimer);
@@ -628,31 +832,7 @@ export function renderSlotMachine(skipSpin = false) {
   pullGesture.lastTime = 0;
   pullGesture.velocity = 0;
   pullGesture.thresholdBuzzed = false;
-  pullGesture.landedCount = 0;
-
-  if (skipSpin) {
-    setSessionSpinState(SPIN_STATE_LANDED);
-    session.slots.forEach((slot, index) => {
-      const picked = session.pickedExercises?.[index];
-      if (!picked) return;
-      const pool = EXERCISES[slot.key] ?? [];
-      const pickedIndex = pool.findIndex(
-        (exercise) => exercise.name === picked.name,
-      );
-      const safeIdx = pickedIndex < 0 ? 0 : pickedIndex;
-      const targetIdx = REP_TARGET * pool.length + safeIdx;
-      const drum = document.getElementById(`reel-drum-${index}`);
-      const wrap = document.getElementById(`reel-wrap-${index}`);
-      if (drum) {
-        drum.style.transform = `translateY(${-(targetIdx * getReelHeight())}px)`;
-      }
-      if (wrap) wrap.classList.add("landed");
-    });
-    pullGesture.landedCount = session.slots.length;
-    statusBtn?.classList.remove("appearing");
-  } else {
-    statusBtn?.classList.remove("appearing");
-  }
+  pullGesture.landedCount = session.slots.length;
 
   syncSlotTriggerState();
   runtime.queueOnboardingRefresh();

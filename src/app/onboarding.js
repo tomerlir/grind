@@ -53,21 +53,21 @@ function getActiveSetRow() {
 const ONBOARDING_CONFIG = {
   [ONBOARDING_STEP_HOME]: {
     label: "Home",
-    copy: "Tap a workout to begin",
+    copy: "Pick a session to begin",
     getTargets: () =>
       document.querySelector('[data-onboarding-target="home-card"]'),
   },
   [ONBOARDING_STEP_PULL]: {
-    label: "Reveal",
-    copy: "Tap to reveal your exercises",
+    label: "Adjust",
+    copy: "Refresh the plan if you want a different mix",
     getTargets: () => {
       const button = document.getElementById("slot-spin-button");
       return button && !button.disabled ? button : null;
     },
   },
   [ONBOARDING_STEP_START]: {
-    label: "Reveal",
-    copy: "Your workout is set — start when ready",
+    label: "Start",
+    copy: "Start when this workout looks right",
     getTargets: () => {
       const button = document.getElementById("slot-trigger-status");
       return button && !button.disabled ? button : null;

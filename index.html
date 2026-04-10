@@ -46,11 +46,11 @@
             sizes="180x180"
             href="assets/icons/apple-touch-icon.png"
         />
-        <meta name="theme-color" content="#04091A" />
+        <meta name="theme-color" content="#0E1218" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Caesar+Dressing&family=Cormorant+Garamond:wght@400;500;600;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
             rel="stylesheet"
         />
     </head>
@@ -58,48 +58,64 @@
         <!-- ═══ DAY PICKER ══════════════════════════════════════════════════ -->
         <div class="screen active" id="screen-day-picker">
             <div class="day-picker-header">
+                <div class="logo-kicker">Structured Home Strength</div>
                 <div class="logo">GRIND</div>
                 <div class="meander-divider" aria-hidden="true"></div>
-                <!--<div class="logo-sub">
-                    <div>
-                        Every session, different exercises. Never the same
-                        workout twice.
-                    </div>
-                </div>-->
+                <p class="logo-sub">
+                    Smart full-body sessions with built-in variation, fast
+                    logging, and no decision fatigue.
+                </p>
             </div>
             <div class="day-picker-cards" id="day-picker-cards"></div>
         </div>
 
-        <!-- ═══ SLOT MACHINE ════════════════════════════════════════════════ -->
+        <!-- ═══ PRE-WORKOUT PLAN ════════════════════════════════════════════ -->
         <div class="screen" id="screen-slot-machine">
-            <div class="slot-machine-header">
+            <div class="slot-machine-header workout-plan-header">
                 <button class="back-btn" id="slot-machine-back">←</button>
-            </div>
-
-            <div class="slot-machine-stage" id="slot-machine-stage">
-                <div class="slot-machine-frame" id="slot-machine-frame">
-                    <div class="reels-container" id="reels-container"></div>
+                <div class="slot-screen-copy">
+                    <div class="slot-screen-label">Today&apos;s Workout</div>
+                    <div class="slot-screen-title" id="slot-screen-title">
+                        Optimized for Full Body A
+                    </div>
+                    <div class="slot-screen-subtitle">
+                        Swap any exercise or shuffle the full workout.
+                    </div>
                 </div>
             </div>
 
-            <div class="slot-machine-actions">
+            <div
+                class="slot-machine-stage workout-plan-stage"
+                id="slot-machine-stage"
+            >
+                <div
+                    class="slot-machine-frame workout-plan-frame"
+                    id="slot-machine-frame"
+                >
+                    <div
+                        class="reels-container workout-plan-list"
+                        id="reels-container"
+                    ></div>
+                </div>
+            </div>
+
+            <div class="slot-machine-actions workout-plan-actions">
                 <button
-                    class="slot-spin-button button-primary"
+                    class="slot-spin-button button-secondary"
                     id="slot-spin-button"
                     type="button"
                     data-tone="ready"
                     aria-controls="reels-container"
                 >
-                    Reveal workout
+                    Shuffle All
                 </button>
                 <button
                     class="slot-trigger-status button-primary"
                     id="slot-trigger-status"
                     type="button"
-                    data-tone="idle"
-                    disabled
+                    data-tone="landed"
                 >
-                    Start workout
+                    Start Workout
                 </button>
             </div>
         </div>
@@ -108,14 +124,14 @@
         <div class="screen" id="screen-exercise">
             <div class="pr-overlay" id="pr-overlay">
                 <div class="pr-overlay-inner">
-                    <div class="pr-overlay-label">New Record</div>
-                    <div class="pr-overlay-bolt">⚡</div>
+                    <div class="pr-overlay-label">Personal best</div>
+                    <div class="pr-overlay-bolt">PB</div>
                     <div class="pr-overlay-text" id="pr-overlay-text"></div>
                     <button
                         class="pr-overlay-continue"
                         id="pr-overlay-continue"
                     >
-                        CONTINUE ▸
+                        Continue
                     </button>
                 </div>
             </div>
@@ -165,21 +181,21 @@
         <!-- ═══ DONE ════════════════════════════════════════════════════════ -->
         <div class="screen" id="screen-done">
             <div class="done-screen">
-                <div class="done-icon">⚡</div>
-                <div class="done-title">GRIND GOD.</div>
-                <div class="done-sub" id="done-sub">Day A complete</div>
+                <div class="done-icon">✓</div>
+                <div class="done-title">Session complete</div>
+                <div class="done-sub" id="done-sub">Session A complete</div>
                 <div class="done-stats" id="done-stats"></div>
                 <div class="done-section-block" id="done-prs">
-                    <div class="done-section-title">⚡ New Records</div>
+                    <div class="done-section-title">Personal bests</div>
                     <div id="done-prs-list"></div>
                 </div>
                 <div class="done-section-block" id="done-nudges">
-                    <div class="done-section-title">◆ Overload Nudges</div>
+                    <div class="done-section-title">Progress nudges</div>
                     <div id="done-nudges-list"></div>
                 </div>
                 <div class="done-sync" id="done-sync"></div>
                 <button class="done-back-btn" id="done-back-btn">
-                    BACK TO HOME
+                    Back to plan
                 </button>
             </div>
         </div>
@@ -189,12 +205,12 @@
             <div class="history-header">
                 <button class="back-btn" id="history-back">←</button>
                 <div class="history-header-copy">
-                    <div class="history-title">HISTORY</div>
+                    <div class="history-title">Training log</div>
                 </div>
             </div>
             <div class="history-list" id="history-list"></div>
             <button class="history-more-btn" id="history-more-btn">
-                SHOW MORE
+                Show more
             </button>
         </div>
 
@@ -207,12 +223,12 @@
                 aria-modal="true"
                 aria-labelledby="exit-session-title"
             >
-                <div class="modal-label">Session in progress</div>
+                <div class="modal-label">Active session</div>
                 <div class="modal-title" id="exit-session-title">
-                    Leave workout?
+                    Leave this session?
                 </div>
                 <div class="modal-copy">
-                    You can keep this workout in progress and resume it later,
+                    You can keep this session in progress and resume it later,
                     or discard it and clear its state completely.
                 </div>
                 <div class="modal-actions">
@@ -220,19 +236,19 @@
                         class="modal-btn modal-btn-primary"
                         id="exit-session-resume-later"
                     >
-                        RESUME LATER
+                        Keep for later
                     </button>
                     <button
                         class="modal-btn modal-btn-danger"
                         id="exit-session-discard"
                     >
-                        DISCARD WORKOUT
+                        Discard session
                     </button>
                     <button
                         class="modal-btn modal-btn-ghost"
                         id="exit-session-cancel"
                     >
-                        CANCEL
+                        Stay here
                     </button>
                 </div>
             </div>
@@ -257,13 +273,13 @@
                         class="modal-btn modal-btn-primary"
                         id="update-app-confirm"
                     >
-                        UPDATE NOW
+                        Update now
                     </button>
                     <button
                         class="modal-btn modal-btn-ghost"
                         id="update-app-later"
                     >
-                        LATER
+                        Later
                     </button>
                 </div>
             </div>

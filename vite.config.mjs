@@ -8,14 +8,14 @@ export default defineConfig({
       registerType: "prompt",
       injectRegister: false,
       manifest: {
-        name: "Grind: Olympus Workout",
+        name: "Grind: Structured Strength",
         short_name: "Grind",
         description:
-          "Structured full-body workouts with built-in variation. Let the God of Thunder generate your training.",
+          "Structured full-body workouts with built-in variation, fast logging, and less decision fatigue.",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#04091A",
-        theme_color: "#04091A",
+        background_color: "#0E1218",
+        theme_color: "#0E1218",
         start_url: "./",
         icons: [
           {

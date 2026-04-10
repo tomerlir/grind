@@ -288,7 +288,7 @@ export const EXERCISES = {
 // Slot position index (0-based) is used as the reservation key.
 export const DAYS = {
   A: {
-    name: "Workout A",
+    name: "Full Body A",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-horizontal", label: "PUSH · HORIZONTAL" },
@@ -301,7 +301,7 @@ export const DAYS = {
   },
 
   B: {
-    name: "Workout B",
+    name: "Full Body B",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "push-vertical", label: "PUSH · VERTICAL" },
@@ -315,7 +315,7 @@ export const DAYS = {
   },
 
   C: {
-    name: "Workout C",
+    name: "Full Body C",
     slots: [
       { key: "lower-quad", label: "LOWER · QUAD" },
       { key: "pull-vertical", label: "PULL · VERTICAL" },

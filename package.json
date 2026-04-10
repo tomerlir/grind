@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/tomerlir/grind#readme",
   "dependencies": {
-    "howler": "2.2.4"
+    "howler": "2.2.4",
+    "lucide-static": "^1.8.0"
   },
   "devDependencies": {
     "vite": "7.3.1",

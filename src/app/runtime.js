@@ -98,6 +98,7 @@ import {
   pickExercise,
   renderSlotMachine,
   startSpinReveal,
+  swapWorkoutExercise,
 } from "./spin.js";
 import {
   createEmptyWeek,
@@ -234,6 +235,7 @@ export function init() {
     renderSlotMachine,
     discardSessionAndGoHome,
     startSpinReveal,
+    swapWorkoutExercise,
     launchExercise,
     openExitSessionModal,
     dismissKeyboard,

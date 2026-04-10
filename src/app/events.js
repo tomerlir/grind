@@ -10,6 +10,7 @@ export function wireEvents({
   renderSlotMachine,
   discardSessionAndGoHome,
   startSpinReveal,
+  swapWorkoutExercise,
   launchExercise,
   openExitSessionModal,
   dismissKeyboard,
@@ -44,7 +45,7 @@ export function wireEvents({
 
       void audioEngine.play("card-tap");
       startSession(card.dataset.day);
-      advanceOnboardingStep("home_card", "pull_handle");
+      advanceOnboardingStep("home_card", "start_button");
       renderSlotMachine();
       showScreen("screen-slot-machine");
     });
@@ -60,10 +61,20 @@ export function wireEvents({
     .getElementById("slot-spin-button")
     .addEventListener("click", startSpinReveal);
 
+  document.getElementById("reels-container").addEventListener("click", (e) => {
+    const swapBtn = e.target.closest("[data-workout-swap]");
+    if (!swapBtn) return;
+    const slotIndex = Number.parseInt(swapBtn.dataset.workoutSwap, 10);
+    if (Number.isNaN(slotIndex)) return;
+    void audioEngine.play("card-tap");
+    void swapWorkoutExercise(slotIndex);
+  });
+
   document
     .getElementById("slot-trigger-status")
     .addEventListener("click", () => {
       void audioEngine.play("final-lock");
+      advanceOnboardingStep("pull_handle", "start_button");
       launchExercise();
     });
 

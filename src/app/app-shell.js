@@ -206,7 +206,7 @@ function getHistoryEntryDate(entry) {
 
 function formatDaysAgoLabel(entry) {
   const completedAt = getHistoryEntryDate(entry);
-  if (!completedAt) return "-";
+  if (!completedAt) return "—";
 
   const now = new Date();
   const startOfToday = new Date(
@@ -228,7 +228,7 @@ function formatDaysAgoLabel(entry) {
 
   if (dayDiff === 0) return "today";
   if (dayDiff === 1) return "yesterday";
-  return `${dayDiff}d ago`;
+  return `${dayDiff} days ago`;
 }
 
 function getActiveHomeSession() {
@@ -260,14 +260,15 @@ function renderDayPickerCards() {
         historyEntries,
       );
       const lastWorkoutLabel = formatDaysAgoLabel(latestCompletedEntry);
-      let ctaLabel = "START SESSION ▸";
+      const dayName = DAYS[templateId]?.name ?? `Full Body ${templateId}`;
+      let ctaLabel = "Start Workout";
 
       if (isDone) {
-        ctaLabel = `COMPLETED ON ${(completedWeekday || "THIS WEEK").toUpperCase()}`;
+        ctaLabel = `Completed ${completedWeekday || "this week"}`;
       } else if (isActiveSession) {
-        ctaLabel = "CLICK TO RESUME";
+        ctaLabel = "Resume Workout";
       } else if (isLocked) {
-        ctaLabel = "FINISH OR DISCARD CURRENT SESSION";
+        ctaLabel = "Finish Current Workout First";
       }
 
       const stateClass = isDone
@@ -282,17 +283,19 @@ function renderDayPickerCards() {
           ? ' data-onboarding-target="home-card"'
           : "";
       if (onboardingTarget) markedOnboardingTarget = true;
-      const lastWorkoutMarkup = `<div class="title-block__meta day-card-last-done">${lastWorkoutLabel}</div>`;
+      const lastWorkoutMarkup = `<div class="day-card-last-done">Last: ${lastWorkoutLabel}</div>`;
 
       return `
       <div class="day-picker-card card fadein ${stateClass}"
            data-day="${templateId}"${onboardingTarget}>
         <div class="day-card-top">
-          <div class="day-card-letter">Full-body ${templateId}</div>
+          <div class="day-card-top-copy">
+            <div class="day-card-name">${dayName}</div>
+            ${lastWorkoutMarkup}
+          </div>
         </div>
-        <div class="title-block">
-          ${lastWorkoutMarkup}
-          <div class="day-card-cta title-block__subtitle">${ctaLabel}</div>
+        <div class="day-card-actions">
+          <div class="day-card-cta">${ctaLabel}</div>
         </div>
       </div>`;
     })

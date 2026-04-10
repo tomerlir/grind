@@ -246,9 +246,9 @@ export function renderHistory({ resetOffset = false } = {}) {
   if (all.length === 0) {
     list.innerHTML = `
       <div class="history-empty">
-        <div class="history-empty-icon">⚡</div>
-        <div class="history-empty-title">No Victories Yet</div>
-        <div class="history-empty-copy">Complete your first workout and your chronicle will be carved here.</div>
+        <div class="history-empty-icon">◎</div>
+        <div class="history-empty-title">No sessions yet</div>
+        <div class="history-empty-copy">Finish your first session and your recent training will show up here.</div>
       </div>`;
     moreBtn.style.display = "none";
     return;
