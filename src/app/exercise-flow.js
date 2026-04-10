@@ -495,7 +495,15 @@ function buildMiniGraphMarkup(points) {
         <text x="${padLeft - 1.5}" y="${tick.y}" fill="var(--silver2)" font-size="4.5" text-anchor="end" dominant-baseline="middle">${formatGraphValue(tick.value)}</text>`,
     )
     .join("");
+  const minLabelSpacing = 18; // SVG units — minimum gap between x-axis labels
+  const maxLabels = Math.max(2, Math.floor(drawableWidth / minLabelSpacing));
+  const labelIndices = new Set([0, coords.length - 1]);
+  if (maxLabels > 2) {
+    const interval = (coords.length - 1) / (maxLabels - 1);
+    for (let i = 1; i < maxLabels - 1; i++) labelIndices.add(Math.round(i * interval));
+  }
   const xLabels = coords
+    .filter((_, i) => labelIndices.has(i))
     .map(
       (point) => `
         <text x="${point.x}" y="${height - 6}" fill="var(--silver2)" font-size="4.2" text-anchor="middle">${formatGraphDateLabel(point)}</text>`,
@@ -599,7 +607,7 @@ function populateExerciseScreen(exercise, slot) {
   const nudgeEl = document.getElementById("overload-nudge");
   if (nudgeEl) {
     if (nudge) {
-      nudgeEl.textContent = `⚡ Last 3× at ${nudge.currentWeight}kg — try ${nudge.suggestedWeight}kg?`;
+      nudgeEl.textContent = `⚡ Try +2.5 kg today`;
       nudgeEl.style.display = "inline-flex";
     } else {
       nudgeEl.style.display = "none";
