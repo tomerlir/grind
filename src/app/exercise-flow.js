@@ -401,11 +401,13 @@ function buildMiniGraphMarkup(points) {
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue;
-  const midValue = minValue + range / 2;
+  const flatLine = range === 0;
+  const tickSpread = flatLine ? Math.max(minValue * 0.1, 2.5) : range / 2;
+  const tickMid = minValue + (flatLine ? 0 : range / 2);
   const yTicks = [
-    { value: maxValue, y: chartTop },
-    { value: midValue, y: chartTop + drawableHeight / 2 },
-    { value: minValue, y: chartBottom },
+    { value: flatLine ? minValue + tickSpread : maxValue, y: chartTop },
+    { value: tickMid, y: chartTop + drawableHeight / 2 },
+    { value: flatLine ? minValue - tickSpread : minValue, y: chartBottom },
   ];
 
   const coords = points.map((point, index) => {
@@ -449,7 +451,7 @@ function buildMiniGraphMarkup(points) {
         <text x="${point.x}" y="${height - 6}" fill="var(--silver2)" font-size="4.2" text-anchor="middle">${formatGraphDateLabel(point)}</text>`,
     )
     .join("");
-  const unitLabel = points[0]?.unit === "reps" ? "total reps" : "top weight";
+  const unitLabel = points[0]?.unit === "reps" ? "total reps" : "estimated 1-rep max";
 
   return `
     <svg

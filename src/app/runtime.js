@@ -442,9 +442,9 @@ export function runTests() {
     const benchSeries = getExerciseProgressSeries("Bench Press");
     assert(
       benchSeries.length === 2 &&
-        benchSeries[0].value === 60 &&
-        benchSeries[1].value === 62.5,
-      "Weighted exercise progress series tracks session top weight values",
+        benchSeries[0].value === 76 &&
+        benchSeries[1].value > benchSeries[0].value,
+      "Weighted exercise progress series tracks estimated 1RM (Epley), capturing both weight and rep progression",
     );
     saveHistory([]);
   }

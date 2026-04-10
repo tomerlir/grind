@@ -86,18 +86,34 @@ export function getExerciseProgressSeries(
       (sessionEntry?.entries || [])
         .filter((exerciseEntry) => exerciseEntry?.exerciseName === exerciseName)
         .map((exerciseEntry) => {
-          const value = isBodyweight
-            ? (exerciseEntry.sets || []).reduce(
-                (sum, set) => sum + (parseInt(set.reps, 10) || 0),
-                0,
-              )
-            : Math.max(
-                ...((exerciseEntry.sets || [])
-                  .map((set) => parseWeight(set.weight))
-                  .filter((weight) => weight !== null)),
-              );
+          const sets = exerciseEntry.sets || [];
+          let value;
 
-          return Number.isFinite(value)
+          if (isBodyweight) {
+            // BW exercises: total reps across all sets
+            value = sets.reduce(
+              (sum, set) => sum + (parseInt(set.reps, 10) || 0),
+              0,
+            );
+          } else {
+            // Weighted exercises: best estimated 1RM (Epley: w × (1 + r/30))
+            // captures both weight AND rep progression in one number.
+            // Falls back to reps when weight is BW/unlogged.
+            const e1RMs = sets
+              .map((set) => {
+                const w = parseWeight(set.weight);
+                const r = parseInt(set.reps, 10);
+                if (w !== null && Number.isFinite(w)) {
+                  return Number.isFinite(r) && r > 0 ? w * (1 + r / 30) : w;
+                }
+                return Number.isFinite(r) && r > 0 ? r : null;
+              })
+              .filter((v) => v !== null);
+
+            value = e1RMs.length > 0 ? Math.max(...e1RMs) : NaN;
+          }
+
+          return Number.isFinite(value) && value > 0
             ? {
                 value,
                 date: sessionEntry.date,
