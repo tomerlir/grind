@@ -1837,11 +1837,7 @@ body::before {
 }
 .set-line {
     display: grid;
-    grid-template-columns:
-        minmax(70px, 0.8fr)
-        minmax(0, 1.05fr)
-        minmax(0, 0.9fr)
-        minmax(78px, 0.92fr);
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-8);
     align-items: stretch;
 }
@@ -1863,6 +1859,7 @@ body::before {
 .set-cell-label {
     color: var(--text);
     white-space: nowrap;
+    font-size: var(--type-label-xl);
 }
 .set-cell-value {
     font-family: var(--font-display);
@@ -1897,7 +1894,7 @@ body::before {
 }
 .set-row.active-set .set-input {
     min-height: auto;
-    font-size: var(--type-metric-xs);
+    font-size: var(--type-metric-sm);
     color: var(--text);
     background: transparent;
     border-color: transparent;
@@ -1948,12 +1945,9 @@ body::before {
 }
 
 .complete-ex-btn {
-    min-height: 100%;
-    height: 100%;
+    width: 100%;
     padding: 10px 12px;
-    font-size: var(--type-button-md);
-}
-.complete-ex-btn.inline {
+    font-size: var(--type-button-lg);
     margin-top: 0;
     min-width: 0;
     border-radius: 14px;
@@ -1986,20 +1980,16 @@ body::before {
         padding: 12px;
     }
     .set-line {
-        grid-template-columns:
-            minmax(62px, 0.72fr)
-            minmax(0, 1fr)
-            minmax(0, 0.84fr)
-            minmax(72px, 0.84fr);
+        grid-template-columns: 1fr 1fr;
         gap: 6px;
     }
     .set-cell,
-    .complete-ex-btn.inline {
+    .complete-ex-btn {
         padding: 10px;
     }
     .set-cell-value,
     .set-row.active-set .set-input {
-        font-size: var(--type-body-md);
+        font-size: var(--type-metric-sm);
     }
 }
 /* PR Overlay — Zeus lightning moment */

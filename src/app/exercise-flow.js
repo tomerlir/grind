@@ -82,10 +82,6 @@ export function renderSets() {
   container.innerHTML = `
     <div class="set-row card card--active fadein active-set focused-set" id="set-row-${activeIdx}">
       <div class="set-line" aria-label="Current set logger">
-        <div class="set-cell set-cell--count">
-          <div class="set-cell-label title-block__eyebrow">Set</div>
-          <div class="set-cell-value">${activeIdx + 1}</div>
-        </div>
         <label class="set-cell" for="weight-${activeIdx}">
           <span class="set-cell-label title-block__eyebrow">Weight</span>
           <input class="set-input"
@@ -104,15 +100,15 @@ export function renderSets() {
             ${isResting ? "disabled" : ""}
             id="reps-${activeIdx}" data-idx="${activeIdx}" data-field="reps">
         </label>
-        <button
-          class="complete-ex-btn button-primary inline"
-          id="complete-ex-btn"
-          type="button"
-          data-exercise-action="primary"
-        >
-          LOG
-        </button>
       </div>
+      <button
+        class="complete-ex-btn button-primary"
+        id="complete-ex-btn"
+        type="button"
+        data-exercise-action="primary"
+      >
+        LOG
+      </button>
       <div class="set-inline-meta">
         <span class="set-inline-hint">${inlineHint}</span>
       </div>
