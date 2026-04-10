@@ -395,14 +395,10 @@ function scheduleExerciseScreenSnap() {
     }
 
     const screen = document.getElementById("screen-exercise");
-    if (screen && screen.scrollTop <= 96) {
-      screen.scrollTop = 0;
-    }
+    if (screen) screen.scrollTop = 0;
 
     const scrollingRoot = document.scrollingElement;
-    if (scrollingRoot && scrollingRoot.scrollTop <= 96) {
-      scrollingRoot.scrollTop = 0;
-    }
+    if (scrollingRoot) scrollingRoot.scrollTop = 0;
   }, 180);
 }
 

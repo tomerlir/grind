@@ -372,7 +372,6 @@ body::before {
     position: relative;
     min-height: 100vh;
     min-height: 100svh;
-    min-height: 100dvh;
     padding-bottom: var(--screen-pad-bottom);
     padding: var(--screen-pad-top) var(--screen-pad-right)
         var(--screen-pad-bottom) var(--screen-pad-left);
