@@ -88,6 +88,7 @@ export function startSession(templateId) {
     currentExercise: null,
     currentSlot: null,
     currentSets: [],
+    partialSets: {},
     spinState: "ready",
     entries: [],
     restEndsAt: null,

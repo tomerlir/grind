@@ -44,14 +44,31 @@ export function renderExerciseProgress() {
   const strip = document.getElementById("exercise-progress-strip");
   if (!strip || !session) return;
 
-  strip.innerHTML = session.slots
-    .map((_, index) => {
+  const seenGroups = new Set();
+  const dots = [];
+
+  session.slots.forEach((slot, index) => {
+    if (slot.supersetGroup) {
+      if (seenGroups.has(slot.supersetGroup)) return;
+      seenGroups.add(slot.supersetGroup);
+      const groupIndices = session.slots
+        .map((s, i) => (s.supersetGroup === slot.supersetGroup ? i : -1))
+        .filter((i) => i !== -1);
+      const allDone = groupIndices.every((i) => i < session.slotIndex);
+      const anyActive = groupIndices.some((i) => i === session.slotIndex);
+      let cls = "progress-dot";
+      if (allDone) cls += " done-dot";
+      else if (anyActive) cls += " active-dot";
+      dots.push(`<div class="${cls}"></div>`);
+    } else {
       let cls = "progress-dot";
       if (index < session.slotIndex) cls += " done-dot";
       else if (index === session.slotIndex) cls += " active-dot";
-      return `<div class="${cls}"></div>`;
-    })
-    .join("");
+      dots.push(`<div class="${cls}"></div>`);
+    }
+  });
+
+  strip.innerHTML = dots.join("");
 }
 
 export function renderSets() {
@@ -247,6 +264,39 @@ async function confirmCurrentSet(idx) {
 
   if (idx === 0 && runtime.isOnboardingActive()) {
     runtime.finishOnboarding("completed");
+  }
+
+  // Superset round-robin: if this slot belongs to a superset group, handle
+  // the jump to the next partner (or complete the whole group) instead of the
+  // normal single-exercise advance/rest path.
+  const supersetTarget = getNextSupersetTarget(session, idx);
+  if (supersetTarget) {
+    try {
+      void AudioEngine.play("set-logged");
+    } catch (error) {
+      console.error("Failed to play set-logged sound:", error);
+    }
+
+    if (supersetTarget.type === "complete-all") {
+      await completeSupersetGroup(supersetTarget.slotIndices);
+      return;
+    }
+
+    // type === "jump": persist current progress as partial state and switch slots.
+    session.partialSets = session.partialSets || {};
+    session.partialSets[session.slotIndex] = session.currentSets;
+
+    if (supersetTarget.needsRest) {
+      // Start rest BEFORE switching slots so it's anchored to the exercise
+      // that just finished. launchExercise is called with keepRest so it
+      // doesn't cancel the timer we just started.
+      runtime.startRest(session.currentExercise.restSeconds);
+    }
+
+    session.slotIndex = supersetTarget.slotIndex;
+    runtime.saveSession();
+    launchExercise({ keepRest: supersetTarget.needsRest });
+    return;
   }
 
   if (isLastSet) {
@@ -536,7 +586,15 @@ export function syncExercisePrimaryAction() {
   runtime.queueOnboardingRefresh();
 }
 
+function getSupersetTag(slots, slot) {
+  if (!slot.supersetGroup) return null;
+  const group = slots.filter((s) => s.supersetGroup === slot.supersetGroup);
+  const pos = group.findIndex((s) => s.key === slot.key);
+  return `SUPERSET ${pos + 1}/${group.length}`;
+}
+
 function populateExerciseScreen(exercise, slot) {
+  const session = runtime.getSession();
   const nudge = runtime.getOverloadNudge(exercise.name);
   const nudgeEl = document.getElementById("overload-nudge");
   if (nudgeEl) {
@@ -548,7 +606,8 @@ function populateExerciseScreen(exercise, slot) {
     }
   }
 
-  document.getElementById("ex-tag").textContent = slot.label;
+  const supersetTag = getSupersetTag(session?.slots ?? [], slot);
+  document.getElementById("ex-tag").textContent = supersetTag ?? slot.label;
   document.getElementById("exercise-topbar-title").textContent =
     exercise.name.toUpperCase();
   const restMin = Math.floor(exercise.restSeconds / 60);
@@ -566,7 +625,11 @@ function populateExerciseScreen(exercise, slot) {
   runtime.queueOnboardingRefresh();
 }
 
-export function launchExercise() {
+export function launchExercise(options = {}) {
+  // Defensive: callers may pass unexpected positional args (e.g. callbacks).
+  const keepRest =
+    options && typeof options === "object" && options.keepRest === true;
+
   const session = runtime.getSession();
   if (!session.pickedExercises?.length) runtime.pickAllExercises?.();
 
@@ -579,16 +642,29 @@ export function launchExercise() {
     return;
   }
 
-  const previousEntry = runtime.getLatestCompletedExerciseEntry(exercise.name);
-  const previousSets = previousEntry?.sets || [];
-  const lastWeight =
-    previousSets.length > 0 ? null : runtime.getLastWeight(exercise.name);
+  // Superset resume: if this slot has partial sets from a prior round, restore them
+  // instead of rebuilding from history. Preserves done state across round-robin jumps.
+  const partial = session.partialSets?.[session.slotIndex];
 
   session.currentExercise = exercise;
   session.currentSlot = slot;
-  session.currentSets = buildInitialCurrentSets(exercise, previousSets, lastWeight);
+
+  if (Array.isArray(partial) && partial.length > 0) {
+    session.currentSets = partial;
+  } else {
+    const previousEntry = runtime.getLatestCompletedExerciseEntry(exercise.name);
+    const previousSets = previousEntry?.sets || [];
+    const lastWeight =
+      previousSets.length > 0 ? null : runtime.getLastWeight(exercise.name);
+    session.currentSets = buildInitialCurrentSets(
+      exercise,
+      previousSets,
+      lastWeight,
+    );
+  }
+
   runtime.saveSession();
-  runtime.stopRest();
+  if (!keepRest) runtime.stopRest();
   populateExerciseScreen(exercise, slot);
 }
 
@@ -599,6 +675,123 @@ export function resumeCurrentExercise() {
   runtime.advanceOnboardingStep("start_button", "exercise_log");
   populateExerciseScreen(exercise, slot);
   runtime.resumeRestIfNeeded();
+}
+
+function getSupersetGroupIndices(session, slotIdx) {
+  const slot = session.slots[slotIdx];
+  if (!slot?.supersetGroup) return null;
+  return session.slots
+    .map((s, i) => (s.supersetGroup === slot.supersetGroup ? i : -1))
+    .filter((i) => i !== -1);
+}
+
+// Determines what should happen after logging `loggedSetIdx` in a superset slot.
+// Returns null when the current slot is not part of a superset.
+// Return shapes:
+//   { type: "jump", slotIndex, needsRest }  — switch to another slot in the group
+//   { type: "complete-all", slotIndices }   — the whole superset group is done
+function getNextSupersetTarget(session, loggedSetIdx) {
+  const slotIdx = session.slotIndex;
+  const groupIndices = getSupersetGroupIndices(session, slotIdx);
+  if (!groupIndices) return null;
+
+  const posInGroup = groupIndices.indexOf(slotIdx);
+
+  // More partners after the current one in the group → jump with no rest.
+  // This is the "A1 → A2" transition inside a single superset round.
+  if (posInGroup < groupIndices.length - 1) {
+    return {
+      type: "jump",
+      slotIndex: groupIndices[posInGroup + 1],
+      needsRest: false,
+    };
+  }
+
+  // We just finished the last partner in the group. Decide between:
+  //   - completing the whole group (if that was also the last set), or
+  //   - starting another round (go back to the first partner with rest)
+  const isLastSet = loggedSetIdx === session.currentSets.length - 1;
+  if (isLastSet) {
+    return { type: "complete-all", slotIndices: groupIndices };
+  }
+
+  return {
+    type: "jump",
+    slotIndex: groupIndices[0],
+    needsRest: true,
+  };
+}
+
+async function completeSupersetGroup(slotIndices) {
+  const session = runtime.getSession();
+  runtime.stopRest();
+  session.restEndsAt = null;
+
+  try {
+    void AudioEngine.play("level-up");
+  } catch (error) {
+    console.error("Failed to play level-up sound:", error);
+  }
+
+  if (!runtime.getSession()) return;
+
+  const aggregatedPRs = {};
+
+  // Push an entry per slot in the group, in slot order, using whichever source
+  // holds the sets for that slot (currentSets for the active slot, partialSets
+  // for any slot we've bounced away from).
+  for (const idx of slotIndices) {
+    const exercise = session.pickedExercises[idx];
+    const slot = session.slots[idx];
+    if (!exercise || !slot) continue;
+
+    const sets =
+      idx === session.slotIndex
+        ? session.currentSets
+        : session.partialSets?.[idx] ?? [];
+
+    const prs = runtime.checkAndUpdatePR(exercise.name, sets);
+    Object.assign(aggregatedPRs, prs);
+    runtime.markExerciseUsed(slot.key, exercise.name, session.weekKey);
+
+    session.entries.push({
+      exerciseName: exercise.name,
+      categoryLabel: slot.label,
+      sets: sets.map((set) => ({ weight: set.weight, reps: set.reps })),
+      timestamp: new Date().toISOString(),
+      prs,
+    });
+  }
+
+  // Clear partial state for all slots in this group.
+  if (session.partialSets) {
+    for (const idx of slotIndices) {
+      delete session.partialSets[idx];
+    }
+  }
+
+  // Advance past the entire group (jump to the slot after the last in the group).
+  session.slotIndex = Math.max(...slotIndices) + 1;
+  session.currentExercise = null;
+  session.currentSlot = null;
+  session.currentSets = [];
+  runtime.saveSession();
+
+  const hasPR = Object.keys(aggregatedPRs).length > 0;
+  if (session.slotIndex >= session.slots.length) {
+    if (hasPR) {
+      runtime.showPROverlay(aggregatedPRs, finishSession);
+    } else {
+      finishSession();
+    }
+    return;
+  }
+
+  if (hasPR) {
+    runtime.showPROverlay(aggregatedPRs, launchExercise);
+  } else {
+    launchExercise();
+  }
 }
 
 async function completeExercise() {
