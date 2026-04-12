@@ -61,66 +61,70 @@
     <body>
         <!-- ═══ DAY PICKER ══════════════════════════════════════════════════ -->
         <div class="screen active" id="screen-day-picker">
-            <div class="day-picker-header">
-                <div class="logo-kicker">Structured Home Strength</div>
-                <div class="logo">GRIND</div>
-                <div class="meander-divider" aria-hidden="true"></div>
-                <p class="logo-sub">
-                    Smart full-body sessions with built-in variation, fast
-                    logging, and no decision fatigue.
-                </p>
+            <div class="screen-shell day-picker-shell">
+                <div class="day-picker-header">
+                    <div class="logo-kicker">Structured Home Strength</div>
+                    <div class="logo">GRIND</div>
+                    <div class="meander-divider" aria-hidden="true"></div>
+                    <p class="logo-sub">
+                        Smart full-body sessions with built-in variation, fast
+                        logging, and no decision fatigue.
+                    </p>
+                </div>
+                <div class="day-picker-cards" id="day-picker-cards"></div>
             </div>
-            <div class="day-picker-cards" id="day-picker-cards"></div>
         </div>
 
         <!-- ═══ PRE-WORKOUT PLAN ════════════════════════════════════════════ -->
         <div class="screen" id="screen-slot-machine">
-            <div class="slot-machine-header workout-plan-header">
-                <button class="back-btn" id="slot-machine-back">←</button>
-                <div class="slot-screen-copy">
-                    <div class="slot-screen-label">Today&apos;s Workout</div>
-                    <div class="slot-screen-title" id="slot-screen-title">
-                        Optimized for Full Body A
-                    </div>
-                    <div class="slot-screen-subtitle">
-                        Swap any exercise or shuffle the full workout.
+            <div class="screen-shell slot-screen-shell">
+                <div class="slot-machine-header workout-plan-header">
+                    <button class="back-btn" id="slot-machine-back">←</button>
+                    <div class="slot-screen-copy">
+                        <div class="slot-screen-label">Today&apos;s Workout</div>
+                        <div class="slot-screen-title" id="slot-screen-title">
+                            Optimized for Full Body A
+                        </div>
+                        <div class="slot-screen-subtitle">
+                            Swap any exercise or shuffle the full workout.
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div
-                class="slot-machine-stage workout-plan-stage"
-                id="slot-machine-stage"
-            >
                 <div
-                    class="slot-machine-frame workout-plan-frame"
-                    id="slot-machine-frame"
+                    class="slot-machine-stage workout-plan-stage"
+                    id="slot-machine-stage"
                 >
                     <div
-                        class="reels-container workout-plan-list"
-                        id="reels-container"
-                    ></div>
+                        class="slot-machine-frame workout-plan-frame"
+                        id="slot-machine-frame"
+                    >
+                        <div
+                            class="reels-container workout-plan-list"
+                            id="reels-container"
+                        ></div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="slot-machine-actions workout-plan-actions">
-                <button
-                    class="slot-spin-button button-secondary"
-                    id="slot-spin-button"
-                    type="button"
-                    data-state="ready"
-                    aria-controls="reels-container"
-                >
-                    Shuffle All
-                </button>
-                <button
-                    class="slot-trigger-status button-primary"
-                    id="slot-trigger-status"
-                    type="button"
-                    data-state="landed"
-                >
-                    Start Workout
-                </button>
+                <div class="slot-machine-actions workout-plan-actions">
+                    <button
+                        class="slot-spin-button button-secondary"
+                        id="slot-spin-button"
+                        type="button"
+                        data-state="ready"
+                        aria-controls="reels-container"
+                    >
+                        Shuffle All
+                    </button>
+                    <button
+                        class="slot-trigger-status button-primary"
+                        id="slot-trigger-status"
+                        type="button"
+                        data-state="landed"
+                    >
+                        Start Workout
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -139,52 +143,53 @@
                     </button>
                 </div>
             </div>
-
-            <div class="exercise-topbar">
-                <button class="back-btn" id="exercise-back">←</button>
-                <div class="exercise-topbar-copy title-block slot-stage-copy">
-                    <div
-                        class="slot-stage-title"
-                        id="exercise-topbar-title"
-                    ></div>
-                </div>
-            </div>
-
-            <div
-                class="exercise-progress-strip"
-                id="exercise-progress-strip"
-            ></div>
-
-            <div class="exercise-header card card--muted">
-                <div class="title-block">
-                    <div class="exercise-tag title-block__eyebrow" id="ex-tag">
-                        LOWER · QUAD
-                    </div>
-                    <div class="exercise-meta title-block__meta" id="ex-meta">
-                        4 sets · 6–10 · 2 min rest
+            <div class="screen-shell exercise-screen-shell">
+                <div class="exercise-topbar">
+                    <button class="back-btn" id="exercise-back">←</button>
+                    <div class="exercise-topbar-copy title-block slot-stage-copy">
+                        <div
+                            class="slot-stage-title"
+                            id="exercise-topbar-title"
+                        ></div>
                     </div>
                 </div>
+
                 <div
-                    class="overload-nudge chip chip--active"
-                    id="overload-nudge"
+                    class="exercise-progress-strip"
+                    id="exercise-progress-strip"
                 ></div>
-                <div class="exercise-tip" id="ex-tip"></div>
-            </div>
 
-            <div class="exercise-flow-target" id="exercise-flow-target">
-                <div class="exercise-graph-stage" id="exercise-graph-stage">
+                <div class="exercise-header card card--muted">
+                    <div class="title-block">
+                        <div class="exercise-tag title-block__eyebrow" id="ex-tag">
+                            LOWER · QUAD
+                        </div>
+                        <div class="exercise-meta title-block__meta" id="ex-meta">
+                            4 sets · 6–10 · 2 min rest
+                        </div>
+                    </div>
                     <div
-                        class="exercise-mini-graph"
-                        id="exercise-mini-graph"
+                        class="overload-nudge chip chip--active"
+                        id="overload-nudge"
                     ></div>
+                    <div class="exercise-tip" id="ex-tip"></div>
                 </div>
-                <div class="sets-container" id="sets-container"></div>
+
+                <div class="exercise-flow-target" id="exercise-flow-target">
+                    <div class="exercise-graph-stage" id="exercise-graph-stage">
+                        <div
+                            class="exercise-mini-graph"
+                            id="exercise-mini-graph"
+                        ></div>
+                    </div>
+                    <div class="sets-container" id="sets-container"></div>
+                </div>
             </div>
         </div>
 
         <!-- ═══ DONE ════════════════════════════════════════════════════════ -->
         <div class="screen" id="screen-done">
-            <div class="done-screen">
+            <div class="done-screen screen-shell">
                 <div class="done-icon">✓</div>
                 <div class="done-title">Session complete</div>
                 <div class="done-sub" id="done-sub">Session A complete</div>
@@ -206,16 +211,18 @@
 
         <!-- ═══ HISTORY ══════════════════════════════════════════════════════ -->
         <div class="screen" id="screen-history">
-            <div class="history-header">
-                <button class="back-btn" id="history-back">←</button>
-                <div class="history-header-copy">
-                    <div class="history-title">Training log</div>
+            <div class="history-screen screen-shell">
+                <div class="history-header">
+                    <button class="back-btn" id="history-back">←</button>
+                    <div class="history-header-copy">
+                        <div class="history-title">Training log</div>
+                    </div>
                 </div>
+                <div class="history-list" id="history-list"></div>
+                <button class="history-more-btn" id="history-more-btn">
+                    Show more
+                </button>
             </div>
-            <div class="history-list" id="history-list"></div>
-            <button class="history-more-btn" id="history-more-btn">
-                Show more
-            </button>
         </div>
 
         <div class="sync-bar" id="sync-bar"></div>

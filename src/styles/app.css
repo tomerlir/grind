@@ -54,11 +54,13 @@
     --safe-right: env(safe-area-inset-right, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
-    --screen-pad-inline: clamp(14px, 4.5vw, 24px);
-    --screen-pad-left: calc(var(--screen-pad-inline) + var(--safe-left));
-    --screen-pad-right: calc(var(--screen-pad-inline) + var(--safe-right));
-    --screen-pad-top: calc(clamp(14px, 4vw, 24px) + var(--safe-top));
-    --screen-pad-bottom: calc(clamp(26px, 8vw, 56px) + var(--safe-bottom));
+    --content-pad-inline: clamp(14px, 4.5vw, 24px);
+    --content-pad-top: clamp(14px, 4vw, 24px);
+    --content-pad-bottom: clamp(26px, 8vw, 56px);
+    --screen-pad-left: calc(var(--content-pad-inline) + var(--safe-left));
+    --screen-pad-right: calc(var(--content-pad-inline) + var(--safe-right));
+    --screen-pad-top: calc(var(--content-pad-top) + var(--safe-top));
+    --screen-pad-bottom: calc(var(--content-pad-bottom) + var(--safe-bottom));
     --space-8: 8px;
     --space-12: 12px;
     --space-16: 16px;
@@ -360,6 +362,8 @@ body::before {
     width: 100%;
     max-width: var(--app-max-width);
     margin: 0 auto;
+    padding: var(--safe-top) var(--safe-right) var(--safe-bottom)
+        var(--safe-left);
     flex-direction: column;
     justify-content: flex-start;
     overflow-x: hidden;
@@ -369,12 +373,36 @@ body::before {
 .screen.active {
     display: flex;
 }
+.screen-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.day-picker-shell,
+.exercise-screen-shell,
+.history-screen,
+.done-screen {
+    padding: var(--content-pad-top) var(--content-pad-inline)
+        var(--content-pad-bottom);
+}
 #screen-exercise {
     position: relative;
-    padding: var(--screen-pad-top) var(--screen-pad-right)
-        var(--screen-pad-bottom) var(--screen-pad-left);
     scroll-padding-top: var(--screen-pad-top);
     scroll-padding-bottom: calc(var(--screen-pad-bottom) + 24px);
+}
+#screen-slot-machine {
+    --reel-h: clamp(28px, 4.1vh, 36px);
+    overflow: hidden;
+}
+.slot-screen-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    align-content: stretch;
+    gap: 16px;
+    padding: var(--content-pad-top) var(--content-pad-inline)
+        clamp(12px, 4vw, 18px);
+    overflow: hidden;
 }
 
 /* ── SHARED — BACK BUTTON ────────────────────────────────────── */
@@ -629,8 +657,7 @@ body::before {
 /* ── DAY PICKER ──────────────────────────────────────────────── */
 .day-picker-header {
     text-align: left;
-    padding: var(--screen-pad-top) var(--screen-pad-right) var(--space-xl)
-        var(--screen-pad-left);
+    padding: 0 0 var(--space-xl);
     flex-shrink: 0;
 }
 .logo-kicker {
@@ -692,8 +719,7 @@ body::before {
     gap: clamp(14px, 2.4vh, 20px);
     flex: 1 1 auto;
     min-height: 0;
-    padding: 0 var(--screen-pad-right) var(--screen-pad-bottom)
-        var(--screen-pad-left);
+    padding: 0;
 }
 .day-picker-card {
     display: flex;
@@ -1609,10 +1635,10 @@ body::before {
 }
 
 @media (max-height: 760px) {
-    #screen-slot-machine {
+    .slot-screen-shell {
         gap: 6px;
-        padding-top: calc(10px + var(--safe-top));
-        padding-bottom: calc(12px + var(--safe-bottom));
+        padding-top: 10px;
+        padding-bottom: 12px;
     }
 
     #screen-slot-machine .slot-machine-frame {
@@ -2115,13 +2141,13 @@ body::before {
 
 /* ── DONE SCREEN ─────────────────────────────────────────────── */
 .done-screen {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: var(--space-xl) 0;
+    min-height: 0;
 }
 .done-icon {
     width: 64px;
@@ -2734,21 +2760,6 @@ body::before {
 }
 
 /* ── PRE-WORKOUT PLAN ───────────────────────────────────────── */
-#screen-slot-machine.active {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    align-content: stretch;
-}
-
-#screen-slot-machine {
-    --reel-h: clamp(28px, 4.1vh, 36px);
-    gap: 16px;
-    overflow: hidden;
-    padding-top: var(--screen-pad-top);
-    padding-right: var(--screen-pad-right);
-    padding-bottom: calc(12px + var(--safe-bottom));
-    padding-left: var(--screen-pad-left);
-}
 
 .workout-plan-header {
     align-items: flex-start;
@@ -3045,8 +3056,8 @@ body::before {
 
 @media (max-height: 760px) {
     :root {
-        --screen-pad-top: calc(12px + var(--safe-top));
-        --screen-pad-bottom: calc(22px + var(--safe-bottom));
+        --content-pad-top: 12px;
+        --content-pad-bottom: 22px;
         --reel-h: clamp(50px, 12vw, 58px);
     }
 
