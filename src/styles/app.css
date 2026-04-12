@@ -49,6 +49,7 @@
     --radius: 16px;
     --radius-card: 26px;
     --app-max-width: 38rem;
+    --app-height: 100vh;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -129,6 +130,12 @@
     --reel-h: clamp(48px, 12vw, 56px);
 }
 
+@supports (height: 100dvh) {
+    :root {
+        --app-height: 100dvh;
+    }
+}
+
 /* ── RESET ───────────────────────────────────────────────────── */
 *,
 *::before,
@@ -139,8 +146,7 @@
 }
 html {
     height: 100%;
-    min-height: 100svh;
-    min-height: 100dvh;
+    min-height: 100%;
     background: var(--bg);
     -webkit-text-size-adjust: 100%;
 }
@@ -161,10 +167,10 @@ body {
     font-family: var(--font-ui);
     font-size: var(--type-body-md);
     line-height: var(--lh-body);
-    min-height: 100svh;
-    min-height: 100dvh;
+    min-height: var(--app-height);
     background-color: var(--bg);
-    overflow-x: hidden;
+    overflow: hidden;
+    overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
 }
 button {
@@ -350,11 +356,12 @@ body::before {
 /* ── SCREENS ─────────────────────────────────────────────────── */
 .screen {
     display: none;
-    min-height: 100dvh;
-    width: min(100%, var(--app-max-width));
+    min-height: var(--app-height);
+    width: 100%;
+    max-width: var(--app-max-width);
     margin: 0 auto;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: flex-start;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -362,36 +369,12 @@ body::before {
 .screen.active {
     display: flex;
 }
-#screen-day-picker {
-    min-height: 100vh;
-    min-height: 100svh;
-    min-height: 100dvh;
-    justify-content: flex-start;
-}
 #screen-exercise {
     position: relative;
-    min-height: 100vh;
-    min-height: 100svh;
-    padding-bottom: var(--screen-pad-bottom);
     padding: var(--screen-pad-top) var(--screen-pad-right)
         var(--screen-pad-bottom) var(--screen-pad-left);
-}
-#screen-slot-machine {
-    min-height: 100vh;
-    min-height: 100svh;
-    min-height: 100dvh;
-    height: 100vh;
-    height: 100svh;
-    height: 100dvh;
-    max-height: 100dvh;
-    padding-top: calc(8px + var(--safe-top));
-    padding-right: calc(10px + var(--safe-right));
-    padding-bottom: calc(12px + var(--safe-bottom));
-    padding-left: calc(10px + var(--safe-left));
-    justify-content: flex-start;
-    gap: 6px;
-    overflow: hidden;
-    --reel-h: clamp(28px, 4.1vh, 36px);
+    scroll-padding-top: var(--screen-pad-top);
+    scroll-padding-bottom: calc(var(--screen-pad-bottom) + 24px);
 }
 
 /* ── SHARED — BACK BUTTON ────────────────────────────────────── */
@@ -1451,18 +1434,6 @@ body::before {
 }
 .slot-trigger-status.appearing {
     animation: boltPulse 1.5s ease-in-out 0.28s infinite;
-}
-
-/* Slot screen reset: plain layout, no viewport math */
-#screen-slot-machine {
-    min-height: 100vh;
-    min-height: 100svh;
-    min-height: 100dvh;
-    padding: var(--screen-pad-top) calc(12px + var(--safe-right))
-        var(--screen-pad-bottom) calc(12px + var(--safe-left));
-    justify-content: flex-start;
-    gap: 14px;
-    overflow: hidden;
 }
 
 #screen-slot-machine .slot-machine-header {
@@ -2770,6 +2741,7 @@ body::before {
 }
 
 #screen-slot-machine {
+    --reel-h: clamp(28px, 4.1vh, 36px);
     gap: 16px;
     overflow: hidden;
     padding-top: var(--screen-pad-top);

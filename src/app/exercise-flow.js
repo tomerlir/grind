@@ -28,7 +28,6 @@ let runtime = {
 };
 
 let focusScrollTimer = null;
-let blurSnapTimer = null;
 
 export function initExerciseFlow(deps = {}) {
   runtime = {
@@ -134,11 +133,10 @@ export function renderSets() {
   [weightInput, repsInput].forEach((input) => {
     if (!input) return;
     input.addEventListener("focus", () => {
-      scheduleInputVisibility(input);
+      ensureInputVisibility(input);
       runtime.trackOnboardingViewport?.();
     });
     input.addEventListener("blur", () => {
-      scheduleExerciseScreenSnap();
       runtime.trackOnboardingViewport?.();
     });
   });
@@ -329,63 +327,16 @@ export function dismissKeyboard() {
   }
 }
 
-function scrollIntoViewCentered(el) {
+function ensureInputVisibility(el) {
   if (!el) return;
   window.clearTimeout(focusScrollTimer);
   focusScrollTimer = window.setTimeout(() => {
     if (document.activeElement !== el) return;
-    const screen = document.getElementById("screen-exercise");
-    if (!(screen instanceof HTMLElement)) {
-      el.scrollIntoView({
-        block: "nearest",
-        inline: "nearest",
-      });
-      return;
-    }
-
-    const screenRect = screen.getBoundingClientRect();
-    const inputRect = el.getBoundingClientRect();
-    const viewportTop = window.visualViewport?.offsetTop ?? 0;
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-    const viewportBottom = viewportTop + viewportHeight;
-    const topPadding = 16;
-    const bottomPadding = 24;
-    const visibleTop = Math.max(screenRect.top, viewportTop) + topPadding;
-    const visibleBottom =
-      Math.min(screenRect.bottom, viewportBottom) - bottomPadding;
-
-    if (inputRect.bottom > visibleBottom) {
-      screen.scrollTop += inputRect.bottom - visibleBottom;
-      return;
-    }
-
-    if (inputRect.top < visibleTop) {
-      screen.scrollTop -= visibleTop - inputRect.top;
-    }
-  }, window.visualViewport ? 180 : 0);
-}
-
-function scheduleInputVisibility(el) {
-  scrollIntoViewCentered(el);
-}
-
-function scheduleExerciseScreenSnap() {
-  window.clearTimeout(blurSnapTimer);
-  blurSnapTimer = window.setTimeout(() => {
-    const active = document.activeElement;
-    if (
-      active instanceof HTMLInputElement ||
-      active instanceof HTMLTextAreaElement
-    ) {
-      return;
-    }
-
-    const screen = document.getElementById("screen-exercise");
-    if (screen) screen.scrollTop = 0;
-
-    const scrollingRoot = document.scrollingElement;
-    if (scrollingRoot) scrollingRoot.scrollTop = 0;
-  }, 180);
+    el.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, 120);
 }
 
 function formatGraphValue(value) {
