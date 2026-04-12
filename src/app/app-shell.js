@@ -331,12 +331,6 @@ export async function renderDoneScreen({
   document.getElementById("done-sub").textContent =
     `${day?.name ?? `Day ${templateId}`} complete`;
 
-  const audioPromise = runtime.audioEngine
-    ?.play("workout-complete")
-    .catch((error) => {
-      console.error("Failed to play workout-complete sound:", error);
-    });
-
   const entries = loadHistory().slice(-1)[0]?.entries ?? [];
   document.getElementById("done-stats").innerHTML = `
     <div class="done-stat">
@@ -385,8 +379,6 @@ export async function renderDoneScreen({
 
   document.getElementById("done-sync").textContent = "";
   document.getElementById("done-sync").className = "done-sync";
-
-  await audioPromise;
 }
 
 export function fireConfetti() {

@@ -4,7 +4,6 @@
 
 - Language: Vanilla JS (ES2022 modules)
 - Tooling: Vite + `vite-plugin-pwa`
-- Audio: `howler`
 - UI: single-page HTML with inline custom CSS in `index.html`
 - Persistence: `localStorage`
 - Sync: n8n webhook POST at session completion, with offline queue
@@ -18,8 +17,6 @@ grind/
     main.js               ← app bootstrap + test harness
     app/
       runtime.js          ← main application flow and DOM-heavy logic
-    audio/
-      index.js            ← audio engine + sound asset imports
     data/
       workouts.js         ← exercise pools + workout templates
     lib/
@@ -34,7 +31,7 @@ grind/
 
 - The codebase now uses Vite as the module boundary instead of relying on one root `app.js`.
 - This refactor is intentionally JS-first: HTML structure and inline CSS remain in place.
-- `src/app/runtime.js` still contains the DOM-heavy orchestration layer, but immutable data, configuration, storage, and audio setup are now separated into dedicated modules.
+- `src/app/runtime.js` still contains the DOM-heavy orchestration layer, but immutable data, configuration, and storage are separated into dedicated modules.
 - Existing `localStorage` keys and runtime behavior are preserved to avoid migration churn.
 
 ## Current Module Boundaries
@@ -52,9 +49,6 @@ grind/
   - `storageGet`
   - `storageSet`
   - `storageDel`
-- `src/audio/index.js`
-  - Howler configuration
-  - sound preloading and playback helpers
 - `src/app/runtime.js`
   - onboarding
   - week/session flow

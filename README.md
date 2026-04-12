@@ -8,7 +8,6 @@ Minimalist fitness PWA for structured, slightly randomized hypertrophy training.
 - HTML plus custom CSS in `src/styles/app.css`
 - `localStorage` for week state, active sessions, history, PRs, and sync queue
 - `vite-plugin-pwa` for installability and offline support
-- `howler` for audio playback
 
 ## Running Locally
 
@@ -26,8 +25,6 @@ grind/
     main.js
     app/
       runtime.js
-    audio/
-      index.js
     data/
       workouts.js
     lib/
@@ -42,7 +39,6 @@ grind/
 
 - `src/main.js`: browser entrypoint, app boot, service worker update prompt, `?test` harness
 - `src/app/runtime.js`: session flow, onboarding, spin logic, exercise logging, history UI, sync UI, event wiring
-- `src/audio/index.js`: Howler-backed audio engine and sound asset imports
 - `src/data/workouts.js`: workout templates and exercise pools
 - `src/lib/storage.js`: guarded `localStorage` helpers
 - `src/config.js`: app-level runtime configuration

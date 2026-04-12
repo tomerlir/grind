@@ -1,5 +1,4 @@
 import refreshRerollIconSvgRaw from "lucide-static/icons/refresh-ccw-dot.svg?raw";
-import { AudioEngine } from "../audio/index.js";
 import { DAYS, EXERCISES } from "../data/workouts.js";
 
 export const SPIN_STATE_READY = "ready";
@@ -17,7 +16,6 @@ const REP_TARGET = 7;
 const BASE_MS = 2000;
 const STAGGER_MS = 350;
 const MOBILE_LANDING_GAP_MS = 520;
-const MOBILE_REEL_LOCK_CUE_NAMES = ["reel-lock", "reel-lock-b"];
 const IS_TOUCH_DEVICE =
   typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
 const SLOT_DISPLAY_LABELS = {
@@ -57,15 +55,12 @@ const pullGesture = {
   lastPull: 0,
   lastTime: 0,
   velocity: 0,
-  thresholdBuzzed: false,
+  thresholdReached: false,
   landedCount: 0,
   recoilTimer: null,
 };
 
 let spinGeneration = 0;
-let landingCuePromise = Promise.resolve();
-let landingCueHandle = null;
-let reelLockCueIndex = 0;
 
 export function initSpin(deps = {}) {
   runtime = {
@@ -208,7 +203,7 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
   if (spinBtn) {
     spinBtn.hidden = false;
     spinBtn.disabled = isSpinning;
-    spinBtn.dataset.tone = isSpinning ? "spinning" : "ready";
+    spinBtn.dataset.state = isSpinning ? "spinning" : "ready";
     spinBtn.textContent = isSpinning ? "Shuffling..." : "Shuffle All";
     spinBtn.setAttribute("aria-disabled", spinBtn.disabled ? "true" : "false");
   }
@@ -216,7 +211,7 @@ function syncSlotTriggerState({ preservePull = false } = {}) {
   if (statusBtn) {
     statusBtn.disabled = !canLaunch;
     statusBtn.tabIndex = canLaunch ? 0 : -1;
-    statusBtn.dataset.tone = canLaunch ? "landed" : "idle";
+    statusBtn.dataset.state = canLaunch ? "landed" : "idle";
     statusBtn.classList.add("is-visible");
     statusBtn.textContent = "Start Workout";
     statusBtn.classList.remove("appearing");
@@ -438,12 +433,6 @@ async function triggerSlotSpin() {
   spinBtn?.blur();
   vibrate([18, 34, 26]);
 
-  try {
-    await AudioEngine.startSpinning();
-  } catch (error) {
-    console.error("Failed to start spinning audio:", error);
-  }
-
   if (!runtime.getSession() || getSessionSpinState() !== SPIN_STATE_SPINNING) {
     return;
   }
@@ -509,7 +498,7 @@ export async function handlePullTriggerStart(e) {
   pullGesture.lastPull = 0;
   pullGesture.lastTime = e.timeStamp || performance.now();
   pullGesture.velocity = 0;
-  pullGesture.thresholdBuzzed = false;
+  pullGesture.thresholdReached = false;
 
   trigger.setPointerCapture?.(e.pointerId);
   setPullGestureClasses({ dragging: true, charged: false });
@@ -539,15 +528,15 @@ export function handlePullTriggerMove(e) {
   pullGesture.lastTime = nextTime;
 
   const charged = nextPull >= pullMetrics.triggerPull;
-  if (charged && !pullGesture.thresholdBuzzed) {
-    pullGesture.thresholdBuzzed = true;
+  if (charged && !pullGesture.thresholdReached) {
+    pullGesture.thresholdReached = true;
     vibrate(12);
   } else if (
     !charged &&
-    pullGesture.thresholdBuzzed &&
+    pullGesture.thresholdReached &&
     nextPull < pullMetrics.triggerPull - 12
   ) {
-    pullGesture.thresholdBuzzed = false;
+    pullGesture.thresholdReached = false;
   }
 
   setPullGestureClasses({ dragging: true, charged });
@@ -585,7 +574,7 @@ export function finishPullTrigger(e, { cancel = false } = {}) {
   pullGesture.lastPull = 0;
   pullGesture.lastTime = 0;
   pullGesture.velocity = 0;
-  pullGesture.thresholdBuzzed = false;
+  pullGesture.thresholdReached = false;
   setPullGestureClasses({ dragging: false, charged: false });
 
   if (shouldSpin) {
@@ -614,47 +603,6 @@ function getLandingGapMs() {
   return IS_TOUCH_DEVICE ? MOBILE_LANDING_GAP_MS : STAGGER_MS;
 }
 
-function getNextReelLockCueName() {
-  if (!IS_TOUCH_DEVICE) {
-    return "reel-lock";
-  }
-
-  const cueName =
-    MOBILE_REEL_LOCK_CUE_NAMES[
-      reelLockCueIndex % MOBILE_REEL_LOCK_CUE_NAMES.length
-    ];
-  reelLockCueIndex += 1;
-  return cueName;
-}
-
-function resetLandingCues() {
-  landingCuePromise = Promise.resolve();
-  reelLockCueIndex = 0;
-
-  if (landingCueHandle) {
-    landingCueHandle.stop();
-    landingCueHandle = null;
-  }
-}
-
-function queueLandingCue(name, playOptions = {}, gen = spinGeneration) {
-  const runCue = async () => {
-    if (gen !== spinGeneration) return null;
-
-    const handle = await AudioEngine.play(name, playOptions);
-    if (gen !== spinGeneration) {
-      handle?.stop?.();
-      return null;
-    }
-
-    landingCueHandle = handle;
-    return handle;
-  };
-
-  landingCuePromise = landingCuePromise.catch(() => null).then(runCue);
-  return landingCuePromise;
-}
-
 function getReelHeight() {
   const reelItem = document.querySelector(".reel-item");
   const reelWindow = document.querySelector(".reel-window");
@@ -672,7 +620,6 @@ function spinAllReels() {
 
   spinGeneration++;
   const gen = spinGeneration;
-  resetLandingCues();
 
   const reelCount = session.slots.length;
   const reelHeight = getReelHeight();
@@ -758,20 +705,8 @@ async function onReelLanded(index, gen = spinGeneration) {
   if (gen !== spinGeneration) return;
 
   if (pullGesture.landedCount < totalReels) {
-    await AudioEngine.stopSpinning();
-    if (gen !== spinGeneration) return;
-
-    void queueLandingCue(getNextReelLockCueName(), { volume: 0.8 }, gen);
-    if (gen !== spinGeneration) return;
-
     vibrate(12);
   } else {
-    await AudioEngine.stopSpinning();
-    if (gen !== spinGeneration) return;
-
-    void queueLandingCue(getNextReelLockCueName(), { volume: 0.8 }, gen);
-    if (gen !== spinGeneration) return;
-
     vibrate([16, 26, 34]);
   }
 }
@@ -831,7 +766,7 @@ export function renderSlotMachine(_skipSpin = false) {
   pullGesture.lastPull = 0;
   pullGesture.lastTime = 0;
   pullGesture.velocity = 0;
-  pullGesture.thresholdBuzzed = false;
+  pullGesture.thresholdReached = false;
   pullGesture.landedCount = session.slots.length;
 
   syncSlotTriggerState();

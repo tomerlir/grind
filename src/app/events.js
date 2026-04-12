@@ -1,5 +1,4 @@
 export function wireEvents({
-  audioEngine,
   renderHistory,
   showScreen,
   getActiveHomeSession,
@@ -38,12 +37,10 @@ export function wireEvents({
 
       if (activeSession) {
         if (activeSession.templateId !== card.dataset.day) return;
-        void audioEngine.play("card-tap");
         resumeSession();
         return;
       }
 
-      void audioEngine.play("card-tap");
       startSession(card.dataset.day);
       advanceOnboardingStep("home_card", "start_button");
       renderSlotMachine();
@@ -53,7 +50,6 @@ export function wireEvents({
   document
     .getElementById("slot-machine-back")
     .addEventListener("click", async () => {
-      void audioEngine.play("navigate-back");
       discardSessionAndGoHome();
     });
 
@@ -66,14 +62,12 @@ export function wireEvents({
     if (!swapBtn) return;
     const slotIndex = Number.parseInt(swapBtn.dataset.workoutSwap, 10);
     if (Number.isNaN(slotIndex)) return;
-    void audioEngine.play("card-tap");
     void swapWorkoutExercise(slotIndex);
   });
 
   document
     .getElementById("slot-trigger-status")
     .addEventListener("click", () => {
-      void audioEngine.play("final-lock");
       advanceOnboardingStep("pull_handle", "start_button");
       launchExercise();
     });
@@ -81,12 +75,6 @@ export function wireEvents({
   document
     .getElementById("exercise-back")
     .addEventListener("click", async (e) => {
-      try {
-        void audioEngine.play("navigate-back");
-      } catch (error) {
-        console.error("Failed to play navigate-back sound:", error);
-      }
-
       openExitSessionModal(e.currentTarget);
     });
 
@@ -132,18 +120,12 @@ export function wireEvents({
   document
     .getElementById("history-back")
     .addEventListener("click", async () => {
-      void audioEngine.play("navigate-back");
       showScreen("screen-day-picker");
     });
 
   document
     .getElementById("history-more-btn")
     .addEventListener("click", async () => {
-      try {
-        void audioEngine.play("card-tap");
-      } catch (error) {
-        console.error("Failed to play card-tap sound:", error);
-      }
       showMoreHistory();
     });
 

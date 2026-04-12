@@ -1,4 +1,3 @@
-import { AudioEngine } from "../audio/index.js";
 import { DAYS, EXERCISES } from "../data/workouts.js";
 import { storageDel, storageGet, storageSet } from "../lib/storage.js";
 import {
@@ -146,7 +145,6 @@ function initializeModules() {
   });
 
   initAppShell({
-    audioEngine: AudioEngine,
     queueOnboardingRefresh,
     cancelPullGesture,
     stopRest,
@@ -224,7 +222,6 @@ export function init() {
   ensureOnboardingState();
 
   wireEvents({
-    audioEngine: AudioEngine,
     renderHistory,
     showScreen,
     getActiveHomeSession,
@@ -252,18 +249,6 @@ export function init() {
     trackOnboardingViewport,
     resumeSession,
   });
-
-  const scheduleAudioPreload = () => {
-    void AudioEngine.preload().catch((error) => {
-      console.error("Audio preload failed:", error);
-    });
-  };
-
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(scheduleAudioPreload, { timeout: 1500 });
-  } else {
-    window.setTimeout(scheduleAudioPreload, 0);
-  }
 
   renderAppVersionBadge();
   renderDayPicker();

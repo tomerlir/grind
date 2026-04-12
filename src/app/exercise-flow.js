@@ -1,5 +1,3 @@
-import { AudioEngine } from "../audio/index.js";
-
 let runtime = {
   getSession: () => null,
   saveSession: () => {},
@@ -271,12 +269,6 @@ async function confirmCurrentSet(idx) {
   // normal single-exercise advance/rest path.
   const supersetTarget = getNextSupersetTarget(session, idx);
   if (supersetTarget) {
-    try {
-      void AudioEngine.play("set-logged");
-    } catch (error) {
-      console.error("Failed to play set-logged sound:", error);
-    }
-
     if (supersetTarget.type === "complete-all") {
       await completeSupersetGroup(supersetTarget.slotIndices);
       return;
@@ -305,12 +297,6 @@ async function confirmCurrentSet(idx) {
   }
 
   renderSets();
-
-  try {
-    void AudioEngine.play("set-logged");
-  } catch (error) {
-    console.error("Failed to play set-logged sound:", error);
-  }
 
   if (!runtime.getSession()) return;
   runtime.startRest(session.currentExercise.restSeconds);
@@ -731,12 +717,6 @@ async function completeSupersetGroup(slotIndices) {
   runtime.stopRest();
   session.restEndsAt = null;
 
-  try {
-    void AudioEngine.play("level-up");
-  } catch (error) {
-    console.error("Failed to play level-up sound:", error);
-  }
-
   if (!runtime.getSession()) return;
 
   const aggregatedPRs = {};
@@ -802,12 +782,6 @@ async function completeExercise() {
   const session = runtime.getSession();
   runtime.stopRest();
   session.restEndsAt = null;
-
-  try {
-    void AudioEngine.play("level-up");
-  } catch (error) {
-    console.error("Failed to play level-up sound:", error);
-  }
 
   if (!runtime.getSession()) return;
 

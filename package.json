@@ -1,7 +1,7 @@
 {
   "name": "grind",
   "version": "1.0.0",
-  "description": "Minimalist fitness PWA for structured, slightly randomized hypertrophy training. Including gamified features like slot-machine randomizations, animations, and sounds for entertainment value.",
+  "description": "Minimalist fitness PWA for structured, slightly randomized hypertrophy training with slot-style session reveals, session persistence, and PR tracking.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -19,7 +19,6 @@
   },
   "homepage": "https://github.com/tomerlir/grind#readme",
   "dependencies": {
-    "howler": "2.2.4",
     "lucide-static": "^1.8.0"
   },
   "devDependencies": {

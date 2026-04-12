@@ -1,5 +1,3 @@
-import { AudioEngine } from "../audio/index.js";
-
 let runtime = {
   getSession: () => null,
   saveSession: () => {},
@@ -65,12 +63,6 @@ export function skipRest() {
 }
 
 async function onRestComplete() {
-  try {
-    void AudioEngine.play("rest-timer-end");
-  } catch (error) {
-    console.error("Failed to play rest-timer-end sound:", error);
-  }
-
   const session = runtime.getSession();
   if (!session) return;
 

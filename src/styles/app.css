@@ -838,13 +838,13 @@ body::before {
         text-shadow 0.22s ease,
         opacity 0.22s ease;
 }
-.slot-stage-title[data-tone="charged"] {
+.slot-stage-title[data-state="charged"] {
     color: var(--gold);
 }
-.slot-stage-title[data-tone="spinning"] {
+.slot-stage-title[data-state="spinning"] {
     color: var(--electric);
 }
-.slot-stage-title[data-tone="landed"] {
+.slot-stage-title[data-state="landed"] {
     color: var(--text);
 }
 
@@ -1341,7 +1341,7 @@ body::before {
         inset 0 1px 0 rgba(255, 255, 255, 0.22),
         0 18px 34px rgba(73, 188, 167, 0.22);
 }
-.slot-spin-button[data-tone="ready"]:not(:disabled) {
+.slot-spin-button[data-state="ready"]:not(:disabled) {
     animation: boltPulse 1.8s ease-in-out infinite;
 }
 .slot-spin-button:hover:not(:disabled) {
@@ -1350,7 +1350,7 @@ body::before {
         inset 0 1px 0 rgba(255, 255, 255, 0.22),
         0 20px 38px rgba(73, 188, 167, 0.26);
 }
-.slot-spin-button[data-tone="spinning"] {
+.slot-spin-button[data-state="spinning"] {
     border-color: rgba(255, 255, 255, 0.08);
     color: #061210;
     box-shadow:
@@ -1411,21 +1411,21 @@ body::before {
         transform 0.28s ease,
         visibility 0s linear 0s;
 }
-.slot-trigger-status[data-tone="charged"] {
+.slot-trigger-status[data-state="charged"] {
     color: var(--gold);
     border-color: rgba(201, 176, 133, 0.3);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.04),
         0 12px 24px rgba(0, 0, 0, 0.18);
 }
-.slot-trigger-status[data-tone="spinning"] {
+.slot-trigger-status[data-state="spinning"] {
     color: var(--text2);
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.04),
         0 12px 24px rgba(0, 0, 0, 0.16);
 }
-.slot-trigger-status[data-tone="landed"] {
+.slot-trigger-status[data-state="landed"] {
     color: #061210;
     border-color: rgba(108, 231, 208, 0.2);
     background: linear-gradient(
@@ -1437,16 +1437,16 @@ body::before {
         inset 0 1px 0 rgba(255, 255, 255, 0.2),
         0 18px 34px rgba(73, 188, 167, 0.22);
 }
-.slot-trigger-status[data-tone="landed"]:not(:disabled) {
+.slot-trigger-status[data-state="landed"]:not(:disabled) {
     cursor: pointer;
     animation: boltPulse 1.5s ease-in-out infinite;
 }
-.slot-trigger-status[data-tone="landed"]:not(:disabled):hover {
+.slot-trigger-status[data-state="landed"]:not(:disabled):hover {
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.2),
         0 22px 38px rgba(73, 188, 167, 0.26);
 }
-.slot-trigger-status[data-tone="landed"]:not(:disabled):active {
+.slot-trigger-status[data-state="landed"]:not(:disabled):active {
     transform: translateY(1px) scale(0.985);
 }
 .slot-trigger-status.appearing {
@@ -2969,11 +2969,11 @@ body::before {
     animation: none;
 }
 
-#screen-slot-machine .slot-spin-button[data-tone="ready"]:not(:disabled) {
+#screen-slot-machine .slot-spin-button[data-state="ready"]:not(:disabled) {
     animation: none;
 }
 
-#screen-slot-machine .slot-spin-button[data-tone="spinning"] {
+#screen-slot-machine .slot-spin-button[data-state="spinning"] {
     color: var(--silver);
     background: rgba(255, 255, 255, 0.03);
     box-shadow:
@@ -2988,7 +2988,7 @@ body::before {
     transform: none;
 }
 
-#screen-slot-machine .slot-trigger-status[data-tone="landed"]:not(:disabled) {
+#screen-slot-machine .slot-trigger-status[data-state="landed"]:not(:disabled) {
     animation: none;
 }
 
