@@ -132,6 +132,12 @@
     --reel-h: clamp(48px, 12vw, 56px);
 }
 
+@supports (height: 100svh) {
+    :root {
+        --app-height: 100svh;
+    }
+}
+
 @supports (height: 100dvh) {
     :root {
         --app-height: 100dvh;
@@ -152,6 +158,13 @@ html {
     background: var(--bg);
     -webkit-text-size-adjust: 100%;
 }
+@supports (-webkit-touch-callout: none) {
+    @supports not (height: 100dvh) {
+        html {
+            height: -webkit-fill-available;
+        }
+    }
+}
 body {
     background:
         radial-gradient(
@@ -170,6 +183,7 @@ body {
     font-size: var(--type-body-md);
     line-height: var(--lh-body);
     min-height: var(--app-height);
+    height: var(--app-height);
     background-color: var(--bg);
     overflow: hidden;
     overscroll-behavior-y: none;
@@ -359,6 +373,7 @@ body::before {
 .screen {
     display: none;
     min-height: var(--app-height);
+    height: var(--app-height);
     width: 100%;
     max-width: var(--app-max-width);
     margin: 0 auto;
@@ -372,6 +387,16 @@ body::before {
 }
 .screen.active {
     display: flex;
+}
+
+@supports (-webkit-touch-callout: none) {
+    @supports not (height: 100dvh) {
+        body,
+        .screen {
+            min-height: -webkit-fill-available;
+            height: -webkit-fill-available;
+        }
+    }
 }
 .screen-shell {
     flex: 1 1 auto;
