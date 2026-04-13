@@ -28,12 +28,102 @@ let runtime = {
 };
 
 let focusScrollTimer = null;
+let exerciseViewportTrackFrame = 0;
+let exerciseViewportTrackUntil = 0;
+let exerciseViewportListenersBound = false;
+
+const EXERCISE_VIEWPORT_SETTLE_MS = 700;
+const EXERCISE_VIEWPORT_TOP_PAD = 16;
+const EXERCISE_VIEWPORT_BOTTOM_PAD = 20;
+const EXERCISE_KEYBOARD_OPEN_THRESHOLD = 120;
+
+function getExerciseScreen() {
+  return document.getElementById("screen-exercise");
+}
+
+function getFocusedExerciseInput() {
+  const active = document.activeElement;
+  if (!(active instanceof HTMLInputElement)) return null;
+  return active.matches("[data-field]") ? active : null;
+}
+
+function isVirtualKeyboardLikelyOpen() {
+  const viewport = window.visualViewport;
+  if (!viewport) return false;
+  return window.innerHeight - viewport.height > EXERCISE_KEYBOARD_OPEN_THRESHOLD;
+}
+
+function syncExerciseEditingState() {
+  const screen = getExerciseScreen();
+  if (!screen) return;
+  const isEditing =
+    screen.classList.contains("active") &&
+    Boolean(getFocusedExerciseInput()) &&
+    isVirtualKeyboardLikelyOpen();
+  screen.classList.toggle("screen-exercise--editing", isEditing);
+}
+
+function keepFocusedExerciseInputVisible() {
+  const screen = getExerciseScreen();
+  const input = getFocusedExerciseInput();
+  if (!screen || !input || !screen.classList.contains("active")) {
+    syncExerciseEditingState();
+    return;
+  }
+
+  const target = input.closest(".set-row") ?? input;
+  const rect = target.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+  const visibleTop = viewportTop + EXERCISE_VIEWPORT_TOP_PAD;
+  const visibleBottom = viewportBottom - EXERCISE_VIEWPORT_BOTTOM_PAD;
+
+  if (rect.bottom > visibleBottom) {
+    screen.scrollTop += rect.bottom - visibleBottom;
+  } else if (rect.top < visibleTop) {
+    screen.scrollTop -= visibleTop - rect.top;
+  }
+}
+
+function trackExerciseViewport(duration = EXERCISE_VIEWPORT_SETTLE_MS) {
+  exerciseViewportTrackUntil = Math.max(
+    exerciseViewportTrackUntil,
+    performance.now() + duration,
+  );
+  if (exerciseViewportTrackFrame) return;
+
+  const tick = () => {
+    exerciseViewportTrackFrame = 0;
+    syncExerciseEditingState();
+    keepFocusedExerciseInputVisible();
+    if (performance.now() < exerciseViewportTrackUntil) {
+      exerciseViewportTrackFrame = requestAnimationFrame(tick);
+    }
+  };
+
+  exerciseViewportTrackFrame = requestAnimationFrame(tick);
+}
 
 export function initExerciseFlow(deps = {}) {
   runtime = {
     ...runtime,
     ...deps,
   };
+
+  if (window.visualViewport && !exerciseViewportListenersBound) {
+    const handleViewportChange = () => {
+      if (!getFocusedExerciseInput()) {
+        syncExerciseEditingState();
+        return;
+      }
+      trackExerciseViewport();
+    };
+
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+    window.visualViewport.addEventListener("scroll", handleViewportChange);
+    exerciseViewportListenersBound = true;
+  }
 }
 
 export function renderExerciseProgress() {
@@ -108,7 +198,7 @@ export function renderSets() {
         <label class="set-cell" for="reps-${activeIdx}">
           <span class="set-cell-label title-block__eyebrow">Reps</span>
           <input class="set-input"
-            type="number" inputmode="numeric" enterkeyhint="done" autocomplete="off"
+            type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off"
             placeholder="—"
             value="${activeSet.reps || ""}"
             ${isResting ? "disabled" : ""}
@@ -133,14 +223,23 @@ export function renderSets() {
   [weightInput, repsInput].forEach((input) => {
     if (!input) return;
     input.addEventListener("focus", () => {
+      syncExerciseEditingState();
       ensureInputVisibility(input);
       runtime.trackOnboardingViewport?.();
+      trackExerciseViewport();
     });
     input.addEventListener("blur", () => {
       runtime.trackOnboardingViewport?.();
+      window.setTimeout(() => {
+        syncExerciseEditingState();
+        if (getFocusedExerciseInput()) {
+          trackExerciseViewport(260);
+        }
+      }, 0);
     });
   });
 
+  syncExerciseEditingState();
   runtime.queueOnboardingRefresh();
 }
 
@@ -336,6 +435,7 @@ function ensureInputVisibility(el) {
       block: "nearest",
       inline: "nearest",
     });
+    trackExerciseViewport();
   }, 120);
 }
 

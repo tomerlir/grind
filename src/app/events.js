@@ -92,6 +92,10 @@ export function wireEvents({
   document.getElementById("sets-container").addEventListener("input", (e) => {
     const input = e.target.closest("[data-field]");
     if (!input) return;
+    if (input.dataset.field === "reps") {
+      const sanitized = input.value.replace(/[^\d]/g, "");
+      if (input.value !== sanitized) input.value = sanitized;
+    }
     updateCurrentSetField(
       parseInt(input.dataset.idx, 10),
       input.dataset.field,

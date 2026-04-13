@@ -416,6 +416,9 @@ body::before {
     scroll-padding-top: var(--screen-pad-top);
     scroll-padding-bottom: calc(var(--screen-pad-bottom) + 24px);
 }
+#screen-exercise.screen-exercise--editing {
+    scroll-padding-bottom: calc(var(--screen-pad-bottom) + 180px);
+}
 #screen-slot-machine {
     --reel-h: clamp(28px, 4.1vh, 36px);
     overflow: hidden;
@@ -1780,6 +1783,9 @@ body::before {
     min-height: 0;
     justify-content: flex-end;
 }
+#screen-exercise.screen-exercise--editing .exercise-flow-target {
+    justify-content: flex-start;
+}
 .exercise-graph-stage {
     display: none;
     flex: 1;
@@ -1788,6 +1794,9 @@ body::before {
 }
 .exercise-graph-stage.is-visible {
     display: flex;
+}
+#screen-exercise.screen-exercise--editing .exercise-graph-stage {
+    display: none !important;
 }
 .exercise-mini-graph {
     display: block;
@@ -1803,6 +1812,9 @@ body::before {
     min-height: 0;
     margin-top: auto;
     margin-bottom: 0;
+}
+#screen-exercise.screen-exercise--editing .sets-container {
+    margin-top: 0;
 }
 .set-row {
     display: flex;
