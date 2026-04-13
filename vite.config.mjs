@@ -34,7 +34,7 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        globPatterns: ["**/*.{js,css,html,mp3}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,webmanifest,mp3}"],
       },
       devOptions: {
         enabled: false,
