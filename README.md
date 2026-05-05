@@ -1,20 +1,36 @@
 # Grind — Structured Strength
 
-Minimalist fitness PWA for structured, slightly randomized hypertrophy training. The app keeps the A/B/C full-body split fixed, then adds controlled exercise variation, session persistence, PR tracking, and a session-builder reveal flow.
+> **Built by [Tomer Liran](https://github.com/tomerlir)** — CTO & Co-Founder at [Bridge](https://usebridge.ai).
+
+Minimalist fitness PWA for structured hypertrophy training. A/B/C full-body split with controlled exercise variation, session persistence, PR tracking, and a session-builder reveal flow. Built to solve: "I want to lift heavy things without thinking about what to do next."
+
+**Live:** [grind.ioneon.io](https://grind.ioneon.io)
+
+## Screenshots
+
+<!-- TODO: Add 3-4 screenshots below. Replace the placeholder images with actual screenshots from the live site. -->
+
+| Day picker | Slot machine | Exercise log | Done screen |
+|---|---|---|---|
+| ![day picker](screenshots/day-picker.png) | ![slot](screenshots/slot-machine.png) | ![log](screenshots/exercise-log.png) | ![done](screenshots/done-screen.png) |
+
+> **Where to add them:** Create a `screenshots/` folder in the repo root. Take screenshots from [grind.ioneon.io](https://grind.ioneon.io) on mobile viewport (375px wide). Name them `day-picker.png`, `slot-machine.png`, `exercise-log.png`, `done-screen.png`.
 
 ## Tech Stack
 
 - Vanilla JavaScript with Vite as the dev server and bundler
-- HTML plus custom CSS in `src/styles/app.css`
+- HTML + custom CSS in `src/styles/app.css`
 - `localStorage` for week state, active sessions, history, PRs, and sync queue
 - `vite-plugin-pwa` for installability and offline support
 
 ## Running Locally
 
-- `npm install`
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
+```bash
+npm install
+npm run dev      # start dev server
+npm run build    # production build
+npm run preview  # preview production build
+```
 
 ## Project Structure
 
@@ -22,53 +38,26 @@ Minimalist fitness PWA for structured, slightly randomized hypertrophy training.
 grind/
   index.html
   src/
-    main.js
+    main.js          # browser entrypoint, app boot, service worker, test harness
     app/
-      runtime.js
+      runtime.js     # session flow, onboarding, spin logic, exercise logging
     data/
-      workouts.js
+      workouts.js    # workout templates and exercise pools
     lib/
-      storage.js
-    config.js
+      storage.js     # guarded localStorage helpers
+    config.js        # app-level runtime configuration
   assets/
   docs/
   vite.config.mjs
 ```
 
-### Module responsibilities
-
-- `src/main.js`: browser entrypoint, app boot, service worker update prompt, `?test` harness
-- `src/app/runtime.js`: session flow, onboarding, spin logic, exercise logging, history UI, sync UI, event wiring
-- `src/data/workouts.js`: workout templates and exercise pools
-- `src/lib/storage.js`: guarded `localStorage` helpers
-- `src/config.js`: app-level runtime configuration
-
 ## Architectural Notes
 
-- The project remains framework-free.
-- This refactor intentionally modularizes JavaScript first.
-- The UI remains framework-free and CSS-first.
-- Storage keys and existing session/history behavior are preserved for backward compatibility.
-
-## Data Model
-
-State is stored in `localStorage` under the `grind:` namespace:
-
-- weekly completion and used-exercise tracking
-- active in-progress session
-- completed session history
-- PR records and overload nudge history
-- offline sync queue
-
-See `docs/ARCHITECTURE.md` for the detailed schema and screen flow.
-
-## Development Guidance
-
-- Preserve the vanilla JS approach; do not introduce a framework casually.
-- Prefer adding new code under `src/` rather than rebuilding root-level entry files.
-- Keep behavior changes separate from structural refactors when possible.
-- Maintain storage compatibility unless a migration is explicitly planned.
+- Framework-free — vanilla JS, modularized intentionally
+- UI is CSS-first, no component library
+- Storage keys and session/history behavior preserved for backward compatibility
+- See `docs/ARCHITECTURE.md` for detailed schema and screen flow
 
 ## License
 
-Private repository — not for redistribution.
+MIT — see [LICENSE](LICENSE)
