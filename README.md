@@ -8,13 +8,9 @@ Minimalist fitness PWA for structured hypertrophy training. A/B/C full-body spli
 
 ## Screenshots
 
-<!-- TODO: Add 3-4 screenshots below. Replace the placeholder images with actual screenshots from the live site. -->
-
-| Day picker | Slot machine | Exercise log | Done screen |
+| Day picker | Workout generator | Exercise log | Done |
 |---|---|---|---|
-| ![day picker](screenshots/day-picker.png) | ![slot](screenshots/slot-machine.png) | ![log](screenshots/exercise-log.png) | ![done](screenshots/done-screen.png) |
-
-> **Where to add them:** Create a `screenshots/` folder in the repo root. Take screenshots from [grind.ioneon.io](https://grind.ioneon.io) on mobile viewport (375px wide). Name them `day-picker.png`, `slot-machine.png`, `exercise-log.png`, `done-screen.png`.
+| ![homepage](screenshots/homepage.png) | ![workout generator](screenshots/workout_generator.png) | ![exercise](screenshots/exercise.png) | ![workout complete](screenshots/workout_complete.png) |
 
 ## Tech Stack
 
