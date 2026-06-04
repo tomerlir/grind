@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tomerlir/grind.git"
+    "url": "git+https://github.com/tomer-liran/grind.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tomerlir/grind/issues"
+    "url": "https://github.com/tomer-liran/grind/issues"
   },
-  "homepage": "https://github.com/tomerlir/grind#readme",
+  "homepage": "https://github.com/tomer-liran/grind#readme",
   "dependencies": {
     "lucide-static": "^1.8.0"
   },

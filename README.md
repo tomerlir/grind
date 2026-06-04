@@ -165,4 +165,4 @@ MIT — see [LICENSE](LICENSE). Free to fork, modify, and run for personal or co
 
 ---
 
-Built by [Tomer Liran](https://github.com/tomerlir).
+Built by [Tomer Liran](https://github.com/tomer-liran).
